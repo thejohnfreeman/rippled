@@ -22,7 +22,6 @@ var searchData=
   ['rcl_20consensus',['RCL Consensus',['../md_ripple_app_consensus_README.html',1,'']]],
   ['ripple_20source_20guidelines',['Ripple Source Guidelines',['../md_ripple_README.html',1,'']]],
   ['resource_3a_3amanager',['Resource::Manager',['../md_ripple_resource_README.html',1,'']]],
-  ['readme',['README',['../md_ripple_rpc_README.html',1,'']]],
   ['nodestore',['NodeStore',['../namespaceripple_1_1NodeStore.html',1,'ripple']]],
   ['openssl',['openssl',['../namespaceripple_1_1openssl.html',1,'ripple']]],
   ['path',['path',['../namespaceripple_1_1path.html',1,'ripple']]],

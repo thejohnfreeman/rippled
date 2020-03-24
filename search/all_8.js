@@ -176,5 +176,6 @@ var searchData=
   ['human',['human',['../classripple_1_1test_1_1jtx_1_1Account.html#aee0c1b197f33ad230162080a4ff2be16',1,'ripple::test::jtx::Account']]],
   ['human_5f',['human_',['../classripple_1_1test_1_1jtx_1_1Account.html#a661e2c39bc8bd232ad2b2439a5a36711',1,'ripple::test::jtx::Account']]],
   ['hypot',['hypot',['http://en.cppreference.com/w/cpp/numeric/math/hypot.html',1,'std']]],
-  ['heap_20profiling_20of_20rippled_20with_20jemalloc',['Heap profiling of rippled with jemalloc',['../md__home_jfreeman_code_rippled_docs_HeapProfiling.html',1,'']]]
+  ['heap_20profiling_20of_20rippled_20with_20jemalloc',['Heap profiling of rippled with jemalloc',['../md__home_jfreeman_code_rippled_docs_HeapProfiling.html',1,'']]],
+  ['how_20to_20use_20rpc_20coroutines_2e',['How to use RPC coroutines.',['../md_ripple_rpc_README.html',1,'']]]
 ];
