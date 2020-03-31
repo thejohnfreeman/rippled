@@ -1,0 +1,7 @@
+<map id="ripple::OverlayImpl::TrafficGauges" name="ripple::OverlayImpl::TrafficGauges">
+<area shape="rect" id="node1" title=" " alt="" coords="25,423,156,464"/>
+<area shape="rect" id="node2" href="$classbeast_1_1insight_1_1Gauge.html" title="A metric for measuring an integral value." alt="" coords="17,289,164,316"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/shared_ptr.html" title=" " alt="" coords="14,185,167,227"/>
+<area shape="rect" id="node4" href="$classbeast_1_1insight_1_1GaugeImpl.html" title=" " alt="" coords="5,96,176,123"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/enable_shared_from_this.html" title=" " alt="" coords="5,5,176,47"/>
+</map>

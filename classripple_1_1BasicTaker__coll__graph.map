@@ -1,0 +1,13 @@
+<map id="ripple::BasicTaker" name="ripple::BasicTaker">
+<area shape="rect" id="node1" title="State for the active party during order book or payment operations." alt="" coords="1029,131,1156,157"/>
+<area shape="rect" id="node2" href="$structripple_1_1Rate.html" title="Represents a transfer rate." alt="" coords="288,15,377,41"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,7,152,49"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="31,84,126,111"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/array.html" title=" " alt="" coords="257,87,408,129"/>
+<area shape="rect" id="node5" href="$classripple_1_1Issue.html" title="A currency issued by an account." alt="" coords="819,104,912,131"/>
+<area shape="rect" id="node6" href="$classripple_1_1base__uint.html" title=" " alt="" coords="510,66,691,107"/>
+<area shape="rect" id="node9" href="$classripple_1_1base__uint.html" title=" " alt="" coords="505,137,696,178"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="291,196,374,223"/>
+<area shape="rect" id="node10" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="813,217,917,244"/>
+<area shape="rect" id="node11" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="531,217,670,244"/>
+</map>

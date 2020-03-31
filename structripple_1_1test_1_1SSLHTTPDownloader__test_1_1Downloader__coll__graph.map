@@ -1,0 +1,11 @@
+<map id="ripple::test::SSLHTTPDownloader_test::Downloader" name="ripple::test::SSLHTTPDownloader_test::Downloader">
+<area shape="rect" id="node1" title=" " alt="" coords="1301,178,1521,219"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/shared_ptr.html" title=" " alt="" coords="1056,85,1227,126"/>
+<area shape="rect" id="node3" href="$classripple_1_1SSLHTTPDownloader.html" title="Provides an asynchronous HTTPS file downloader." alt="" coords="797,65,988,92"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/enable_shared_from_this.html" title=" " alt="" coords="460,119,696,161"/>
+<area shape="rect" id="node5" href="$classripple_1_1HTTPClientSSLContext.html" title=" " alt="" coords="477,5,679,32"/>
+<area shape="rect" id="node6" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="266,68,370,95"/>
+<area shape="rect" id="node7" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="5,128,144,155"/>
+<area shape="rect" id="node8" href="$classripple_1_1test_1_1StreamSink.html" title=" " alt="" coords="239,192,397,219"/>
+<area shape="rect" id="node9" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/io/basic_stringstream.html" title="STL class." alt="" coords="15,192,135,219"/>
+</map>

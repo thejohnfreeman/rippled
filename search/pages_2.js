@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['fees',['Fees',['../md_ripple_app_misc_FeeEscalation.html',1,'']]],
-  ['fee_20voting',['Fee Voting',['../md_ripple_app_misc_README.html',1,'']]]
+  ['deprecated_20list_24439',['Deprecated List',['../deprecated.html',1,'']]]
 ];

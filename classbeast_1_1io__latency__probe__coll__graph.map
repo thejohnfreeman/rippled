@@ -1,0 +1,6 @@
+<map id="beast::io_latency_probe&lt; Clock &gt;" name="beast::io_latency_probe&lt; Clock &gt;">
+<area shape="rect" id="node1" title="Measures handler latency on an io_service queue." alt="" coords="135,95,295,136"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/recursive_mutex.html" title="STL class." alt="" coords="5,5,149,32"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="173,5,256,32"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/condition_variable_any.html" title=" " alt="" coords="281,5,461,32"/>
+</map>

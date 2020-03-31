@@ -1,0 +1,11 @@
+<map id="ripple::Logs" name="ripple::Logs">
+<area shape="rect" id="node1" title="Manages partitions for logging." alt="" coords="729,79,819,105"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/mutex.html" title="STL class." alt="" coords="512,5,596,32"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="475,57,633,127"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="248,24,328,51"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/unique_ptr.html" title=" " alt="" coords="212,75,364,117"/>
+<area shape="rect" id="node6" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="5,83,144,109"/>
+<area shape="rect" id="node7" href="$classripple_1_1Logs_1_1File.html" title="Manages a system file containing logged output." alt="" coords="495,152,613,179"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/unique_ptr.html" title=" " alt="" coords="219,145,357,186"/>
+<area shape="rect" id="node9" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/io/basic_ofstream.html" title="STL class." alt="" coords="25,152,124,179"/>
+</map>

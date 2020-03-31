@@ -1,0 +1,7 @@
+<map id="ripple::SSLHTTPDownloader" name="ripple::SSLHTTPDownloader">
+<area shape="rect" id="node1" title="Provides an asynchronous HTTPS file downloader." alt="" coords="743,73,933,99"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/enable_shared_from_this.html" title=" " alt="" coords="405,5,641,47"/>
+<area shape="rect" id="node3" href="$classripple_1_1HTTPClientSSLContext.html" title=" " alt="" coords="423,134,624,161"/>
+<area shape="rect" id="node4" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="239,103,343,130"/>
+<area shape="rect" id="node5" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="5,103,144,130"/>
+</map>

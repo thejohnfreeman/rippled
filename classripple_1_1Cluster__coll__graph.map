@@ -1,0 +1,14 @@
+<map id="ripple::Cluster" name="ripple::Cluster">
+<area shape="rect" id="node1" title=" " alt="" coords="951,80,1053,107"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/mutex.html" title="STL class." alt="" coords="733,15,817,41"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/set.html" title=" " alt="" coords="696,65,855,121"/>
+<area shape="rect" id="node4" href="$classripple_1_1ClusterNode.html" title=" " alt="" coords="465,80,599,107"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="206,5,301,32"/>
+<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="213,56,293,83"/>
+<area shape="rect" id="node7" href="$classripple_1_1PublicKey.html" title="A public key." alt="" coords="193,107,313,133"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="5,81,92,108"/>
+<area shape="rect" id="node9" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="7,132,90,159"/>
+<area shape="rect" id="node10" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/chrono/time_point.html" title=" " alt="" coords="176,158,331,199"/>
+<area shape="rect" id="node11" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="723,145,827,172"/>
+<area shape="rect" id="node12" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="463,145,601,172"/>
+</map>

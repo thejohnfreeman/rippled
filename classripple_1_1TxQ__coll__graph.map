@@ -1,0 +1,51 @@
+<map id="ripple::TxQ" name="ripple::TxQ">
+<area shape="rect" id="node1" title="Transaction Queue." alt="" coords="3543,1098,3629,1125"/>
+<area shape="rect" id="node2" href="$structripple_1_1TxQ_1_1Setup.html" title="Structure used to customize TxQ behavior." alt="" coords="2429,1681,2557,1707"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="837,597,932,623"/>
+<area shape="rect" id="node24" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/array.html" title=" " alt="" coords="1067,505,1217,547"/>
+<area shape="rect" id="node26" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="2677,549,2875,575"/>
+<area shape="rect" id="node27" href="$classripple_1_1TxQ_1_1MaybeTx.html" title="Represents a transaction in the queue which may be applied later to the open ledger." alt="" coords="2419,549,2567,575"/>
+<area shape="rect" id="node4" href="$classripple_1_1feeunit_1_1TaggedFee.html" title=" " alt="" coords="2020,1407,2193,1448"/>
+<area shape="rect" id="node47" href="$classripple_1_1TxQ_1_1FeeMetrics.html" title="Track and use the fee escalation metrics of the current open ledger." alt="" coords="2413,1137,2572,1163"/>
+<area shape="rect" id="node5" title=" " alt="" coords="1733,1553,1905,1609"/>
+<area shape="rect" id="node6" title=" " alt="" coords="1727,1633,1911,1675"/>
+<area shape="rect" id="node7" title=" " alt="" coords="1728,1246,1909,1302"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1735,1326,1903,1382"/>
+<area shape="rect" id="node9" title=" " alt="" coords="1725,1407,1913,1448"/>
+<area shape="rect" id="node10" title=" " alt="" coords="1733,1473,1905,1529"/>
+<area shape="rect" id="node11" title=" " alt="" coords="1799,1145,1838,1171"/>
+<area shape="rect" id="node15" href="$classripple_1_1feeunit_1_1TaggedFee.html" title=" " alt="" coords="2020,897,2193,939"/>
+<area shape="rect" id="node12" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="2063,1726,2150,1753"/>
+<area shape="rect" id="node13" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="596,406,679,433"/>
+<area shape="rect" id="node23" href="$classripple_1_1base__uint.html" title=" " alt="" coords="2044,425,2169,467"/>
+<area shape="rect" id="node29" href="$classripple_1_1STTx.html" title=" " alt="" coords="1772,398,1865,425"/>
+<area shape="rect" id="node43" href="$classripple_1_1detail_1_1STVar.html" title=" " alt="" coords="816,149,953,175"/>
+<area shape="rect" id="node46" href="$classripple_1_1base__uint.html" title=" " alt="" coords="1326,449,1451,491"/>
+<area shape="rect" id="node14" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/mutex.html" title="STL class." alt="" coords="3304,1237,3388,1263"/>
+<area shape="rect" id="node16" title=" " alt="" coords="1720,832,1917,873"/>
+<area shape="rect" id="node17" title=" " alt="" coords="1727,897,1911,939"/>
+<area shape="rect" id="node18" title=" " alt="" coords="1712,963,1925,1004"/>
+<area shape="rect" id="node19" title=" " alt="" coords="1735,1028,1903,1069"/>
+<area shape="rect" id="node20" title=" " alt="" coords="1725,685,1913,727"/>
+<area shape="rect" id="node21" title=" " alt="" coords="1738,751,1899,807"/>
+<area shape="rect" id="node22" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="3271,472,3421,513"/>
+<area shape="rect" id="node25" href="$classripple_1_1TxQ_1_1TxQAccount.html" title="Used to represent an account to the queue, and stores the transactions queued for that account by seq..." alt="" coords="2999,479,3165,506"/>
+<area shape="rect" id="node28" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/shared_ptr.html" title=" " alt="" coords="2031,505,2183,547"/>
+<area shape="rect" id="node30" href="$classripple_1_1STObject.html" title=" " alt="" coords="1331,171,1447,198"/>
+<area shape="rect" id="node31" href="$classripple_1_1STBase.html" title="A type which can be exported to a well known binary format." alt="" coords="583,227,691,254"/>
+<area shape="rect" id="node32" href="$classripple_1_1SField.html" title="Identifies fields." alt="" coords="274,182,373,209"/>
+<area shape="rect" id="node33" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="568,156,707,197"/>
+<area shape="rect" id="node34" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="29,157,109,183"/>
+<area shape="rect" id="node35" href="$classJson_1_1StaticString.html" title="Lightweight wrapper to tag static string." alt="" coords="5,207,132,234"/>
+<area shape="rect" id="node36" href="$classripple_1_1CountedObject.html" title=" " alt="" coords="1068,99,1216,140"/>
+<area shape="rect" id="node37" href="$classripple_1_1SOTemplate.html" title="Defines the fields and their attributes within a STObject." alt="" coords="1075,47,1209,74"/>
+<area shape="rect" id="node38" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="823,71,946,98"/>
+<area shape="rect" id="node39" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="821,5,948,47"/>
+<area shape="rect" id="node40" href="$classripple_1_1SOElement.html" title="An element in a SOTemplate." alt="" coords="573,13,701,39"/>
+<area shape="rect" id="node41" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/utility/functional/reference_wrapper.html" title=" " alt="" coords="244,5,403,47"/>
+<area shape="rect" id="node42" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="1079,164,1205,205"/>
+<area shape="rect" id="node44" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/aligned_storage.html" title=" " alt="" coords="568,88,707,129"/>
+<area shape="rect" id="node45" href="$classripple_1_1CountedObject.html" title=" " alt="" coords="1315,332,1463,373"/>
+<area shape="rect" id="node48" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="2055,1094,2159,1121"/>
+<area shape="rect" id="node49" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="1749,1094,1888,1121"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="ripple::test::csf::LedgerCollector" name="ripple::test::csf::LedgerCollector">
+<area shape="rect" id="node1" title="Tracks the accepted &#45;&gt; validated evolution of ledgers." alt="" coords="1040,136,1157,177"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/unordered_map.html" title=" " alt="" coords="655,48,867,119"/>
+<area shape="rect" id="node3" href="$structripple_1_1test_1_1csf_1_1LedgerCollector_1_1Tracker.html" title=" " alt="" coords="359,5,524,47"/>
+<area shape="rect" id="node4" href="$classripple_1_1tagged__integer.html" title="A type&#45;safe wrap around standard integral types." alt="" coords="368,71,515,112"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,19,253,163"/>
+<area shape="rect" id="node6" href="$classripple_1_1test_1_1csf_1_1Histogram.html" title=" " alt="" coords="683,194,838,250"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="88,195,171,222"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="364,257,519,328"/>
+</map>

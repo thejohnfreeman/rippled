@@ -1,0 +1,12 @@
+<map id="ripple::TimeKeeperImpl" name="ripple::TimeKeeperImpl">
+<area shape="rect" id="node1" title=" " alt="" coords="724,130,880,157"/>
+<area shape="rect" id="node2" href="$classripple_1_1TimeKeeper.html" title="Manages various times used by the server." alt="" coords="457,13,587,39"/>
+<area shape="rect" id="node3" href="$classbeast_1_1abstract__clock.html" title=" " alt="" coords="205,5,352,47"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/unique_ptr.html" title=" " alt="" coords="447,64,597,105"/>
+<area shape="rect" id="node5" href="$classripple_1_1SNTPClock.html" title="A clock based on system_clock and adjusted for SNTP." alt="" coords="213,71,344,98"/>
+<area shape="rect" id="node6" href="$classbeast_1_1abstract__clock.html" title=" " alt="" coords="5,57,156,113"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/mutex.html" title="STL class." alt="" coords="480,130,564,157"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/chrono/duration.html" title=" " alt="" coords="451,181,593,223"/>
+<area shape="rect" id="node9" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="470,247,574,274"/>
+<area shape="rect" id="node10" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="209,247,348,274"/>
+</map>

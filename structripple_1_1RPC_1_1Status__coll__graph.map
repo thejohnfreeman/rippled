@@ -1,0 +1,6 @@
+<map id="ripple::RPC::Status" name="ripple::RPC::Status">
+<area shape="rect" id="node1" title="Status represents the results of an operation that might fail." alt="" coords="11,184,147,211"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/error/exception.html" title="STL class." alt="" coords="5,95,109,121"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="134,95,301,121"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="177,5,257,32"/>
+</map>

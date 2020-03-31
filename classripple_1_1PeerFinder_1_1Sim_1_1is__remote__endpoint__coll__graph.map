@@ -1,0 +1,5 @@
+<map id="ripple::PeerFinder::Sim::is_remote_endpoint" name="ripple::PeerFinder::Sim::is_remote_endpoint">
+<area shape="rect" id="node1" title="UnaryPredicate, true if the remote address matches." alt="" coords="5,184,180,225"/>
+<area shape="rect" id="node2" href="$classbeast_1_1IP_1_1Endpoint.html" title="A version&#45;independent IP address and port combination." alt="" coords="25,95,160,121"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="45,5,140,32"/>
+</map>

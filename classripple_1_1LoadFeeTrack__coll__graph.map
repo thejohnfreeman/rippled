@@ -1,0 +1,7 @@
+<map id="ripple::LoadFeeTrack" name="ripple::LoadFeeTrack">
+<area shape="rect" id="node1" title="Manages the current fee schedule." alt="" coords="125,331,269,357"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="5,95,100,121"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/mutex.html" title="STL class." alt="" coords="155,95,239,121"/>
+<area shape="rect" id="node4" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="263,95,367,121"/>
+<area shape="rect" id="node5" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="246,5,385,32"/>
+</map>

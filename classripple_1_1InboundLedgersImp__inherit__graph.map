@@ -1,0 +1,5 @@
+<map id="ripple::InboundLedgersImp" name="ripple::InboundLedgersImp">
+<area shape="rect" id="node1" title=" " alt="" coords="75,80,249,107"/>
+<area shape="rect" id="node2" href="$classripple_1_1InboundLedgers.html" title="Manages the lifetime of inbound ledgers." alt="" coords="5,5,159,32"/>
+<area shape="rect" id="node3" href="$classripple_1_1Stoppable.html" title="Provides an interface for starting and stopping." alt="" coords="183,5,301,32"/>
+</map>

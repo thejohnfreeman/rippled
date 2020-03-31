@@ -1,0 +1,57 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classripple_1_1AbstractFetchPackContainer.html" title="An interface facilitating retrieval of fetch packs without an application or ledgermaster object." alt="" coords="10,5,183,47"/>
+<area shape="rect" id="node2" href="$classripple_1_1LedgerMaster.html" title=" " alt="" coords="268,13,408,39"/>
+<area shape="rect" id="node3" href="$classBasicApp.html" title=" " alt="" coords="299,1743,377,1770"/>
+<area shape="rect" id="node4" href="$classripple_1_1ApplicationImp.html" title=" " alt="" coords="518,1693,665,1719"/>
+<area shape="rect" id="node5" href="$structripple_1_1Workers_1_1Callback.html" title="Called to perform tasks as needed." alt="" coords="12,1245,181,1271"/>
+<area shape="rect" id="node6" href="$classripple_1_1JobQueue.html" title="A pool of threads to perform work." alt="" coords="278,1190,398,1217"/>
+<area shape="rect" id="node7" href="$structripple_1_1Workers__test_1_1TestCallback.html" title=" " alt="" coords="269,1292,407,1333"/>
+<area shape="rect" id="node8" href="$classripple_1_1InboundLedgers.html" title="Manages the lifetime of inbound ledgers." alt="" coords="20,1089,173,1115"/>
+<area shape="rect" id="node9" href="$classripple_1_1InboundLedgersImp.html" title=" " alt="" coords="251,1089,425,1115"/>
+<area shape="rect" id="node10" href="$classripple_1_1InboundTransactions.html" title="Manages the acquisition and lifetime of transaction sets." alt="" coords="5,1139,188,1166"/>
+<area shape="rect" id="node11" href="$classripple_1_1InboundTransactionsImp.html" title=" " alt="" coords="236,1139,440,1166"/>
+<area shape="rect" id="node12" href="$classripple_1_1perf_1_1PerfLog.html" title="Singleton class that maintains performance counters and optionally writes Json&#45;formatted data to a di..." alt="" coords="29,1333,165,1359"/>
+<area shape="rect" id="node13" href="$classripple_1_1perf_1_1PerfLogImp.html" title="Implementation class for PerfLog." alt="" coords="259,1241,417,1267"/>
+<area shape="rect" id="node14" href="$classripple_1_1perf_1_1PerfLogTest.html" title=" " alt="" coords="257,1358,419,1385"/>
+<area shape="rect" id="node15" href="$classripple_1_1NodeStore_1_1Scheduler.html" title="Scheduling for asynchronous backend activity." alt="" coords="31,1427,162,1468"/>
+<area shape="rect" id="node16" href="$classripple_1_1NodeStore_1_1DummyScheduler.html" title="Simple NodeStore Scheduler that just peforms the tasks synchronously." alt="" coords="273,1627,403,1668"/>
+<area shape="rect" id="node17" href="$classripple_1_1NodeStoreScheduler.html" title="A NodeStore::Scheduler which uses the JobQueue and implements the Stoppable API." alt="" coords="247,1409,429,1435"/>
+<area shape="rect" id="node18" href="$classbeast_1_1PropertyStream_1_1Source.html" title="Subclasses can be called to write to a stream and have children." alt="" coords="20,1561,173,1603"/>
+<area shape="rect" id="node19" href="$classripple_1_1Application.html" title=" " alt="" coords="275,1693,401,1719"/>
+<area shape="rect" id="node20" href="$classripple_1_1detail_1_1LedgerCleaner.html" title="Check the ledger/transaction databases to make sure they have continuity." alt="" coords="246,1459,430,1486"/>
+<area shape="rect" id="node22" href="$classripple_1_1Overlay.html" title="Manages the set of connected peers." alt="" coords="285,1510,391,1537"/>
+<area shape="rect" id="node24" href="$classripple_1_1PeerFinder_1_1Manager.html" title="Maintains a set of IP addresses used for getting into the network." alt="" coords="276,1561,400,1603"/>
+<area shape="rect" id="node26" href="$classripple_1_1Resource_1_1Manager.html" title="Tracks load and resource consumption." alt="" coords="251,1794,425,1821"/>
+<area shape="rect" id="node21" href="$classripple_1_1detail_1_1LedgerCleanerImp.html" title=" " alt="" coords="488,1459,695,1486"/>
+<area shape="rect" id="node23" href="$classripple_1_1OverlayImpl.html" title=" " alt="" coords="526,1510,657,1537"/>
+<area shape="rect" id="node25" href="$classripple_1_1PeerFinder_1_1ManagerImp.html" title=" " alt="" coords="529,1561,653,1603"/>
+<area shape="rect" id="node27" href="$classripple_1_1Resource_1_1ManagerImp.html" title=" " alt="" coords="493,1794,690,1821"/>
+<area shape="rect" id="node28" href="$classripple_1_1Stoppable.html" title="Provides an interface for starting and stopping." alt="" coords="37,794,156,821"/>
+<area shape="rect" id="node29" href="$classripple_1_1InfoSub_1_1Source.html" title="Abstracts the source of subscription data." alt="" coords="261,769,415,795"/>
+<area shape="rect" id="node32" href="$classripple_1_1LoadManager.html" title="Manages load sources." alt="" coords="269,819,407,846"/>
+<area shape="rect" id="node33" href="$classripple_1_1NodeStore_1_1Database.html" title="Persistency layer for NodeObject." alt="" coords="273,871,403,912"/>
+<area shape="rect" id="node39" href="$classripple_1_1OrderBookDB.html" title=" " alt="" coords="267,937,409,963"/>
+<area shape="rect" id="node40" href="$classripple_1_1RootStoppable.html" title=" " alt="" coords="265,987,411,1014"/>
+<area shape="rect" id="node43" href="$classripple_1_1ServerHandlerImp.html" title=" " alt="" coords="255,1038,421,1065"/>
+<area shape="rect" id="node44" href="$classripple_1_1SHAMapStore.html" title="class to create database, launch online delete thread, and related SQLite database" alt="" coords="265,63,411,90"/>
+<area shape="rect" id="node46" href="$classripple_1_1test_1_1Stoppable__test_1_1A.html" title=" " alt="" coords="263,115,413,156"/>
+<area shape="rect" id="node47" href="$classripple_1_1test_1_1Stoppable__test_1_1B.html" title=" " alt="" coords="263,180,413,221"/>
+<area shape="rect" id="node48" href="$classripple_1_1test_1_1Stoppable__test_1_1C.html" title=" " alt="" coords="263,245,413,287"/>
+<area shape="rect" id="node49" href="$classripple_1_1test_1_1Stoppable__test_1_1D.html" title=" " alt="" coords="263,311,413,352"/>
+<area shape="rect" id="node50" href="$classripple_1_1test_1_1Stoppable__test_1_1E.html" title=" " alt="" coords="263,376,413,417"/>
+<area shape="rect" id="node51" href="$classripple_1_1test_1_1Stoppable__test_1_1F.html" title=" " alt="" coords="263,441,413,483"/>
+<area shape="rect" id="node52" href="$classripple_1_1test_1_1Stoppable__test_1_1G.html" title=" " alt="" coords="263,507,413,548"/>
+<area shape="rect" id="node53" href="$classripple_1_1test_1_1Stoppable__test_1_1H.html" title=" " alt="" coords="263,572,413,613"/>
+<area shape="rect" id="node54" href="$classripple_1_1test_1_1Stoppable__test_1_1I.html" title=" " alt="" coords="263,637,413,679"/>
+<area shape="rect" id="node55" href="$classripple_1_1test_1_1Stoppable__test_1_1J.html" title=" " alt="" coords="263,703,413,744"/>
+<area shape="rect" id="node30" href="$classripple_1_1NetworkOPs.html" title="Provides server functionality for clients." alt="" coords="523,743,659,770"/>
+<area shape="rect" id="node31" href="$classripple_1_1NetworkOPsImp.html" title=" " alt="" coords="743,743,901,770"/>
+<area shape="rect" id="node34" href="$classripple_1_1NodeStore_1_1DatabaseNodeImp.html" title=" " alt="" coords="526,925,657,967"/>
+<area shape="rect" id="node35" href="$classripple_1_1NodeStore_1_1DatabaseRotating.html" title=" " alt="" coords="526,795,657,836"/>
+<area shape="rect" id="node37" href="$classripple_1_1NodeStore_1_1DatabaseShard.html" title="A collection of historical shards." alt="" coords="526,860,657,901"/>
+<area shape="rect" id="node36" href="$classripple_1_1NodeStore_1_1DatabaseRotatingImp.html" title=" " alt="" coords="747,795,897,836"/>
+<area shape="rect" id="node38" href="$classripple_1_1NodeStore_1_1DatabaseShardImp.html" title=" " alt="" coords="755,860,889,901"/>
+<area shape="rect" id="node41" href="$structripple_1_1PerfLog__test_1_1PerfLogParent.html" title=" " alt="" coords="524,1056,659,1097"/>
+<area shape="rect" id="node42" href="$classripple_1_1test_1_1Stoppable__test_1_1Root.html" title=" " alt="" coords="517,991,666,1032"/>
+<area shape="rect" id="node45" href="$classripple_1_1SHAMapStoreImp.html" title=" " alt="" coords="508,63,675,90"/>
+</map>

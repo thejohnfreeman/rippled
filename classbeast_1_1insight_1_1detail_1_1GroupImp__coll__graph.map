@@ -1,0 +1,8 @@
+<map id="beast::insight::detail::GroupImp" name="beast::insight::detail::GroupImp">
+<area shape="rect" id="node1" title=" " alt="" coords="520,89,659,131"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/enable_shared_from_this.html" title=" " alt="" coords="225,5,389,47"/>
+<area shape="rect" id="node3" href="$classbeast_1_1insight_1_1Group.html" title="A collector front&#45;end that manages a group of metrics." alt="" coords="236,71,379,98"/>
+<area shape="rect" id="node4" href="$classbeast_1_1insight_1_1Collector.html" title="Interface for a manager that allows collection of metrics." alt="" coords="5,71,165,98"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/shared_ptr.html" title=" " alt="" coords="215,122,400,149"/>
+<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="267,173,347,199"/>
+</map>

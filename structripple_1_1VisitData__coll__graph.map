@@ -1,0 +1,10 @@
+<map id="ripple::VisitData" name="ripple::VisitData">
+<area shape="rect" id="node1" title=" " alt="" coords="111,332,226,359"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="5,213,167,255"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/shared_ptr.html" title="STL class." alt="" coords="13,102,154,129"/>
+<area shape="rect" id="node4" title=" " alt="" coords="64,5,103,32"/>
+<area shape="rect" id="node5" href="$classripple_1_1base__uint.html" title=" " alt="" coords="191,213,317,255"/>
+<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/array.html" title=" " alt="" coords="179,95,329,136"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="207,5,301,32"/>
+<area shape="rect" id="node8" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="354,102,437,129"/>
+</map>

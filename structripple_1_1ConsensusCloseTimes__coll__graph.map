@@ -1,0 +1,6 @@
+<map id="ripple::ConsensusCloseTimes" name="ripple::ConsensusCloseTimes">
+<area shape="rect" id="node1" title="Stores the set of initial close times." alt="" coords="72,199,269,225"/>
+<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="7,95,158,136"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/chrono/time_point.html" title=" " alt="" coords="5,5,160,32"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/chrono/time_point.html" title=" " alt="" coords="183,95,337,136"/>
+</map>

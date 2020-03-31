@@ -1,0 +1,7 @@
+<map id="ripple::NodeStore::EncodedBlob" name="ripple::NodeStore::EncodedBlob">
+<area shape="rect" id="node1" title="Utility for producing flattened node objects." alt="" coords="109,288,240,329"/>
+<area shape="rect" id="node2" href="$classripple_1_1Buffer.html" title="Like std::vector&lt;char&gt; but better." alt="" coords="127,199,223,225"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/unique_ptr.html" title=" " alt="" coords="5,95,144,136"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="31,5,118,32"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="168,102,251,129"/>
+</map>

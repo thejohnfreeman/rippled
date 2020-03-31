@@ -1,0 +1,12 @@
+<map id="ripple::TxQ::FeeMetrics::Snapshot" name="ripple::TxQ::FeeMetrics::Snapshot">
+<area shape="rect" id="node1" title="Snapshot of the externally relevant FeeMetrics fields at any given time." alt="" coords="633,237,792,279"/>
+<area shape="rect" id="node2" href="$classripple_1_1feeunit_1_1TaggedFee.html" title=" " alt="" coords="296,201,469,243"/>
+<area shape="rect" id="node3" title=" " alt="" coords="13,5,211,47"/>
+<area shape="rect" id="node4" title=" " alt="" coords="20,71,204,112"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,136,219,177"/>
+<area shape="rect" id="node6" title=" " alt="" coords="28,201,196,243"/>
+<area shape="rect" id="node7" title=" " alt="" coords="18,267,206,308"/>
+<area shape="rect" id="node8" title=" " alt="" coords="31,333,193,389"/>
+<area shape="rect" id="node9" title=" " alt="" coords="93,413,131,439"/>
+<area shape="rect" id="node10" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="341,267,424,294"/>
+</map>

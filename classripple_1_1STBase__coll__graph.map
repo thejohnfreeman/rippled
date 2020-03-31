@@ -1,0 +1,7 @@
+<map id="ripple::STBase" name="ripple::STBase">
+<area shape="rect" id="node1" title="A type which can be exported to a well known binary format." alt="" coords="5,191,113,218"/>
+<area shape="rect" id="node2" href="$classripple_1_1SField.html" title="Identifies fields." alt="" coords="85,95,183,121"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="145,184,283,225"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="30,5,110,32"/>
+<area shape="rect" id="node5" href="$classJson_1_1StaticString.html" title="Lightweight wrapper to tag static string." alt="" coords="135,5,261,32"/>
+</map>

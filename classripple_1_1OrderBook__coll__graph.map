@@ -1,0 +1,11 @@
+<map id="ripple::OrderBook" name="ripple::OrderBook">
+<area shape="rect" id="node1" title="Describes a serialized ledger entry for an order book." alt="" coords="1148,68,1271,95"/>
+<area shape="rect" id="node2" href="$classripple_1_1base__uint.html" title=" " alt="" coords="486,34,611,75"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/array.html" title=" " alt="" coords="205,17,356,58"/>
+<area shape="rect" id="node8" href="$classripple_1_1base__uint.html" title=" " alt="" coords="458,99,639,141"/>
+<area shape="rect" id="node9" href="$classripple_1_1base__uint.html" title=" " alt="" coords="453,165,644,206"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="5,24,100,51"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="239,189,322,216"/>
+<area shape="rect" id="node6" href="$classripple_1_1Book.html" title="Specifies an order book." alt="" coords="964,97,1055,124"/>
+<area shape="rect" id="node7" href="$classripple_1_1Issue.html" title="A currency issued by an account." alt="" coords="747,107,840,133"/>
+</map>

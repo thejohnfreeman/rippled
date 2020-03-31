@@ -1,0 +1,14 @@
+<map id="ripple::test::multi_runner_parent" name="ripple::test::multi_runner_parent">
+<area shape="rect" id="node1" title="Manager for children running unit tests." alt="" coords="1188,155,1307,197"/>
+<area shape="rect" id="node2" href="$classripple_1_1test_1_1detail_1_1multi__runner__base.html" title=" " alt="" coords="845,83,989,139"/>
+<area shape="rect" id="node3" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/memory/unique_ptr.html" title=" " alt="" coords="469,115,632,171"/>
+<area shape="rect" id="node4" href="$structripple_1_1test_1_1detail_1_1multi__runner__base_1_1inner.html" title=" " alt="" coords="479,35,623,91"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/atomic/atomic.html" title=" " alt="" coords="195,5,329,32"/>
+<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/atomic/atomic.html" title=" " alt="" coords="176,124,348,151"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="5,95,88,121"/>
+<area shape="rect" id="node8" href="$structripple_1_1test_1_1detail_1_1results.html" title=" " alt="" coords="201,57,323,98"/>
+<area shape="rect" id="node9" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/set.html" title=" " alt="" coords="843,163,991,189"/>
+<area shape="rect" id="node10" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="511,195,591,221"/>
+<area shape="rect" id="node11" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/thread/thread.html" title="STL class." alt="" coords="875,213,959,240"/>
+<area shape="rect" id="node12" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/io/basic_ostream.html" title="STL class." alt="" coords="869,264,964,291"/>
+</map>

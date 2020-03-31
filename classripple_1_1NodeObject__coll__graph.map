@@ -1,0 +1,9 @@
+<map id="ripple::NodeObject" name="ripple::NodeObject">
+<area shape="rect" id="node1" title="A simple object that the Ledger uses to store entries." alt="" coords="696,109,827,135"/>
+<area shape="rect" id="node2" href="$classripple_1_1CountedObject.html" title=" " alt="" coords="453,5,601,47"/>
+<area shape="rect" id="node3" href="$classripple_1_1base__uint.html" title=" " alt="" coords="465,71,590,112"/>
+<area shape="rect" id="node4" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/array.html" title=" " alt="" coords="205,27,356,68"/>
+<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/integer.html" title=" " alt="" coords="5,34,100,61"/>
+<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/types/size_t.html" title=" " alt="" coords="239,115,322,142"/>
+<area shape="rect" id="node7" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="453,200,601,241"/>
+</map>
