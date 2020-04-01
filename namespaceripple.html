@@ -993,7 +993,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Context needed to build Strand Steps and for error checking.  <a href="structripple_1_1StrandContext.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structripple_1_1StrandResult.html">StrandResult</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of <a class="el" href="namespaceripple.html#aa2ecfbaa1ad5a63404f7da486747f7f1" title="Make a payment from the src account to the dst account.">flow()</a> execution of a single Strand.  <a href="structripple_1_1StrandResult.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of <a class="el" href="namespaceripple.html#aea839338eb91258b10d5d14262ef079f" title="Make a payment from the src account to the dst account.">flow()</a> execution of a single Strand.  <a href="structripple_1_1StrandResult.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1StreambufWSMsg.html">StreambufWSMsg</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2260,12 +2260,9 @@ Functions</h2></td></tr>
 <tr class="separator:a3c5f274e7acff7630f3e7a544f90c109"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37173963b40ddf6c4e4245d821125ffb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceripple.html#af6706a6ca37a4295262cd18f8cb619e2">hash_set</a>&lt; <a class="el" href="namespaceripple.html#a8792cc3f99463ceba4e96dde34fe17a4">Currency</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceripple.html#a37173963b40ddf6c4e4245d821125ffb">accountDestCurrencies</a> (<a class="el" href="namespaceripple.html#a16ab89d505feb8a59bf35abddfe1fb2c">AccountID</a> const &amp;account, <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1RippleLineCache.html">RippleLineCache</a> &gt; const &amp;lrCache, bool includeXRP)</td></tr>
 <tr class="separator:a37173963b40ddf6c4e4245d821125ffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5585a905b0b4bc7fd1849c23747800f2"><td class="memTemplParams" colspan="2">template&lt;class FlowResult &gt; </td></tr>
-<tr class="memitem:a5585a905b0b4bc7fd1849c23747800f2"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceripple.html#a5585a905b0b4bc7fd1849c23747800f2">finishFlow</a> (<a class="el" href="classripple_1_1PaymentSandbox.html">PaymentSandbox</a> &amp;sb, <a class="el" href="classripple_1_1Issue.html">Issue</a> const &amp;srcIssue, <a class="el" href="classripple_1_1Issue.html">Issue</a> const &amp;dstIssue, FlowResult &amp;&amp;f)</td></tr>
-<tr class="separator:a5585a905b0b4bc7fd1849c23747800f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2ecfbaa1ad5a63404f7da486747f7f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structripple_1_1path_1_1RippleCalc_1_1Output.html">path::RippleCalc::Output</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceripple.html#aa2ecfbaa1ad5a63404f7da486747f7f1">flow</a> (<a class="el" href="classripple_1_1PaymentSandbox.html">PaymentSandbox</a> &amp;view, <a class="el" href="classripple_1_1STAmount.html">STAmount</a> const  &amp;deliver, <a class="el" href="namespaceripple.html#a16ab89d505feb8a59bf35abddfe1fb2c">AccountID</a> const  &amp;src, <a class="el" href="namespaceripple.html#a16ab89d505feb8a59bf35abddfe1fb2c">AccountID</a> const  &amp;dst, <a class="el" href="classripple_1_1STPathSet.html">STPathSet</a> const  &amp;paths, bool defaultPaths, bool partialPayment, bool ownerPaysTransferFee, bool offerCrossing, boost::optional&lt; Quality &gt; const  &amp;limitQuality, boost::optional&lt; <a class="el" href="classripple_1_1STAmount.html">STAmount</a> &gt; const  &amp;sendMax, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j, <a class="el" href="structripple_1_1path_1_1detail_1_1FlowDebugInfo.html">path::detail::FlowDebugInfo</a> *flowDebugInfo=nullptr)</td></tr>
-<tr class="memdesc:aa2ecfbaa1ad5a63404f7da486747f7f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a payment from the src account to the dst account.  <a href="namespaceripple.html#aa2ecfbaa1ad5a63404f7da486747f7f1">More...</a><br /></td></tr>
-<tr class="separator:aa2ecfbaa1ad5a63404f7da486747f7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea839338eb91258b10d5d14262ef079f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structripple_1_1path_1_1RippleCalc_1_1Output.html">path::RippleCalc::Output</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceripple.html#aea839338eb91258b10d5d14262ef079f">flow</a> (<a class="el" href="classripple_1_1PaymentSandbox.html">PaymentSandbox</a> &amp;view, <a class="el" href="classripple_1_1STAmount.html">STAmount</a> const &amp;deliver, <a class="el" href="namespaceripple.html#a16ab89d505feb8a59bf35abddfe1fb2c">AccountID</a> const &amp;src, <a class="el" href="namespaceripple.html#a16ab89d505feb8a59bf35abddfe1fb2c">AccountID</a> const &amp;dst, <a class="el" href="classripple_1_1STPathSet.html">STPathSet</a> const &amp;paths, bool defaultPaths, bool partialPayment, bool ownerPaysTransferFee, bool offerCrossing, boost::optional&lt; Quality &gt; const &amp;limitQuality, boost::optional&lt; <a class="el" href="classripple_1_1STAmount.html">STAmount</a> &gt; const &amp;sendMax, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j, <a class="el" href="structripple_1_1path_1_1detail_1_1FlowDebugInfo.html">path::detail::FlowDebugInfo</a> *flowDebugInfo=nullptr)</td></tr>
+<tr class="memdesc:aea839338eb91258b10d5d14262ef079f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make a payment from the src account to the dst account.  <a href="namespaceripple.html#aea839338eb91258b10d5d14262ef079f">More...</a><br /></td></tr>
+<tr class="separator:aea839338eb91258b10d5d14262ef079f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a104985c6e3067babe99aca6bbc51ba5d"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a104985c6e3067babe99aca6bbc51ba5d"><td class="memTemplItemLeft" align="right" valign="top">T &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceripple.html#a104985c6e3067babe99aca6bbc51ba5d">get</a> (<a class="el" href="structripple_1_1EitherAmount.html">EitherAmount</a> &amp;amt)</td></tr>
 <tr class="separator:a104985c6e3067babe99aca6bbc51ba5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -10446,60 +10443,8 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a id="a5585a905b0b4bc7fd1849c23747800f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5585a905b0b4bc7fd1849c23747800f2">&#9670;&nbsp;</a></span>finishFlow()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class FlowResult &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static auto ripple::finishFlow </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classripple_1_1PaymentSandbox.html">PaymentSandbox</a> &amp;&#160;</td>
-          <td class="paramname"><em>sb</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classripple_1_1Issue.html">Issue</a> const &amp;&#160;</td>
-          <td class="paramname"><em>srcIssue</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classripple_1_1Issue.html">Issue</a> const &amp;&#160;</td>
-          <td class="paramname"><em>dstIssue</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">FlowResult &amp;&amp;&#160;</td>
-          <td class="paramname"><em>f</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="Flow_8cpp_source.html#l00038">38</a> of file <a class="el" href="Flow_8cpp_source.html">Flow.cpp</a>.</p>
-
-</div>
-</div>
-<a id="aa2ecfbaa1ad5a63404f7da486747f7f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa2ecfbaa1ad5a63404f7da486747f7f1">&#9670;&nbsp;</a></span>flow() <span class="overload">[1/3]</span></h2>
+<a id="aea839338eb91258b10d5d14262ef079f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aea839338eb91258b10d5d14262ef079f">&#9670;&nbsp;</a></span>flow() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -10610,8 +10555,6 @@ template&lt;class FlowResult &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Actual amount in and out, and the result code </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="Flow_8cpp_source.html#l00056">56</a> of file <a class="el" href="Flow_8cpp_source.html">Flow.cpp</a>.</p>
 
 </div>
 </div>
