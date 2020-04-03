@@ -28,30 +28,97 @@ namespace beast {
 class rfc2616_test : public unit_test::suite
 {
 public:
+    std::string
+    concatenate(
+        std::vector<std::string> const& words,
+        std::string const& pre = {},
+        std::string const& mid = {},
+        std::string const& post = {})
+    {
+        std::string text;
+        for (auto const& word : words)
+        {
+            text += pre;
+
+            if (mid.empty())
+                text += word;
+            else
+            {
+                std::string s {word};
+                std::size_t pos {0};
+                while ((pos = s.find(' ', pos)) != std::string::npos)
+                {
+                    s.insert(pos, mid);
+                    pos += mid.size() + 1;
+                }
+                text += s;
+            }
+
+            text += post + ',';
+        }
+        text.pop_back();
+
+        return text;
+    }
+
     void run() override
     {
         testcase("LWS compression & trimming during parsing");
 
-        beast::xor_shift_engine rng(0x243F6A8885A308D3);
+        using namespace beast::rfc2616;
+        std::vector<std::string> const words {
+            "apple", "star fruit", "juicy juniper berry" };
 
-        std::vector<std::string> words;
-
-        for (int i = 0; i != 64; ++i)
-            words.push_back("X-" + std::to_string(ripple::rand_int(rng, 100, 1000)));
-
-        std::string question;
-
-        for (auto w : words)
+        // no added space
         {
-            if (!question.empty())
-                question += ",";
-
-            question.append(ripple::rand_int(rng, 0, 3), ' ');
-            question.append(w);
-            question.append(ripple::rand_int(rng, 0, 3), ' ');
+            auto const text {concatenate(words)};
+            BEAST_EXPECT(split_commas(text) == words);
         }
 
-        BEAST_EXPECT(beast::rfc2616::split_commas(question) == words);
+        for (auto const& space : {" ", "     "})
+        {
+            // prefix
+            {
+                auto const text {concatenate(words, space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // mid
+            {
+                auto const text {concatenate(words, "", space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // suffix
+            {
+                auto const text {concatenate(words, "", "", space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // prefix, mid
+            {
+                auto const text {concatenate(words, space, space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // prefix, mid, suffix
+            {
+                auto const text {concatenate(words, space, space, space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // prefix, suffix
+            {
+                auto const text{ concatenate(words, space, "", space) };
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+
+            // mid, suffix
+            {
+                auto const text {concatenate(words, "", space, space)};
+                BEAST_EXPECT(split_commas(text) == words);
+            }
+        }
     }
 };
 
