@@ -1,4 +1,4 @@
 <map id="ripple::Resource::Charge" name="ripple::Resource::Charge">
-<area shape="rect" id="node1" title="A consumption charge." alt="" coords="5,95,172,121"/>
-<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="49,5,129,32"/>
+<area shape="rect" id="node1" title="A consumption charge." alt="" coords="5,95,185,121"/>
+<area shape="rect" id="node2" href="/__w/rippled/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="52,5,139,32"/>
 </map>

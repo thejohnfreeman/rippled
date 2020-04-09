@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['json_24443',['JSON',['../md_ripple_json_README.html',1,'']]],
-  ['json_20todo_24444',['JSON TODO',['../md_ripple_json_TODO.html',1,'']]]
+  ['ledger_20process_24644',['Ledger Process',['../md_ripple_app_ledger_README.html',1,'']]]
 ];

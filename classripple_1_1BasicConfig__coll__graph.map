@@ -1,8 +1,8 @@
 <map id="ripple::BasicConfig" name="ripple::BasicConfig">
-<area shape="rect" id="node1" title="Holds unparsed configuration information." alt="" coords="931,53,1063,80"/>
-<area shape="rect" id="node2" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="696,39,845,95"/>
-<area shape="rect" id="node3" href="$classripple_1_1Section.html" title="Holds a collection of configuration values." alt="" coords="485,121,591,148"/>
-<area shape="rect" id="node4" title=" " alt="" coords="191,69,392,139"/>
-<area shape="rect" id="node5" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="5,164,85,191"/>
-<area shape="rect" id="node6" href="/home/jfreeman/code/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="208,164,375,191"/>
+<area shape="rect" id="node1" title="Holds unparsed configuration information." alt="" coords="1007,55,1149,81"/>
+<area shape="rect" id="node2" href="/__w/rippled/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/map.html" title=" " alt="" coords="755,40,917,96"/>
+<area shape="rect" id="node3" href="$classripple_1_1Section.html" title="Holds a collection of configuration values." alt="" coords="527,123,641,149"/>
+<area shape="rect" id="node4" title=" " alt="" coords="205,70,428,141"/>
+<area shape="rect" id="node5" href="/__w/rippled/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/string/basic_string.html" title="STL class." alt="" coords="5,165,92,192"/>
+<area shape="rect" id="node6" href="/__w/rippled/rippled/build/docs/cppreference-doxygen-web.tag.xml$cpp/container/vector.html" title=" " alt="" coords="223,165,410,192"/>
 </map>
