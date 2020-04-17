@@ -192,9 +192,17 @@ trim (std::string const& s)
     return trim <std::string> (s);
 }
 
-/** Parse a character sequence of values separated by commas.
-    Double quotes and escape sequences will be converted.  Excess white
-    space, commas, double quotes, and empty elements are not copied.
+/** Parse a character sequence of sentences separated by delimiters.
+
+    - Sentences are linear-whitespace-separated words.
+    - Linear whitespace between words is collapsed to a single space.
+    - Words are tokens or quoted strings.
+    - Tokens are non-empty sequences of characters other than control or
+      separator characters.
+    - Quoted strings may contain backslash-escaped characters.
+    - Empty sentences are ignored.
+    - Linear whitespace is stripped from both ends of sentences.
+
     Format:
        #(token|quoted-string)
     Reference:
@@ -211,70 +219,69 @@ split(FwdIt first, FwdIt last, Char delim)
     Result result;
     using string = typename Result::value_type;
     FwdIt iter = first;
-    string e;
+    string word;
+    bool need_space = false;
     while (iter != last)
     {
-        if (*iter == '"')
+        Char c = *iter++;
+
+        if (is_lws(c)) {
+            if (need_space) {
+                word.append(1, ' ');
+                need_space = false;
+            }
+            continue;
+        }
+
+        if (c == delim)
+            goto end_word;
+
+        need_space = true;
+
+        if (c == '"')
         {
             // quoted-string
-            ++iter;
             while (iter != last)
             {
-                if (*iter == '"')
+                c = *iter++;
+
+                if (c == '"')
                 {
-                    ++iter;
                     break;
                 }
 
-                if (*iter == '\\')
+                if (c == '\\')
                 {
                     // quoted-pair
-                    ++iter;
-                    if (iter != last)
-                        e.append (1, *iter++);
+                    if (iter == last)
+                        break;
+                    c = *iter++;
                 }
-                else
-                {
-                    // qdtext
-                    e.append (1, *iter++);
-                }
+
+                word.append(1, c);
             }
-            if (! e.empty())
-            {
-                result.emplace_back(std::move(e));
-                e.clear();
-            }
+            continue;
         }
-        else if (*iter == delim)
-        {
-            e = trim_right(e);
-            if (! e.empty())
-            {
-                result.emplace_back(std::move(e));
-                e.clear();
-            }
-            ++iter;
+
+        word.append(1, c);
+        continue;
+
+end_word:
+        // If need_space == false, then we have added a space expecting to add
+        // more non-whitespace characters.
+        if (!word.empty() && !need_space)
+            word.pop_back();
+        if (!word.empty()) {
+            result.emplace_back(std::move(word));
+            word.clear();
         }
-        else if (is_lws (*iter))
-        {
-            if (!e.empty())
-                e.append (1, ' ');
-            do
-                iter++;
-            while (iter != last && is_lws (*iter));
-        }
-        else
-        {
-            e.append (1, *iter++);
-        }
+        need_space = false;
     }
 
-    if (! e.empty())
-    {
-        e = trim (e);
-        if (! e.empty())
-            result.emplace_back(std::move(e));
-    }
+    if (!word.empty() && !need_space)
+        word.pop_back();
+    if (!word.empty())
+        result.emplace_back(std::move(word));
     return result;
 }
 
