@@ -726,6 +726,7 @@ target_sources (rippled PRIVATE
   src/test/beast/beast_abstract_clock_test.cpp
   src/test/beast/beast_basic_seconds_clock_test.cpp
   src/test/beast/beast_io_latency_probe_test.cpp
+  src/test/beast/beast_rfc2616_test.cpp
   src/test/beast/define_print.cpp
   #[===============================[
      test sources:
