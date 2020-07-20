@@ -23,6 +23,10 @@ enum MessageType
     mtGET_PEER_SHARD_INFO   = 52;
     mtPEER_SHARD_INFO       = 53;
     mtVALIDATORLIST         = 54;
+    mtProofPathRequest      = 55;
+    mtProofPathResponse     = 56;
+    mtReplayDeltaRequest    = 57;
+    mtReplayDeltaResponse   = 58;
 }
 
 // token, iterations, target, challenge = issue demand for proof of work
@@ -332,6 +336,7 @@ enum TMReplyError
 {
     reNO_LEDGER                     = 1;    // We don't have the ledger you are asking about
     reNO_NODE                       = 2;    // We don't have any of the nodes you are asking for
+    reBAD_REQUEST                   = 3;    // The request is wrong, e.g. wrong format
 }
 
 message TMLedgerData
@@ -354,5 +359,40 @@ message TMPing
     optional uint32 seq         = 2; // detect stale replies, ensure other side is reading
     optional uint64 pingTime    = 3; // know when we think we sent the ping
     optional uint64 netTime     = 4;
+}
+
+enum TMLedgerMapType
+{
+    lmTX_NODE = 1;        // transaction node
+    lmAS_NODE = 2;        // account state node
+}
+
+message TMProofPathRequest
+{
+    required bytes key = 1;
+    required bytes ledgerHash = 2;
+    required TMLedgerMapType type = 3;
+}
+
+message TMProofPathResponse
+{
+    optional bytes key = 1;
+    optional bytes ledgerHash = 2;
+    optional bytes ledgerHeader = 3;
+    repeated bytes path = 4;
+    optional TMReplyError error = 5;
+}
+
+message TMReplayDeltaRequest
+{
+    required bytes ledgerHash = 1;
+}
+
+message TMReplayDeltaResponse
+{
+    optional bytes ledgerHash = 1;
+    optional bytes ledgerHeader = 2;
+    repeated bytes transaction = 3;
+    optional TMReplyError error = 4;
 }
 

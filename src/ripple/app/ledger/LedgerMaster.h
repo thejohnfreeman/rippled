@@ -290,6 +290,15 @@ public:
     boost::optional<LedgerIndex>
     minSqlSeq();
 
+    // TODO move into LedgerMaster??
+    protocol::TMProofPathResponse
+    getProofPathResponse(
+        std::shared_ptr<protocol::TMProofPathRequest> const& request);
+
+    protocol::TMReplayDeltaResponse
+    getReplayDeltaResponse(
+        std::shared_ptr<protocol::TMReplayDeltaRequest> const& request);
+
 private:
     void
     setValidLedger(std::shared_ptr<Ledger const> const& l);

@@ -84,6 +84,9 @@ public:
     bool
     has_common_prefix(SHAMapNodeID const& other) const;
 
+    static SHAMapNodeID
+    createID(int depth, uint256 const& hash);
+
 private:
     static uint256 const&
     Masks(int depth);

@@ -1552,6 +1552,103 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMGetLedger> const& m)
 }
 
 void
+PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
+{
+    JLOG(p_journal_.trace()) << "onMessage, TMProofPathRequest";
+    fee_ = Resource::feeMediumBurdenPeer;  // TODO understand
+    std::weak_ptr<PeerImp> weak = shared_from_this();
+    app_.getJobQueue().addJob(
+        jtPROOF_PATH_REQUEST, "recvProofPathRequest", [weak, m](Job&) {
+            if (auto peer = weak.lock())
+                peer->getProofPath(m);
+        });
+}
+
+//TODO how to unit test
+void
+PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
+{
+    JLOG(p_journal_.trace()) << "onMessage, TMProofPathResponse";
+    protocol::TMProofPathResponse& reply = *m;
+    if (reply.has_error() || !reply.has_key() || !reply.has_ledgerheader() ||
+        reply.path_size() == 0)
+        // TODO handle error
+        return;
+
+    std::vector<Blob> path;
+    path.reserve(reply.path_size());
+    for (int i = 0; i < reply.path_size(); ++i)
+    {
+        path.emplace_back(reply.path(i).begin(), reply.path(i).end());
+    }
+    auto info = deserializeHeader(
+        {reply.ledgerheader().data(), reply.ledgerheader().size()});
+
+    if (!SHAMap::verifyProofPath(info.accountHash, keylet::skip().key, path))
+        // TODO handle error
+        return;
+
+    // TODO shorten the deserialize code??
+    auto node = SHAMapAbstractNode::makeFromWire(makeSlice(path.front()));
+    if (!node || !node->isLeaf())
+        // TODO handle error
+        return;
+
+    auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
+    if (!item)
+        // TODO handle error
+        return;
+
+    // TODO call handler with info and item, in handler call
+    // TODO calculateLedgerHash(info) and check if the hashes match
+}
+
+void
+PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
+{
+    JLOG(p_journal_.trace()) << "onMessage, TMReplayDeltaRequest";
+    fee_ = Resource::feeMediumBurdenPeer;
+    std::weak_ptr<PeerImp> weak = shared_from_this();
+    app_.getJobQueue().addJob(
+        jtREPLAY_DELTA_REQUEST, "recvReplayDeltaRequest", [weak, m](Job&) {
+            if (auto peer = weak.lock())
+                peer->getReplayDelta(m);
+        });
+}
+
+void
+PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
+{
+    protocol::TMReplayDeltaResponse& reply = *m;
+    if (reply.has_error() ||
+        !reply.has_ledgerheader())
+        //TODO handle error
+        return;
+
+    auto info = deserializeHeader(
+        {reply.ledgerheader().data(), reply.ledgerheader().size()});
+    auto numTxns = reply.transaction_size();
+    if(numTxns == 0 && info.txHash.isNonZero())
+        //TODO confirm txHash is zero if no Tx
+        //TODO handle error
+        return;
+
+    std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
+    for (int i = 0; i < numTxns; ++i)
+    {
+        SerialIter sit(makeSlice(reply.transaction(i)));
+        auto tx = std::make_shared<STTx const>(sit);
+        if (!tx)
+            // TODO handle error
+            return;
+        orderedTxns.emplace(i, std::move(tx));
+    }
+
+    // TODO call handler with info and orderedTxns, in handler call
+    // TODO calculateLedgerHash(info) and check if the hashes match
+}
+
+void
 PeerImp::onMessage(std::shared_ptr<protocol::TMLedgerData> const& m)
 {
     protocol::TMLedgerData& packet = *m;
@@ -2981,6 +3078,32 @@ PeerImp::Metrics::total_bytes() const
 {
     std::shared_lock lock{mutex_};
     return totalBytes_;
+}
+
+void
+PeerImp::getProofPath(
+    std::shared_ptr<protocol::TMProofPathRequest> const& request)
+{
+    auto reply = app_.getLedgerMaster().getProofPathResponse(request);
+    if (reply.has_error() &&
+        reply.error() == protocol::TMReplyError::reBAD_REQUEST)
+        charge(Resource::feeInvalidRequest);
+    auto oPacket =
+        std::make_shared<Message>(reply, protocol::mtProofPathResponse);
+    send(oPacket);
+}
+
+void
+PeerImp::getReplayDelta(
+    std::shared_ptr<protocol::TMReplayDeltaRequest> const& request)
+{
+    auto reply = app_.getLedgerMaster().getReplayDeltaResponse(request);
+    if (reply.has_error() &&
+        reply.error() == protocol::TMReplyError::reBAD_REQUEST)
+        charge(Resource::feeInvalidRequest);
+    auto oPacket =
+        std::make_shared<Message>(reply, protocol::mtReplayDeltaResponse);
+    send(oPacket);
 }
 
 }  // namespace ripple

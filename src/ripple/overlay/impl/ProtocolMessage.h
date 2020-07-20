@@ -77,6 +77,14 @@ protocolMessageName(int type)
             return "validation";
         case protocol::mtGET_OBJECTS:
             return "get_objects";
+        case protocol::mtProofPathRequest:
+            return "proof_path_request";
+        case protocol::mtProofPathResponse:
+            return "proof_path_response";
+        case protocol::mtReplayDeltaRequest:
+            return "replay_delta_request";
+        case protocol::mtReplayDeltaResponse:
+            return "replay_delta_response";
         default:
             break;
     }
@@ -373,6 +381,22 @@ invokeProtocolMessage(Buffers const& buffers, Handler& handler)
             break;
         case protocol::mtGET_OBJECTS:
             success = detail::invoke<protocol::TMGetObjectByHash>(
+                *header, buffers, handler);
+            break;
+        case protocol::mtProofPathRequest:
+            success = detail::invoke<protocol::TMProofPathRequest>(
+                *header, buffers, handler);
+            break;
+        case protocol::mtProofPathResponse:
+            success = detail::invoke<protocol::TMProofPathResponse>(
+                *header, buffers, handler);
+            break;
+        case protocol::mtReplayDeltaRequest:
+            success = detail::invoke<protocol::TMReplayDeltaRequest>(
+                *header, buffers, handler);
+            break;
+        case protocol::mtReplayDeltaResponse:
+            success = detail::invoke<protocol::TMReplayDeltaResponse>(
                 *header, buffers, handler);
             break;
         default:

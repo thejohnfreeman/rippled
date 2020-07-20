@@ -63,6 +63,14 @@ enum JobType {
     jtNETOP_TIMER,    // NetworkOPs net timer processing
     jtADMIN,          // An administrative operation
 
+    jtPROOF_PATH_REQUEST,     // Peer request the proof path of a ledger ShaMap
+                              // node
+    jtPROOF_PATH_RESPONSE,    // Received response of the proof path we're
+                              // acquiring
+    jtREPLAY_DELTA_REQUEST,   // Peer request the replay delta of a ledger
+    jtREPLAY_DELTA_RESPONSE,  // Received response of the replay delta we're
+                              // acquiring
+
     // Special job types which are not dispatched by the job pool
     jtPEER,
     jtDISK,

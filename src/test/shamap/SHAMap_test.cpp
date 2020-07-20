@@ -347,7 +347,35 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(SHAMap, ripple_app, ripple);
+class SHAMapPathProof_test : public beast::unit_test::suite
+{
+    void
+    run() override
+    {
+        test::SuiteJournal journal("SHAMapPathProof_test", *this);
 
+        tests::TestNodeFamily tf{journal};
+        SHAMap map{SHAMapType::FREE, tf};
+        map.setUnbacked();
+
+        for (unsigned char c = 1; c < 100; ++c)
+        {
+            uint256 k(c);
+            Blob b(32, c);
+            map.addItem(SHAMapItem{k, b}, false, false);
+            map.invariants();
+
+            auto rootHash = map.getHash().as_uint256();
+            auto path = map.getProofPath(k);
+            BEAST_EXPECT(path);
+            if (!path)
+                break;
+            BEAST_EXPECT(map.verifyProofPath(rootHash, k, *path));
+        }
+    }
+};
+
+BEAST_DEFINE_TESTSUITE(SHAMap, ripple_app, ripple);
+BEAST_DEFINE_TESTSUITE(SHAMapPathProof, ripple_app, ripple);
 }  // namespace tests
 }  // namespace ripple
