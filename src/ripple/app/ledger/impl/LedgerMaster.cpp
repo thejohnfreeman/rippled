@@ -2196,4 +2196,135 @@ LedgerMaster::minSqlSeq()
     return seq;
 }
 
+protocol::TMProofPathResponse
+LedgerMaster::getProofPathResponse(
+    std::shared_ptr<protocol::TMProofPathRequest> const& request)
+{
+    // TODO split the function to two and put the protocol:: stuff in peerImp
+    protocol::TMProofPathRequest& packet = *request;
+    protocol::TMProofPathResponse reply;
+
+    if (!packet.has_ledgerhash() || !packet.has_key() || !packet.has_type() ||
+        packet.ledgerhash().size() != uint256::size() ||
+        packet.key().size() != uint256::size() ||
+        !protocol::TMLedgerMapType_IsValid(packet.type()))
+    {
+        JLOG(m_journal.debug()) << "getProofPath: Invalid request";
+        reply.set_error(protocol::TMReplyError::reBAD_REQUEST);
+        return reply;
+    }
+    reply.set_key(packet.key());
+
+    uint256 const key{packet.key()};
+    uint256 const ledgerHash{packet.ledgerhash()};
+    auto ledger = getLedgerByHash(ledgerHash);
+    if (!ledger || !ledger->isImmutable())
+    {
+        JLOG(m_journal.debug())
+            << "getProofPath: Don't have ledger " << ledgerHash;
+        reply.set_ledgerhash(packet.ledgerhash());
+        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
+        return reply;
+    }
+
+    auto const path = [&]() -> std::optional<std::vector<Blob>> {
+        switch (packet.type())
+        {
+            case protocol::lmAS_NODE:
+                return ledger->stateMap().getProofPath(key);
+            case protocol::lmTX_NODE:
+                return ledger->txMap().getProofPath(key);
+            default:
+                // should not be here
+                // because already tested with TMLedgerMapType_IsValid()
+                return {};
+        }
+    }();
+
+    if (!path)
+    {
+        JLOG(m_journal.debug()) << "getProofPath: Don't have the node " << key
+                                << " of ledger " << ledgerHash;
+        reply.set_ledgerhash(packet.ledgerhash());
+        reply.set_error(protocol::TMReplyError::reNO_NODE);
+        return reply;
+    }
+
+    // pack header, code copied from getLedger()
+    Serializer nData(128);
+    addRaw(ledger->info(), nData);
+    reply.set_ledgerheader(nData.getDataPtr(), nData.getLength());
+    // pack path
+    for (auto const& b : *path)
+        reply.add_path(b.data(), b.size());
+
+    JLOG(m_journal.debug())
+        << "getProofPath for the node " << key << " of ledger " << ledgerHash
+        << " path length " << path->size();
+    return reply;
+}
+
+protocol::TMReplayDeltaResponse
+LedgerMaster::getReplayDeltaResponse(
+    std::shared_ptr<protocol::TMReplayDeltaRequest> const& request)
+{
+    protocol::TMReplayDeltaRequest& packet = *request;
+    protocol::TMReplayDeltaResponse reply;
+
+    if (!packet.has_ledgerhash() ||
+        packet.ledgerhash().size() != uint256::size())
+    {
+        JLOG(m_journal.debug()) << "getReplayDelta: Invalid request";
+        reply.set_error(protocol::TMReplyError::reBAD_REQUEST);
+        return reply;
+    }
+    reply.set_ledgerhash(packet.ledgerhash());
+
+    uint256 const ledgerHash{packet.ledgerhash()};
+    auto ledger = getLedgerByHash(ledgerHash);
+    if (!ledger || !ledger->isImmutable())
+    {
+        JLOG(m_journal.debug())
+            << "getReplayDelta: Don't have ledger " << ledgerHash;
+        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
+        return reply;
+    }
+
+    auto const& txMap = ledger->txMap();
+    std::map<uint32_t, Slice> transactions;
+
+    try
+    {
+        txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const& txNode) {
+            SerialIter sit(txNode->slice());
+            auto txSlice = sit.getSlice(sit.getVLDataLength());
+            SerialIter s(sit.getSlice(sit.getVLDataLength()));
+            STObject meta(s, sfMetadata);
+            transactions.insert({meta[sfTransactionIndex], txSlice});
+        });
+    }
+    catch (std::exception const&)
+    {
+        JLOG(m_journal.warn())
+            << "getReplayDelta: bad data in ledger " << ledgerHash;
+        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
+        return reply;
+    }
+
+    // pack header
+    Serializer nData(128);
+    addRaw(ledger->info(), nData);
+    reply.set_ledgerheader(nData.getDataPtr(), nData.getLength());
+    // pack transactions
+    for (auto const& [_, txSlice] : transactions)
+    {
+        reply.add_transaction(txSlice.data(), txSlice.size());
+    }
+
+    JLOG(m_journal.debug())
+        << "getReplayDelta for ledger " << ledgerHash
+        << " number of transactions " << transactions.size();
+    return reply;
+}
+
 }  // namespace ripple

@@ -238,6 +238,29 @@ public:
         bool fatLeaves,
         std::uint32_t depth) const;
 
+    // TODO
+    /**
+     *
+     * @param key
+     * @return
+     */
+    std::optional<std::vector<Blob>>
+    getProofPath(uint256 const& key) const;
+
+    // TODO
+    /**
+     *
+     * @param rootHash
+     * @param key
+     * @param path
+     * @return
+     */
+    static bool
+    verifyProofPath(
+        uint256 const& rootHash,
+        uint256 const& key,
+        std::vector<Blob> const& path);
+
     bool
     getRootNode(Serializer& s, SHANodeFormat format) const;
     std::vector<uint256>

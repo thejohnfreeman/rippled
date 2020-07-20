@@ -549,6 +549,14 @@ public:
     onMessage(std::shared_ptr<protocol::TMValidation> const& m);
     void
     onMessage(std::shared_ptr<protocol::TMGetObjectByHash> const& m);
+    void
+    onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m);
+    void
+    onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m);
+    void
+    onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m);
+    void
+    onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m);
 
 private:
     State
@@ -600,8 +608,22 @@ private:
         uint256 const& hash,
         std::shared_ptr<protocol::TMLedgerData> const& pPacket,
         beast::Journal journal);
-};
 
+    /**
+     * //TODO
+     * @param request
+     */
+    void
+    getProofPath(std::shared_ptr<protocol::TMProofPathRequest> const& request);
+
+    /**
+     * //TODO
+     * @param request
+     */
+    void
+    getReplayDelta(
+        std::shared_ptr<protocol::TMReplayDeltaRequest> const& request);
+};
 //------------------------------------------------------------------------------
 
 template <class Buffers>
