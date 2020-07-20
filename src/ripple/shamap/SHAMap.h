@@ -238,6 +238,27 @@ public:
         bool fatLeaves,
         std::uint32_t depth) const;
 
+    /**
+     * Get the proof path (from the leaf to the root with siblings) of the key
+     * @param key  key of the leaf
+     * @return the proof path if found
+     */
+    std::optional<std::vector<Blob>>
+    getProofPath(uint256 const& key) const;
+
+    /**
+     * Verify the proof path
+     * @param rootHash  root hash of the map
+     * @param key  key of the leaf
+     * @param path  the proof path
+     * @return true if verified successfully
+     */
+    static bool
+    verifyProofPath(
+        uint256 const& rootHash,
+        uint256 const& key,
+        std::vector<Blob> const& path);
+
     bool
     getRootNode(Serializer& s, SHANodeFormat format) const;
     std::vector<uint256>

@@ -63,6 +63,7 @@ class InboundLedgers;
 class InboundTransactions;
 class AcceptedLedger;
 class LedgerMaster;
+class LedgerReplayer;
 class LoadManager;
 class ManifestCache;
 class ValidatorKeys;
@@ -200,6 +201,8 @@ public:
 
     virtual LedgerMaster&
     getLedgerMaster() = 0;
+    virtual LedgerReplayer&
+    getLedgerReplayer() = 0;
     virtual NetworkOPs&
     getOPs() = 0;
     virtual OrderBookDB&

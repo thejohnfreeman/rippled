@@ -105,8 +105,11 @@ private:
     void
     onShutdown(error_code ec);
 
+    // TODO to be refactored.
+    // Greg plans to refactor this function and the related code.
+    // I will adapt once that PR is merged.
     static request_type
-    makeRequest(bool crawl, bool compressionEnabled);
+    makeRequest(bool crawl, bool compressionEnabled, bool ledgerReplayEnabled);
 
     void
     processResponse();

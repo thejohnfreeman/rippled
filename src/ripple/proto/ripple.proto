@@ -24,6 +24,10 @@ enum MessageType
     mtPEER_SHARD_INFO       = 53;
     mtVALIDATORLIST         = 54;
     mtSQUELCH               = 55;
+    mtPROOF_PATH_REQ        = 56;
+    mtPROOF_PATH_RESPONSE   = 57;
+    mtREPLAY_DELTA_REQ      = 58;
+    mtREPLAY_DELTA_RESPONSE = 59;
 }
 
 // token, iterations, target, challenge = issue demand for proof of work
@@ -225,15 +229,31 @@ message TMValidation
     optional uint32 hops = 3           [deprecated = true];
 }
 
+message TMIPv4Endpoint
+{
+    required uint32 ipv4            = 1;
+
+    // VFALCO NOTE There is no uint16 in google protocol buffers,
+    //             so we use a uint32 to represent the port.
+    //
+    required uint32 ipv4Port        = 2;
+}
+
+// An Endpoint describes a network peer that can accept incoming connections
+message TMEndpoint
+{
+    required TMIPv4Endpoint ipv4    = 1;
+    required uint32         hops    = 2;
+}
+
 // An array of Endpoint messages
 message TMEndpoints
 {
-    // Previously used - don't reuse.
-    reserved 2;
-
     // This field is used to allow the TMEndpoints message format to be
     // modified as necessary in the future.
     required uint32         version = 1;
+
+    repeated TMEndpoint     endpoints = 2;
 
     // An update to the Endpoint type that uses a string
     // to represent endpoints, thus allowing ipv6 or ipv4 addresses
@@ -317,6 +337,7 @@ enum TMReplyError
 {
     reNO_LEDGER                     = 1;    // We don't have the ledger you are asking about
     reNO_NODE                       = 2;    // We don't have any of the nodes you are asking for
+    reBAD_REQUEST                   = 3;    // The request is wrong, e.g. wrong format
 }
 
 message TMLedgerData
@@ -346,5 +367,41 @@ message TMSquelch
     required bool squelch           = 1; // squelch if true, otherwise unsquelch
     required bytes validatorPubKey  = 2; // validator's public key
     optional uint32 squelchDuration = 3; // squelch duration in milliseconds
+}
+
+enum TMLedgerMapType
+{
+    lmTX = 1;        // transaction map
+    lmAS = 2;        // account state map
+}
+
+message TMProofPathRequest
+{
+    required bytes key = 1;
+    required bytes ledgerHash = 2;
+    required TMLedgerMapType type = 3;
+}
+
+message TMProofPathResponse
+{
+    required bytes key = 1;
+    required bytes ledgerHash = 2;
+    required TMLedgerMapType type = 3;
+    optional bytes ledgerHeader = 4;
+    repeated bytes path = 5;
+    optional TMReplyError error = 6;
+}
+
+message TMReplayDeltaRequest
+{
+    required bytes ledgerHash = 1;
+}
+
+message TMReplayDeltaResponse
+{
+    required bytes ledgerHash = 1;
+    optional bytes ledgerHeader = 2;
+    repeated bytes transaction = 3;
+    optional TMReplyError error = 4;
 }
 

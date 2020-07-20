@@ -20,6 +20,7 @@
 #include <ripple/app/consensus/RCLValidations.h>
 #include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/ledger/LedgerMaster.h>
+#include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/OpenLedger.h>
 #include <ripple/app/ledger/OrderBookDB.h>
 #include <ripple/app/ledger/PendingSaves.h>
@@ -1287,6 +1288,27 @@ LedgerMaster::findNewLedgersToPublish(
         return {};
     }
 
+    {
+        // TODO remove, force a replay for test
+        //        if (app_.config().LEDGER_REPLAY)
+        //        {
+        //            static bool called_once = false;
+        //            if (!called_once)
+        //            {
+        //                called_once = true;
+        //                std::uint32_t totalLedgers = 5;
+        //                JLOG(m_journal.debug())
+        //                    << "LFR end with " <<
+        //                    mValidLedger.get()->info().seq << " "
+        //                    << mValidLedger.get()->info().hash << " back "
+        //                    << totalLedgers << " ledgers";
+        //                app_.getLedgerReplayer().replay(
+        //                    InboundLedger::Reason::GENERIC,
+        //                    mValidLedger.get()->info().hash, totalLedgers);
+        //            }
+        //        }
+    }
+
     if (!mPubLedger)
     {
         JLOG(m_journal.info())
@@ -1350,10 +1372,13 @@ LedgerMaster::findNewLedgersToPublish(
                 ledger = mLedgerHistory.getLedgerByHash(*hash);
             }
 
-            // Can we try to acquire the ledger we need?
-            if (!ledger && (++acqCount < ledger_fetch_size_))
-                ledger = app_.getInboundLedgers().acquire(
-                    *hash, seq, InboundLedger::Reason::GENERIC);
+            if (!app_.config().LEDGER_REPLAY)
+            {
+                // Can we try to acquire the ledger we need?
+                if (!ledger && (++acqCount < ledger_fetch_size_))
+                    ledger = app_.getInboundLedgers().acquire(
+                        *hash, seq, InboundLedger::Reason::GENERIC);
+            }
 
             // Did we acquire the next ledger we need to publish?
             if (ledger && (ledger->info().seq == pubSeq))
@@ -1371,6 +1396,40 @@ LedgerMaster::findNewLedgersToPublish(
     {
         JLOG(m_journal.error())
             << "Exception while trying to find ledgers to publish.";
+    }
+
+    if (app_.config().LEDGER_REPLAY)
+    {
+        /* Narrow down the gap of ledgers, and try to replay them.
+         * When replaying a ledger gap, if the local node has
+         * the start ledger, it saves an expensive InboundLedger
+         * acquire. If the local node has the finish ledger, it
+         * saves a skip list acquire.
+         */
+        auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
+        auto finishLedger = valLedger;
+        while (startLedger->seq() + 1 < finishLedger->seq())
+        {
+            if (auto const parent = mLedgerHistory.getLedgerByHash(
+                    finishLedger->info().parentHash);
+                parent)
+            {
+                finishLedger = parent;
+            }
+            else
+            {
+                break;
+            }
+        }
+        JLOG(m_journal.debug())
+            << "Ledger replay (Publish) from seq=" << startLedger->info().seq
+            << ", " << startLedger->info().hash
+            << " to seq=" << finishLedger->info().seq << ", "
+            << finishLedger->info().hash;
+        app_.getLedgerReplayer().replay(
+            InboundLedger::Reason::GENERIC,
+            finishLedger->info().hash,
+            finishLedger->seq() - startLedger->seq() + 1);
     }
 
     return ret;

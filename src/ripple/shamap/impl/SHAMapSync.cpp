@@ -838,4 +838,83 @@ SHAMap::getFetchPack(
         });
 }
 
+std::optional<std::vector<Blob>>
+SHAMap::getProofPath(uint256 const& key) const
+{
+    SharedPtrNodeStack stack;
+    walkTowardsKey(key, &stack);
+
+    if (stack.empty())
+    {
+        JLOG(journal_.debug()) << "no path to " << key;
+        return {};
+    }
+
+    if (auto const& node = stack.top().first; !node || node->isInner() ||
+        std::static_pointer_cast<SHAMapTreeNode>(node)->peekItem()->key() !=
+            key)
+    {
+        JLOG(journal_.debug()) << "no path to " << key;
+        return {};
+    }
+
+    std::vector<Blob> path;
+    path.reserve(stack.size());
+    while (!stack.empty())
+    {
+        Serializer s;
+        stack.top().first->addRaw(s, snfWIRE);
+        path.emplace_back(std::move(s.modData()));
+        stack.pop();
+    }
+
+    JLOG(journal_.debug()) << "getPath for key " << key << ", path length "
+                           << path.size();
+    return path;
+}
+
+bool
+SHAMap::verifyProofPath(
+    uint256 const& rootHash,
+    uint256 const& key,
+    std::vector<Blob> const& path)
+{
+    if (path.empty() || path.size() > 65)
+        return false;
+
+    SHAMapHash hash{rootHash};
+    auto pathLen = path.size();
+    try
+    {
+        for (int depth = 0; depth < pathLen; ++depth)
+        {
+            int depthToIndex = pathLen - 1 - depth;
+            auto const& blob = path[depthToIndex];
+            auto node = SHAMapAbstractNode::makeFromWire(makeSlice(blob));
+            if (!node)
+                return false;
+            node->updateHash();
+            if (node->getNodeHash() != hash)
+                return false;
+
+            if (node->isInner())
+            {
+                auto nodeId = SHAMapNodeID::createID(depth, key);
+                hash = static_cast<SHAMapInnerNode*>(node.get())
+                           ->getChildHash(nodeId.selectBranch(key));
+            }
+            else
+            {
+                // should exhaust all the blobs now
+                return depth + 1 == pathLen;
+            }
+        }
+    }
+    catch (std::exception const&)
+    {
+        return false;
+    }
+    return false;
+}
+
 }  // namespace ripple
