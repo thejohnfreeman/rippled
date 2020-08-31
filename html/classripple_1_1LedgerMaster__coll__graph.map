@@ -1,0 +1,52 @@
+<map id="ripple::LedgerMaster" name="ripple::LedgerMaster">
+<area shape="rect" id="node1" title=" " alt="" coords="1921,935,2060,962"/>
+<area shape="rect" id="node2" href="$classripple_1_1Stoppable.html" title="Provides an interface for starting and stopping." alt="" coords="916,451,1033,478"/>
+<area shape="rect" id="node5" href="$classripple_1_1RootStoppable.html" title=" " alt="" coords="1217,307,1361,334"/>
+<area shape="rect" id="node9" href="$structripple_1_1Stoppable_1_1Child.html" title=" " alt="" coords="1227,492,1350,533"/>
+<area shape="rect" id="node42" href="$classripple_1_1detail_1_1LedgerCleaner.html" title="Check the ledger/transaction databases to make sure they have continuity." alt="" coords="1199,610,1379,637"/>
+<area shape="rect" id="node3" title=" " alt="" coords="542,375,673,402"/>
+<area shape="rect" id="node4" title="STL class." alt="" coords="302,213,383,239"/>
+<area shape="rect" id="node6" href="$classripple_1_1ClosureCounter.html" title=" " alt="" coords="712,205,860,247"/>
+<area shape="rect" id="node25" href="$classripple_1_1LedgerHolder.html" title="Hold a ledger in a thread&#45;safe way." alt="" coords="1220,170,1357,197"/>
+<area shape="rect" id="node27" href="$classripple_1_1Ledger.html" title="Holds a ledger." alt="" coords="558,107,657,134"/>
+<area shape="rect" id="node7" title="STL class." alt="" coords="568,701,647,727"/>
+<area shape="rect" id="node21" href="$classbeast_1_1PropertyStream_1_1Source.html" title="Subclasses can be called to write to a stream and have children." alt="" coords="899,633,1050,675"/>
+<area shape="rect" id="node28" href="$classripple_1_1TaggedCache.html" title=" " alt="" coords="1219,921,1358,977"/>
+<area shape="rect" id="node46" href="$classripple_1_1TaggedCache.html" title=" " alt="" coords="1203,1279,1374,1320"/>
+<area shape="rect" id="node47" href="$classripple_1_1TaggedCache.html" title=" " alt="" coords="1213,1031,1364,1087"/>
+<area shape="rect" id="node8" title="STL class." alt="" coords="281,693,405,735"/>
+<area shape="rect" id="node10" title=" " alt="" coords="921,543,1028,570"/>
+<area shape="rect" id="node11" href="$classbeast_1_1LockFreeStack.html" title=" " alt="" coords="533,511,682,552"/>
+<area shape="rect" id="node12" href="$classbeast_1_1LockFreeStack_1_1Node.html" title=" " alt="" coords="5,501,163,543"/>
+<area shape="rect" id="node13" title=" " alt="" coords="256,485,429,527"/>
+<area shape="rect" id="node14" href="$classripple_1_1AbstractFetchPackContainer.html" title="An interface facilitating retrieval of fetch packs without an application or ledgermaster object." alt="" coords="1575,1544,1745,1585"/>
+<area shape="rect" id="node15" href="$structripple_1_1LedgerMaster_1_1Stats.html" title=" " alt="" coords="905,1485,1044,1527"/>
+<area shape="rect" id="node16" href="$classbeast_1_1insight_1_1Gauge.html" title="A metric for measuring an integral value." alt="" coords="536,1523,679,1550"/>
+<area shape="rect" id="node30" href="$structripple_1_1TaggedCache_1_1Stats.html" title=" " alt="" coords="888,1249,1061,1305"/>
+<area shape="rect" id="node17" title=" " alt="" coords="267,1516,418,1557"/>
+<area shape="rect" id="node18" href="$classbeast_1_1insight_1_1Hook.html" title="A reference to a handler for performing polled collection." alt="" coords="540,1367,675,1394"/>
+<area shape="rect" id="node19" title=" " alt="" coords="267,1360,418,1401"/>
+<area shape="rect" id="node20" href="$classripple_1_1Application.html" title=" " alt="" coords="1227,734,1350,761"/>
+<area shape="rect" id="node45" href="$classripple_1_1LedgerHistory.html" title="Retains historical ledgers." alt="" coords="1590,1147,1730,1174"/>
+<area shape="rect" id="node24" href="$classbeast_1_1PropertyStream_1_1Item.html" title=" " alt="" coords="1213,665,1364,707"/>
+<area shape="rect" id="node22" title="STL class." alt="" coords="537,877,678,903"/>
+<area shape="rect" id="node23" href="$classbeast_1_1List.html" title=" " alt="" coords="527,604,688,645"/>
+<area shape="rect" id="node26" title=" " alt="" coords="900,89,1049,131"/>
+<area shape="rect" id="node44" href="$classripple_1_1LedgerReplay.html" title=" " alt="" coords="1219,13,1358,39"/>
+<area shape="rect" id="node29" href="$classbeast_1_1abstract__clock.html" title=" " alt="" coords="902,1057,1047,1113"/>
+<area shape="rect" id="node31" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="923,1399,1026,1426"/>
+<area shape="rect" id="node32" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="540,1469,675,1495"/>
+<area shape="rect" id="node33" title=" " alt="" coords="1571,1610,1749,1637"/>
+<area shape="rect" id="node34" title=" " alt="" coords="1571,1665,1749,1691"/>
+<area shape="rect" id="node35" href="$classripple_1_1CanonicalTXSet.html" title="Holds transactions which were deferred to the next pass of consensus." alt="" coords="1583,1715,1737,1742"/>
+<area shape="rect" id="node36" href="$classripple_1_1base__uint.html" title=" " alt="" coords="546,1677,669,1719"/>
+<area shape="rect" id="node40" href="$classripple_1_1CanonicalTXSet_1_1Key.html" title=" " alt="" coords="884,1626,1065,1653"/>
+<area shape="rect" id="node37" title=" " alt="" coords="271,1677,415,1719"/>
+<area shape="rect" id="node38" title=" " alt="" coords="1199,1663,1379,1719"/>
+<area shape="rect" id="node39" title=" " alt="" coords="900,1677,1049,1719"/>
+<area shape="rect" id="node41" title=" " alt="" coords="1580,636,1740,677"/>
+<area shape="rect" id="node43" title=" " alt="" coords="1586,5,1734,47"/>
+<area shape="rect" id="node48" title=" " alt="" coords="1199,1177,1379,1203"/>
+<area shape="rect" id="node49" href="$classbeast_1_1insight_1_1Counter.html" title="A metric for measuring an integral value." alt="" coords="1214,1227,1363,1254"/>
+<area shape="rect" id="node50" title=" " alt="" coords="1210,1111,1367,1152"/>
+</map>

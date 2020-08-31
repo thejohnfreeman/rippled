@@ -1,0 +1,13 @@
+<map id="ripple::TxQ::FeeMetrics" name="ripple::TxQ::FeeMetrics">
+<area shape="rect" id="node1" title="Track and use the fee escalation metrics of the current open ledger." alt="" coords="623,373,777,400"/>
+<area shape="rect" id="node2" href="$classripple_1_1feeunit_1_1TaggedFee.html" title=" " alt="" coords="284,273,453,314"/>
+<area shape="rect" id="node3" title=" " alt="" coords="14,5,182,61"/>
+<area shape="rect" id="node4" title=" " alt="" coords="7,85,189,126"/>
+<area shape="rect" id="node5" title=" " alt="" coords="9,149,187,205"/>
+<area shape="rect" id="node6" title=" " alt="" coords="15,229,181,285"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,309,191,350"/>
+<area shape="rect" id="node8" title=" " alt="" coords="14,373,182,429"/>
+<area shape="rect" id="node9" title=" " alt="" coords="79,453,117,480"/>
+<area shape="rect" id="node10" href="$classbeast_1_1Journal.html" title="A generic endpoint for log messages." alt="" coords="317,403,420,429"/>
+<area shape="rect" id="node11" href="$classbeast_1_1Journal_1_1Sink.html" title="Abstraction for the underlying message destination." alt="" coords="31,504,165,531"/>
+</map>
