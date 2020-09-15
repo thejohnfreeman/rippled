@@ -125,10 +125,11 @@ PeerSet::invokeOnTimer()
 
 void
 PeerSet::sendRequest(
-    const protocol::TMGetLedger& tmGL,
+    std::shared_ptr<Message> const&
+        packet,  // const protocol::TMGetLedger& tmGL,
     std::shared_ptr<Peer> const& peer)
 {
-    auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
+    //    auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
 
     if (peer)
     {

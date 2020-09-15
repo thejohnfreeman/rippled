@@ -21,6 +21,7 @@
 #include <ripple/app/ledger/InboundLedgers.h>
 #include <ripple/app/ledger/InboundTransactions.h>
 #include <ripple/app/ledger/LedgerMaster.h>
+#include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/LedgerToJson.h>
 #include <ripple/app/ledger/OpenLedger.h>
 #include <ripple/app/ledger/OrderBookDB.h>
@@ -184,6 +185,7 @@ public:
     OrderBookDB m_orderBookDB;
     std::unique_ptr<PathRequests> m_pathRequests;
     std::unique_ptr<LedgerMaster> m_ledgerMaster;
+    std::unique_ptr<LedgerReplayer> m_ledgerReplayer;
     std::unique_ptr<InboundLedgers> m_inboundLedgers;
     std::unique_ptr<InboundTransactions> m_inboundTransactions;
     TaggedCache<uint256, AcceptedLedger> m_acceptedLedgerCache;
@@ -332,6 +334,9 @@ public:
               *m_jobQueue,
               m_collectorManager->collector(),
               logs_->journal("LedgerMaster")))
+
+        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(*this, stopwatch()))
+        // logs_->journal("LedgerReplayer")))
 
         // VFALCO NOTE must come before NetworkOPs to prevent a crash due
         //             to dependencies in the destructor.
@@ -563,6 +568,12 @@ public:
     getLedgerMaster() override
     {
         return *m_ledgerMaster;
+    }
+
+    LedgerReplayer&
+    getLedgerReplayer() override
+    {
+        return *m_ledgerReplayer;
     }
 
     InboundLedgers&
@@ -1218,6 +1229,7 @@ public:
         if (shardStore_)
             shardStore_->sweep();
         getLedgerMaster().sweep();
+        // TODO getLedgerReplayer().sweep();
         getTempNodeCache().sweep();
         getValidations().expire();
         getInboundLedgers().sweep();

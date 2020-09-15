@@ -93,7 +93,8 @@ protected:
     /** Send a GetLedger message to one or all peers. */
     void
     sendRequest(
-        const protocol::TMGetLedger& message,
+        std::shared_ptr<Message> const& packet,
+        // const protocol::TMGetLedger& message,
         std::shared_ptr<Peer> const& peer);
 
     /** Schedule a call to queueJob() after mTimerInterval. */

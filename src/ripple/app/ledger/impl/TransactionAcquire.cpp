@@ -135,7 +135,8 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
             tmGL.set_querytype(protocol::qtINDIRECT);
 
         *(tmGL.add_nodeids()) = SHAMapNodeID().getRawString();
-        sendRequest(tmGL, peer);
+        auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
+        sendRequest(packet, peer);
     }
     else if (!mMap->isValid())
     {
@@ -169,7 +170,8 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
         {
             *tmGL.add_nodeids() = node.first.getRawString();
         }
-        sendRequest(tmGL, peer);
+        auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
+        sendRequest(packet, peer);
     }
 }
 
