@@ -42,7 +42,7 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
     bool needInit = false;
     std::shared_ptr<SkipListAcquire> skipList;
     {
-        std::lock_guard<std::recursive_mutex> lock(lock_);
+        std::lock_guard<std::mutex> lock(lock_);
         auto i = skipLists_.find(parameter.finishLedgerHash);
         if (i != skipLists_.end())
         {
@@ -102,7 +102,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             bool newDelta = false;
             std::shared_ptr<LedgerDeltaAcquire> delta;
             {
-                std::lock_guard<std::recursive_mutex> lock(lock_);
+                std::lock_guard<std::mutex> lock(lock_);
                 auto i = deltas_.find(*skipListItem);
                 if (i != deltas_.end())
                 {
@@ -132,32 +132,13 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
 }
 
 void
-LedgerReplayer::gotProofPath(
-    std::shared_ptr<protocol::TMProofPathResponse> response)
+LedgerReplayer::gotSkipList(
+    LedgerInfo const& info,
+    std::shared_ptr<SHAMapItem const> const& item)
 {
-    protocol::TMProofPathResponse const& reply = *response;
-    if (!reply.has_ledgerheader() || reply.has_error() ||
-        reply.path_size() == 0)
-        return;
-    // deserialize the header
-    auto info = deserializeHeader(
-        {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    if (calculateLedgerHash(info) != info.hash)
-        return;
-
-    // verify the skip list
-    std::vector<Blob> path;
-    path.reserve(reply.path_size());
-    for (int i = 0; i < reply.path_size(); ++i)
-    {
-        path.emplace_back(reply.path(i).begin(), reply.path(i).end());
-    }
-    if (!SHAMap::verifyProofPath(info.accountHash, keylet::skip().key, path))
-        return;
-
     std::shared_ptr<SkipListAcquire> skipList;
     {
-        std::lock_guard<std::recursive_mutex> lock(lock_);
+        std::lock_guard<std::mutex> lock(lock_);
         auto i = skipLists_.find(info.hash);
         if (i == skipLists_.end())
             return;
@@ -169,47 +150,17 @@ LedgerReplayer::gotProofPath(
             return;
         }
     }
-    skipList->processData(path.front());
+    skipList->processData(item);
 }
 
 void
 LedgerReplayer::gotReplayDelta(
-    std::shared_ptr<protocol::TMReplayDeltaResponse> response)
+    LedgerInfo const& info,
+    std::map<std::uint32_t, std::shared_ptr<STTx const>>&& txns)
 {
-    auto const& reply = *response;
-
-    if (!reply.has_ledgerheader() || reply.has_error())
-        return;
-
-    // verify the header
-    auto info = deserializeHeader(
-        {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    if (calculateLedgerHash(info) != info.hash)
-        return;
-
-    // TODO verify the transactions hash
-    auto numTxns = reply.transaction_size();
-    std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
-    try
-    {
-        for (int i = 0; i < numTxns; ++i)
-        {
-            SerialIter sit(makeSlice(reply.transaction(i)));
-            auto tx = std::make_shared<STTx const>(sit);
-            if (!tx)
-                return;
-            orderedTxns.emplace(i, std::move(tx));
-        }
-    }
-    catch (std::exception const&)
-    {
-        JLOG(j_.error()) << "Peer sends us junky ledger delta data";
-        return;
-    }
-
     std::shared_ptr<LedgerDeltaAcquire> delta;
     {
-        std::lock_guard<std::recursive_mutex> lock(lock_);
+        std::lock_guard<std::mutex> lock(lock_);
         auto i = deltas_.find(info.hash);
         if (i == deltas_.end())
             return;
@@ -221,48 +172,7 @@ LedgerReplayer::gotReplayDelta(
             return;
         }
     }
-    delta->processData(info, std::move(orderedTxns));
+    delta->processData(info, std::move(txns));
 }
 
 }  // namespace ripple
-
-//    bool
-//    gotLedgerData(
-//        LedgerHash const& hash,
-//        std::shared_ptr<Peer> peer,
-//        std::shared_ptr<protocol::TMLedgerData> packet_ptr)
-//    {
-//        protocol::TMLedgerData& packet = *packet_ptr;
-//
-//        JLOG(j_.trace()) << "Got data (" << packet.nodes().size()
-//                         << ") for acquiring ledger: " << hash;
-//
-//        auto ledger = find(hash);
-//
-//        if (!ledger)
-//        {
-//            JLOG(j_.trace()) << "Got data for ledger we're no longer
-//            acquiring";
-//
-//            // If it's state node data, stash it because it still might be
-//            // useful.
-//            if (packet.type() == protocol::liAS_NODE)
-//            {
-//                app_.getJobQueue().addJob(
-//                    jtLEDGER_DATA, "gotStaleData", [this, packet_ptr](Job&) {
-//                        gotStaleData(packet_ptr);
-//                    });
-//            }
-//
-//            return false;
-//        }
-//
-//        // Stash the data for later processing and see if we need to dispatch
-//        if (ledger->gotData(std::weak_ptr<Peer>(peer), packet_ptr))
-//            app_.getJobQueue().addJob(
-//                jtLEDGER_DATA, "processLedgerData", [this, hash](Job&) {
-//                    doLedgerData(hash);
-//                });
-//
-//        return true;
-//    }

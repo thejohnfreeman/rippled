@@ -24,6 +24,7 @@
 #include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/app/misc/NetworkOPs.h>
+#include <ripple/nodestore/DatabaseShard.h>
 #include <ripple/overlay/Overlay.h>
 
 #include <memory>
@@ -61,9 +62,46 @@ LedgerDeltaAcquire::~LedgerDeltaAcquire()
 void
 LedgerDeltaAcquire::init(int numPeers)
 {
+    auto l = app_.getLedgerMaster().getLedgerByHash(mHash);
     ScopedLockType sl(mLock);
-    addPeers(numPeers);
-    setTimer();
+    if (l)
+    {
+        mComplete = true;
+        replay_ = l;
+        ledgerBuilt_ = true;
+    }
+    else
+    {
+        addPeers(numPeers);
+        setTimer();
+    }
+}
+
+void
+LedgerDeltaAcquire::addPeers(std::size_t limit)
+{
+    PeerSet::addPeers(limit, [this](auto peer) {
+        return peer->hasLedger(mHash, ledgerSeq_);
+    });
+}
+
+void
+LedgerDeltaAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
+{
+    if (isDone())
+        return;
+
+    if (!replay_)
+    {
+        JLOG(m_journal.trace())
+            << "LedgerDeltaAcquire::trigger " << (peer ? "havePeer" : "noPeer")
+            << " hash " << mHash;
+        protocol::TMReplayDeltaRequest request;
+        request.set_ledgerhash(mHash.data(), mHash.size());
+        auto packet =
+            std::make_shared<Message>(request, protocol::mtReplayDeltaRequest);
+        sendRequest(packet, peer);
+    }
 }
 
 void
@@ -82,7 +120,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     {
         mFailed = true;
         for (auto& t : tasks_)
-            t->subTaskFailed(LedgerReplayTask::SubTaskType::LEDGER_DELTA);
+            t->subTaskFailed(mHash);
         return;
     }
 
@@ -96,87 +134,23 @@ LedgerDeltaAcquire::pmDowncast()
 }
 
 void
-LedgerDeltaAcquire::trigger(std::shared_ptr<Peer> const& peer)
-{
-    if (mComplete)
-    {
-        // JLOG(m_journal.info()) << "trigger after complete";
-        return;
-    }
-    if (mFailed)
-    {
-        // JLOG(m_journal.info()) << "trigger after fail";
-        return;
-    }
-
-    if (!replay_)
-    {
-        JLOG(m_journal.trace())
-            << "LedgerDeltaAcquire::trigger " << (peer ? "havePeer" : "noPeer")
-            << " hash " << mHash;
-        protocol::TMReplayDeltaRequest request;
-        request.set_ledgerhash(mHash.data(), mHash.size());
-        auto packet =
-            std::make_shared<Message>(request, protocol::mtReplayDeltaRequest);
-        sendRequest(packet, peer);
-    }
-}
-
-void
 LedgerDeltaAcquire::processData(
     LedgerInfo const& info,
     std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns)
 {
     // create LedgerReplay object
-    auto rp =
-        std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
-    if (rp)
-        return;
-
-    ScopedLockType sl(mLock);
-    if (mComplete)
-        return;
-    replay_ = rp;
-    mComplete = true;
-    JLOG(m_journal.debug()) << "LedgerDeltaAcquire received " << mHash;
-}
-
-std::shared_ptr<Ledger const>
-LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
-{
-    ScopedLockType sl(mLock);
-
-    if (ledgerBuilt_)
+    if (auto rp =
+            std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
+        rp)
     {
-        return replay_;
+        JLOG(m_journal.debug()) << "LedgerDeltaAcquire received " << mHash;
+        ScopedLockType sl(mLock);
+        if (mComplete)
+            return;
+        mComplete = true;
+        replay_ = rp;
+        orderedTxns_ = std::move(orderedTxns);
     }
-
-    if (mFailed)
-    {
-        return {};
-    }
-
-    if (!mComplete || !replay_)
-    {
-        return {};
-    }
-
-    // build ledger TODO jobQueue ??
-    assert(parent->info().hash == replay_->info().parentHash);
-    LedgerReplay replayData(parent, replay_, std::move(orderedTxns_));
-    auto const l = buildLedger(replayData, tapNONE, app_, m_journal);
-    if (!l)
-    {
-        JLOG(m_journal.error()) << "tryBuild failed";
-        orderedTxns_ = replayData.orderedTxns();
-        return {};
-    }
-    assert(mHash == l->info().hash);
-
-    replay_ = l;
-    ledgerBuilt_ = true;
-    onLedgerBuilt({});
-    return l;
 }
 
 void
@@ -193,27 +167,94 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
             onLedgerBuilt(reason);
     }
     if (mFailed)
-        task->subTaskFailed(LedgerReplayTask::SubTaskType::LEDGER_DELTA);
+        task->subTaskFailed(mHash);
+}
+
+std::shared_ptr<Ledger const>
+LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
+{
+    ScopedLockType sl(mLock);
+
+    if (ledgerBuilt_)
+        return replay_;
+
+    if (mFailed || !mComplete || !replay_)
+        return {};
+
+    // build ledger
+    assert(parent->info().hash == replay_->info().parentHash);
+    LedgerReplay replayData(parent, replay_, std::move(orderedTxns_));
+    auto const l = buildLedger(replayData, tapNONE, app_, m_journal);
+    if (!l)
+    {
+        JLOG(m_journal.error()) << "tryBuild failed";
+        orderedTxns_ = replayData.orderedTxns();
+        return {};
+    }
+    assert(mHash == l->info().hash);
+
+    replay_ = l;
+    ledgerBuilt_ = true;
+    onLedgerBuilt();
+    return l;
 }
 
 void
 LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
 {
+    JLOG(m_journal.info()) << "onLedgerBuilt " << mHash;
+
+    auto store = [&](InboundLedger::Reason reason) {
+        switch (reason)
+        {  // TODO from InboundLedger::done(), ask Mickey to review
+            case InboundLedger::Reason::SHARD:
+                app_.getShardStore()->setStored(replay_);
+                [[fallthrough]];
+            case InboundLedger::Reason::HISTORY:
+                app_.getInboundLedgers().onLedgerFetched();
+                break;
+            default:
+                app_.getLedgerMaster().storeLedger(replay_);
+                break;
+        }
+    };
+
     if (reason)
     {
-        // TODO just for this reason
+        if (reason == InboundLedger::Reason::HISTORY &&
+            reasons_.count(InboundLedger::Reason::SHARD))
+            // best effort only,
+            // there could be a case that store() gets called twice for both
+            // HISTORY and SHARD, if a SHARD task is added after the ledger has
+            // been built
+            return;
+
+        store(*reason);
     }
     else
     {
-        // TODO for all reasons in reasons_
+        for (auto reason : reasons_)
+        {
+            if (reason == InboundLedger::Reason::HISTORY &&
+                reasons_.count(InboundLedger::Reason::SHARD))
+                continue;
+            store(reason);
+        }
+
+        // TODO needed ??
+        // Probably not a good place to run the following code.
+        // It could be confusing to caller. ??
+        app_.getJobQueue().addJob(
+            jtREPLAY_DELTA,
+            "LedgerDeltaDone",
+            [self = shared_from_this()](Job&) {
+                if (self->mComplete && !self->mFailed && self->ledgerBuilt_)
+                {
+                    self->app_.getLedgerMaster().checkAccept(self->replay_);
+                    self->app_.getLedgerMaster().tryAdvance();
+                }
+            });
     }
 }
 
-void
-LedgerDeltaAcquire::addPeers(std::size_t limit)
-{
-    PeerSet::addPeers(limit, [this](auto peer) {
-        return peer->hasLedger(mHash, ledgerSeq_);
-    });
-}
 }  // namespace ripple

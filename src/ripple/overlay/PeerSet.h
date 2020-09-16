@@ -64,7 +64,9 @@ protected:
         std::size_t limit,
         std::function<bool(std::shared_ptr<Peer> const&)> score);
 
-    /** Hook called from addPeers(). */
+    /** Hook called from addPeers().
+     * @note holding a recursive_mutex
+     **/
     virtual void
     onPeerAdded(std::shared_ptr<Peer> const&) = 0;
 

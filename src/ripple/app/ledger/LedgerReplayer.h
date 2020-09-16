@@ -51,22 +51,26 @@ public:
     createDeltas(std::shared_ptr<LedgerReplayTask> task);
 
     void
-    gotProofPath(std::shared_ptr<protocol::TMProofPathResponse> response);
+    gotSkipList(
+        LedgerInfo const& info,
+        std::shared_ptr<SHAMapItem const> const& data);
 
     void
-    gotReplayDelta(std::shared_ptr<protocol::TMReplayDeltaResponse> response);
+    gotReplayDelta(
+        LedgerInfo const& info,
+        std::map<std::uint32_t, std::shared_ptr<STTx const>>&& txns);
 
     void
     removeLedgerDeltaAcquire(uint256 const& hash)
     {
-        std::lock_guard<std::recursive_mutex> lock(lock_);
+        std::lock_guard<std::mutex> lock(lock_);
         deltas_.erase(hash);
     }
 
     void
     removeSkipListAcquire(uint256 const& hash)
     {
-        std::lock_guard<std::recursive_mutex> lock(lock_);
+        std::lock_guard<std::mutex> lock(lock_);
         skipLists_.erase(hash);
     }
 
@@ -75,7 +79,7 @@ private:
     clock_type& clock_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
-    mutable std::recursive_mutex lock_;
+    mutable std::mutex lock_;
     beast::Journal j_;
 };
 

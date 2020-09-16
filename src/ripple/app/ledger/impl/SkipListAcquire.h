@@ -56,7 +56,7 @@ public:
     init(int numPeers);
 
     void
-    processData(Blob const& data);
+    processData(std::shared_ptr<SHAMapItem const> const& item);
 
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);

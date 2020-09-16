@@ -38,21 +38,15 @@ class LedgerReplayTask final
       public CountedObject<LedgerReplayTask>
 {
 public:
-    enum class SubTaskType {
-        START_LEDGER,  // Acquiring the first ledger of the task
-        SKIP_LIST,     // Acquiring the skip list
-        LEDGER_DELTA,  // Acquiring a ledger delta
-    };
-
     struct TaskParameter
     {
-        uint256 startLedgerHash;
+        InboundLedger::Reason reason;
         uint256 finishLedgerHash;
-        std::uint32_t startLedgerSeq;
+        uint256 startLedgerHash;
         std::uint32_t finishLedgerSeq;
+        std::uint32_t startLedgerSeq;
         std::uint32_t ledgersToBuild;  // including the start and the finish
         std::vector<uint256> skipList;
-        InboundLedger::Reason reason;
 
         bool
         isValid() const  // TODO name
@@ -153,13 +147,11 @@ public:
         Application& app,
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,
         TaskParameter&& parameter);
+
     ~LedgerReplayTask() = default;
 
     void
-    init()
-    {
-        trigger();
-    }
+    init();
 
     void
     updateSkipList(
@@ -177,7 +169,7 @@ public:
     }
 
     void
-    subTaskFailed(SubTaskType type);
+    subTaskFailed(uint256 const& hash);
 
 private:
     void
@@ -191,14 +183,14 @@ private:
     {
     }
 
+    std::weak_ptr<PeerSet>
+    pmDowncast() override;
+
     void
     done();
 
     void
     trigger();
-
-    std::weak_ptr<PeerSet>
-    pmDowncast() override;
 
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
@@ -211,3 +203,10 @@ private:
 }  // namespace ripple
 
 #endif
+
+//    enum class SubTaskType {
+//        START_LEDGER,  // Acquiring the first ledger of the task
+//        SKIP_LIST,     // Acquiring the skip list
+//        LEDGER_DELTA,  // Acquiring a ledger delta
+//    };
+//

@@ -50,6 +50,41 @@ LedgerReplayTask::LedgerReplayTask(
 }
 
 void
+LedgerReplayTask::init()
+{
+    ScopedLockType sl(mLock);
+    trigger();
+}
+
+void
+LedgerReplayTask::trigger()
+{
+    if (isDone())
+        return;
+
+    if (ledgers_.empty())
+    {
+        auto l =
+            app_.getLedgerMaster().getLedgerByHash(parameter_.startLedgerHash);
+        if (!l)
+        {
+            l = app_.getInboundLedgers().acquire(
+                parameter_.startLedgerHash,
+                parameter_.startLedgerSeq,
+                InboundLedger::Reason::GENERIC);
+        }
+        if (l)
+        {
+            tryAdvance(l);
+        }
+        else
+        {
+            setTimer();
+        }
+    }
+}
+
+void
 LedgerReplayTask::queueJob()
 {
     app_.getJobQueue().addJob(
@@ -61,9 +96,6 @@ LedgerReplayTask::queueJob()
 void
 LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
 {
-    if (isDone())
-        return;
-
     if (mTimeouts > MAX_TIMEOUTS)
     {
         mFailed = true;
@@ -96,37 +128,6 @@ LedgerReplayTask::updateSkipList(
 }
 
 void
-LedgerReplayTask::trigger()
-{
-    if (mComplete)
-    {
-        JLOG(m_journal.info()) << "trigger after complete";
-        return;
-    }
-    if (mFailed)
-    {
-        JLOG(m_journal.info()) << "trigger after fail";
-        return;
-    }
-
-    if (ledgers_.empty())  // nextSeqToBuild_ == parameter_.startLedgerSeq)
-    {
-        auto l = app_.getInboundLedgers().acquire(
-            parameter_.startLedgerHash,
-            parameter_.startLedgerSeq,
-            InboundLedger::Reason::GENERIC);
-        if (l)
-        {
-            tryAdvance(l);
-        }
-        else
-        {
-            setTimer();
-        }
-    }
-}
-
-void
 LedgerReplayTask::done()
 {
     skipListAcquirer_ = nullptr;
@@ -134,17 +135,22 @@ LedgerReplayTask::done()
     deltas_.clear();
     if (mFailed)
     {
-        JLOG(m_journal.warn()) << "Failed";
+        JLOG(m_journal.warn()) << "LedgerReplayTask Failed " << mHash;
     }
     if (mComplete)
     {
-        JLOG(m_journal.info()) << "Completed";
+        JLOG(m_journal.info()) << "LedgerReplayTask Completed " << mHash;
     }
 }
 
 void
 LedgerReplayTask::tryAdvance(std::shared_ptr<Ledger const> const& ledger)
 {
+    JLOG(m_journal.trace()) << "LedgerReplayTask " << mHash << " tryAdvance "
+                            << ledger->info().hash;
+
+    // TODO for call from LedgerDeltaAcquire to be coded
+    ScopedLockType sl(mLock);
     if (ledgers_.empty())
     {
         if (ledger->info().hash == parameter_.startLedgerHash)
@@ -177,82 +183,12 @@ LedgerReplayTask::tryAdvance(std::shared_ptr<Ledger const> const& ledger)
 }
 
 void
-LedgerReplayTask::subTaskFailed(SubTaskType type)
+LedgerReplayTask::subTaskFailed(uint256 const& hash)
 {
+    JLOG(m_journal.warn()) << "sub task failed " << hash;
+    ScopedLockType sl(mLock);
     mFailed = true;
-    //    JLOG(m_journal.warn()) << "Failed due to " << type;
     done();
 }
 
 }  // namespace ripple
-
-// TODO useful for build txMap to verify Txns in Delta responses
-// SHAMapAddNode
-// LedgerReplayTask::takeNodes(
-//    const std::list<SHAMapNodeID>& nodeIDs,
-//    const std::list<Blob>& data,
-//    std::shared_ptr<Peer> const& peer)
-//{
-//    ScopedLockType sl(mLock);
-//
-//    if (mComplete)
-//    {
-//        JLOG(m_journal.trace()) << "TX set complete";
-//        return SHAMapAddNode();
-//    }
-//
-//    if (mFailed)
-//    {
-//        JLOG(m_journal.trace()) << "TX set failed";
-//        return SHAMapAddNode();
-//    }
-//
-//    try
-//    {
-//        if (nodeIDs.empty())
-//            return SHAMapAddNode::invalid();
-//
-//        std::list<SHAMapNodeID>::const_iterator nodeIDit = nodeIDs.begin();
-//        std::list<Blob>::const_iterator nodeDatait = data.begin();
-//        ConsensusTransSetSF sf(app_, app_.getTempNodeCache());
-//
-//        while (nodeIDit != nodeIDs.end())
-//        {
-//            if (nodeIDit->isRoot())
-//            {
-//                if (mHaveRoot)
-//                    JLOG(m_journal.debug())
-//                        << "Got root TXS node, already have it";
-//                else if (!mMap->addRootNode(
-//                                  SHAMapHash{mHash},
-//                                  makeSlice(*nodeDatait),
-//                                  nullptr)
-//                              .isGood())
-//                {
-//                    JLOG(m_journal.warn()) << "TX acquire got bad root node";
-//                }
-//                else
-//                    mHaveRoot = true;
-//            }
-//            else if (!mMap->addKnownNode(*nodeIDit, makeSlice(*nodeDatait),
-//            &sf)
-//                          .isGood())
-//            {
-//                JLOG(m_journal.warn()) << "TX acquire got bad non-root node";
-//                return SHAMapAddNode::invalid();
-//            }
-//
-//            ++nodeIDit;
-//            ++nodeDatait;
-//        }
-//
-//        trigger(peer);
-//        mProgress = true;
-//        return SHAMapAddNode::useful();
-//    }
-//    catch (std::exception const&)
-//    {
-//        JLOG(m_journal.error()) << "Peer sends us junky transaction node
-//        data"; return SHAMapAddNode::invalid();
-//    }
-//}

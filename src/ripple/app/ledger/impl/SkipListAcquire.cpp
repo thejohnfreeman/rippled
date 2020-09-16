@@ -52,9 +52,30 @@ SkipListAcquire::~SkipListAcquire()
 void
 SkipListAcquire::init(int numPeers)
 {
+    if (auto const l = app_.getLedgerMaster().getLedgerByHash(mHash); l)
+    {
+        auto const hashIndex = l->read(keylet::skip());
+        if (hashIndex && hashIndex->isFieldPresent(sfHashes))
+        {
+            auto const& slist = hashIndex->getFieldV256(sfHashes).value();
+            if (!slist.empty())
+            {
+                ScopedLockType sl(mLock);
+                mComplete = true;
+                skipList_ = slist;
+                for (auto& t : tasks_)
+                {
+                    t->updateSkipList(mHash, ledgerSeq_, skipList_);
+                }
+            }
+        }
+    }
     ScopedLockType sl(mLock);
-    addPeers(numPeers);
-    setTimer();
+    if (!mComplete)
+    {
+        addPeers(numPeers);
+        setTimer();
+    }
 }
 
 void
@@ -63,6 +84,24 @@ SkipListAcquire::addPeers(std::size_t limit)
     PeerSet::addPeers(limit, [this](auto peer) {
         return peer->hasLedger(mHash, ledgerSeq_);
     });
+}
+
+void
+SkipListAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
+{
+    if (isDone())
+        return;
+
+    JLOG(m_journal.trace())
+        << "SkipListAcquire::trigger " << (peer ? "havePeer" : "noPeer")
+        << " hash " << mHash;
+    protocol::TMProofPathRequest request;
+    request.set_ledgerhash(mHash.data(), mHash.size());
+    request.set_key(keylet::skip().key.data(), keylet::skip().key.size());
+    request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
+    auto packet =
+        std::make_shared<Message>(request, protocol::mtProofPathRequest);
+    sendRequest(packet, peer);
 }
 
 void
@@ -77,42 +116,15 @@ SkipListAcquire::queueJob()
 void
 SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
-    if (isDone())
-        return;
-
     if (mTimeouts > MAX_TIMEOUTS)
     {
         mFailed = true;
+        for (auto& t : tasks_)
+            t->subTaskFailed(mHash);
         return;
     }
 
     addPeers(1);
-}
-
-void
-SkipListAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
-{
-    if (mComplete)
-    {
-        // JLOG(m_journal.info()) << "trigger after complete";
-        return;
-    }
-    if (mFailed)
-    {
-        // JLOG(m_journal.info()) << "trigger after fail";
-        return;
-    }
-
-    JLOG(m_journal.trace())
-        << "SkipListAcquire::trigger " << (peer ? "havePeer" : "noPeer")
-        << " hash " << mHash;
-    protocol::TMProofPathRequest request;
-    request.set_ledgerhash(mHash.data(), mHash.size());
-    request.set_key(keylet::skip().key.data(), keylet::skip().key.size());
-    request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
-    auto packet =
-        std::make_shared<Message>(request, protocol::mtProofPathRequest);
-    sendRequest(packet, peer);
 }
 
 std::weak_ptr<PeerSet>
@@ -122,16 +134,8 @@ SkipListAcquire::pmDowncast()
 }
 
 void
-SkipListAcquire::processData(Blob const& data)
+SkipListAcquire::processData(std::shared_ptr<SHAMapItem const> const& item)
 {
-    // deserialize the skip list
-    // TODO shorten the deserialize code?? possible exceptions??
-    auto node = SHAMapAbstractNode::makeFromWire(makeSlice(data));
-    if (!node || !node->isLeaf())
-        return;
-    auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
-    if (!item)
-        return;
     auto sle = std::make_shared<SLE>(
         SerialIter{item->data(), item->size()}, item->key());
     if (!sle)
@@ -155,6 +159,7 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     ScopedLockType sl(mLock);
     if (mFailed)
     {
+        task->subTaskFailed(mHash);
         return false;
     }
     for (auto const& t : tasks_)

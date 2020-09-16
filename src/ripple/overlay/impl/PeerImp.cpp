@@ -21,6 +21,7 @@
 #include <ripple/app/ledger/InboundLedgers.h>
 #include <ripple/app/ledger/InboundTransactions.h>
 #include <ripple/app/ledger/LedgerMaster.h>
+#include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/misc/HashRouter.h>
 #include <ripple/app/misc/LoadFeeTrack.h>
 #include <ripple/app/misc/NetworkOPs.h>
@@ -1565,6 +1566,8 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
 }
 
 // TODO how to unit test
+// TODO handle error
+// TODO app_.getJobQueue().addJob()
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
 {
@@ -1572,35 +1575,37 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
     protocol::TMProofPathResponse& reply = *m;
     if (reply.has_error() || !reply.has_key() || !reply.has_ledgerheader() ||
         reply.path_size() == 0)
-        // TODO handle error
         return;
 
+    // deserialize the header
+    auto info = deserializeHeader(
+        {reply.ledgerheader().data(), reply.ledgerheader().size()});
+    if (calculateLedgerHash(info) != info.hash)
+        return;
+
+    // verify the skip list
     std::vector<Blob> path;
     path.reserve(reply.path_size());
     for (int i = 0; i < reply.path_size(); ++i)
     {
         path.emplace_back(reply.path(i).begin(), reply.path(i).end());
     }
-    auto info = deserializeHeader(
-        {reply.ledgerheader().data(), reply.ledgerheader().size()});
-
-    if (!SHAMap::verifyProofPath(info.accountHash, keylet::skip().key, path))
-        // TODO handle error
+    uint256 key(reply.key());
+    if (!SHAMap::verifyProofPath(info.accountHash, key, path))
         return;
 
-    // TODO shorten the deserialize code??
+    if (key != keylet::skip().key)
+        return;
+
+    // deserialize the SHAMapItem
     auto node = SHAMapAbstractNode::makeFromWire(makeSlice(path.front()));
     if (!node || !node->isLeaf())
-        // TODO handle error
         return;
-
     auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
     if (!item)
-        // TODO handle error
         return;
 
-    // TODO call handler with info and item, in handler call
-    // TODO calculateLedgerHash(info) and check if the hashes match
+    app_.getLedgerReplayer().gotSkipList(info, item);
 }
 
 void
@@ -1621,30 +1626,55 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 {
     protocol::TMReplayDeltaResponse& reply = *m;
     if (reply.has_error() || !reply.has_ledgerheader())
-        // TODO handle error
         return;
 
     auto info = deserializeHeader(
         {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    auto numTxns = reply.transaction_size();
-    if (numTxns == 0 && info.txHash.isNonZero())
-        // TODO confirm txHash is zero if no Tx
-        // TODO handle error
+    if (calculateLedgerHash(info) != info.hash)
         return;
 
+    auto numTxns = reply.transaction_size();
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
-    for (int i = 0; i < numTxns; ++i)
+    SHAMap txMap(SHAMapType::TRANSACTION, app_.getNodeFamily());
+    try
     {
-        SerialIter sit(makeSlice(reply.transaction(i)));
-        auto tx = std::make_shared<STTx const>(sit);
-        if (!tx)
-            // TODO handle error
-            return;
-        orderedTxns.emplace(i, std::move(tx));
+        for (int i = 0; i < numTxns; ++i)
+        {
+            // deserialize:
+            // -- TxShaMapItem for building a ShaMap for verification
+            // -- Tx
+            // -- TxMetaData for Tx ordering
+            Serializer shaMapItemData(
+                reply.transaction(i).data(), reply.transaction(i).size());
+
+            SerialIter txMetaSit(makeSlice(reply.transaction(i)));
+            SerialIter txSit(txMetaSit.getSlice(txMetaSit.getVLDataLength()));
+            SerialIter metaSit(txMetaSit.getSlice(txMetaSit.getVLDataLength()));
+
+            auto tx = std::make_shared<STTx const>(txSit);
+            if (!tx)
+                return;
+            STObject meta(metaSit, sfMetadata);
+            orderedTxns.emplace(meta[sfTransactionIndex], std::move(tx));
+
+            auto item = std::make_shared<SHAMapItem const>(
+                tx->getTransactionID(), std::move(shaMapItemData));
+            if (!item || !txMap.addGiveItem(std::move(item), true, true))
+                return;
+        }
+    }
+    catch (std::exception const&)
+    {
+        JLOG(p_journal_.warn()) << "Peer sends us junky ledger delta data";
+        return;
     }
 
-    // TODO call handler with info and orderedTxns, in handler call
-    // TODO calculateLedgerHash(info) and check if the hashes match
+    if (txMap.getHash().as_uint256() != info.txHash)
+        // TODO confirm if work for 0 Txns
+        // reply.transaction_size() == 0, info.txHash.isZero()
+        return;
+
+    app_.getLedgerReplayer().gotReplayDelta(info, std::move(orderedTxns));
 }
 
 void

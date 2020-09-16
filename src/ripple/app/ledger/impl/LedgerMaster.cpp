@@ -20,6 +20,8 @@
 #include <ripple/app/consensus/RCLValidations.h>
 #include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/ledger/LedgerMaster.h>
+#include <ripple/app/ledger/LedgerReplayTask.h>
+#include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/OpenLedger.h>
 #include <ripple/app/ledger/OrderBookDB.h>
 #include <ripple/app/ledger/PendingSaves.h>
@@ -1315,7 +1317,7 @@ LedgerMaster::findNewLedgersToPublish(
         return {};
     }
 
-    int acqCount = 0;
+    //    int acqCount = 0;
 
     auto pubSeq = mPubLedgerSeq + 1;  // Next sequence to publish
     auto valLedger = mValidLedger.get();
@@ -1352,10 +1354,10 @@ LedgerMaster::findNewLedgersToPublish(
                 ledger = mLedgerHistory.getLedgerByHash(*hash);
             }
 
-            // Can we try to acquire the ledger we need?
-            if (!ledger && (++acqCount < ledger_fetch_size_))
-                ledger = app_.getInboundLedgers().acquire(
-                    *hash, seq, InboundLedger::Reason::GENERIC);
+            //            // Can we try to acquire the ledger we need?
+            //            if (!ledger && (++acqCount < ledger_fetch_size_))
+            //                ledger = app_.getInboundLedgers().acquire(
+            //                    *hash, seq, InboundLedger::Reason::GENERIC);
 
             // Did we acquire the next ledger we need to publish?
             if (ledger && (ledger->info().seq == pubSeq))
@@ -1375,6 +1377,29 @@ LedgerMaster::findNewLedgersToPublish(
             << "Exception while trying to find ledgers to publish.";
     }
 
+    auto const& startHash = ret.back()->info().hash;
+    if (startHash != valLedger->info().hash)
+    {
+        auto child = valLedger;
+        while (child->info().parentHash != startHash)
+        {
+            auto const parent =
+                mLedgerHistory.getLedgerByHash(child->info().parentHash);
+            if (parent)
+                child = parent;
+            else
+                break;
+        }
+        LedgerReplayTask::TaskParameter p{
+            InboundLedger::Reason::GENERIC,
+            child->info().hash,
+            startHash,
+            0,
+            0,
+            0,
+            {}};
+        app_.getLedgerReplayer().replay(std::move(p));
+    }
     return ret;
 }
 
@@ -2291,39 +2316,42 @@ LedgerMaster::getReplayDeltaResponse(
     }
 
     auto const& txMap = ledger->txMap();
-    std::map<uint32_t, Slice> transactions;
-
-    try
-    {
-        txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const& txNode) {
-            SerialIter sit(txNode->slice());
-            auto txSlice = sit.getSlice(sit.getVLDataLength());
-            SerialIter s(sit.getSlice(sit.getVLDataLength()));
-            STObject meta(s, sfMetadata);
-            transactions.insert({meta[sfTransactionIndex], txSlice});
-        });
-    }
-    catch (std::exception const&)
-    {
-        JLOG(m_journal.warn())
-            << "getReplayDelta: bad data in ledger " << ledgerHash;
-        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
-        return reply;
-    }
+    //    std::map<uint32_t, Slice> transactions;
+    //
+    //    try
+    //    {
+    //        txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const&
+    //        txNode) {
+    //            SerialIter sit(txNode->slice());
+    //            auto txSlice = sit.getSlice(sit.getVLDataLength());
+    //            SerialIter s(sit.getSlice(sit.getVLDataLength()));
+    //            STObject meta(s, sfMetadata);
+    //            transactions.insert({meta[sfTransactionIndex], txSlice});
+    //        });
+    //    }
+    //    catch (std::exception const&)
+    //    {
+    //        JLOG(m_journal.warn())
+    //            << "getReplayDelta: bad data in ledger " << ledgerHash;
+    //        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
+    //        return reply;
+    //    }
 
     // pack header
     Serializer nData(128);
     addRaw(ledger->info(), nData);
     reply.set_ledgerheader(nData.getDataPtr(), nData.getLength());
     // pack transactions
-    for (auto const& [_, txSlice] : transactions)
-    {
-        reply.add_transaction(txSlice.data(), txSlice.size());
-    }
+    //    for (auto const& [_, txSlice] : transactions)
+    //    {
+    //        reply.add_transaction(txSlice.data(), txSlice.size());
+    //    }
+    txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const& txNode) {
+        reply.add_transaction(txNode->data(), txNode->size());
+    });
 
-    JLOG(m_journal.debug())
-        << "getReplayDelta for ledger " << ledgerHash
-        << " number of transactions " << transactions.size();
+    JLOG(m_journal.debug()) << "getReplayDelta for ledger " << ledgerHash
+                            << " txMap hash " << txMap.getHash().as_uint256();
     return reply;
 }
 

@@ -45,7 +45,6 @@ public:
 
     using pointer = std::shared_ptr<LedgerDeltaAcquire>;
 
-public:
     LedgerDeltaAcquire(
         Application& app,
         uint256 const& ledgerHash,
@@ -68,15 +67,6 @@ public:
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
 private:
-    std::uint32_t ledgerSeq_;
-    std::shared_ptr<Ledger const> replay_;
-    std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
-    // TODO call tryAdvance() for all in tasks_ ??
-    // std::shared_ptr<Ledger const> parent_;
-    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
-    std::set<InboundLedger::Reason> reasons_;
-    bool ledgerBuilt_ = false;
-
     void
     queueJob() override;
 
@@ -84,10 +74,7 @@ private:
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
     void
-    onPeerAdded(std::shared_ptr<Peer> const& peer) override
-    {
-        trigger(peer);
-    }
+    onPeerAdded(std::shared_ptr<Peer> const& peer) override;
 
     std::weak_ptr<PeerSet>
     pmDowncast() override;
@@ -96,10 +83,16 @@ private:
     addPeers(std::size_t limit);
 
     void
-    trigger(std::shared_ptr<Peer> const&);
+    onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
-    void
-    onLedgerBuilt(std::optional<InboundLedger::Reason> reason);
+    std::uint32_t ledgerSeq_;
+    std::shared_ptr<Ledger const> replay_;
+    std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
+    // TODO call tryAdvance() for all in tasks_ ??
+    // std::shared_ptr<Ledger const> parent_;
+    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
+    std::set<InboundLedger::Reason> reasons_;
+    bool ledgerBuilt_ = false;
 };
 
 }  // namespace ripple
