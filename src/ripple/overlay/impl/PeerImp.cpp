@@ -1702,8 +1702,6 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
     }
 
     if (txMap.getHash().as_uint256() != info.txHash)
-    // TODO confirm if work for 0 Txns
-    // reply.transaction_size() == 0, info.txHash.isZero()
     {
         JLOG(p_journal_.trace()) << "Bad message: Transactions verify failed";
         return;

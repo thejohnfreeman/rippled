@@ -266,10 +266,13 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     }
 
     void
-    testLedgerDeltaReplayBuild()
+    testLedgerDeltaReplayBuild(int numTxPerLedger = 10)
     {
         testcase("ledger delta replay build");
-        NetworkHistory history(*this, {3});
+        NetworkHistory::Parameter p = {3};
+        p.numTxPerLedger = numTxPerLedger;
+        NetworkHistory history(*this, p);
+
         auto const l = history.ledgerMaster.getClosedLedger();
         auto const parent =
             history.ledgerMaster.getLedgerByHash(l->info().parentHash);
@@ -292,7 +295,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
 
         // verify the transaction size
         auto numTxns = reply.transaction_size();
-        BEAST_EXPECT(numTxns = history.param.numTxPerLedger);
+        BEAST_EXPECT(numTxns == history.param.numTxPerLedger);
 
         std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
         SHAMap txMap(
@@ -370,6 +373,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         testSkipList();
         testLedgerReplayBuild();
         testLedgerDeltaReplayBuild();
+        testLedgerDeltaReplayBuild(0);
     }
 };
 

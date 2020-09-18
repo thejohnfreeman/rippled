@@ -1391,13 +1391,7 @@ LedgerMaster::findNewLedgersToPublish(
                 break;
         }
         LedgerReplayTask::TaskParameter p{
-            InboundLedger::Reason::GENERIC,
-            child->info().hash,
-            startHash,
-            0,
-            0,
-            0,
-            {}};
+            InboundLedger::Reason::GENERIC, child->info().hash, startHash};
         JLOG(m_journal.debug())
             << "Ask ledger replay from " << child->info().seq << " "
             << child->info().hash << " to " << ret.back()->info().seq << ""

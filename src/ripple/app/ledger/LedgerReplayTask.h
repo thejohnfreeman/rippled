@@ -51,11 +51,11 @@ public:
     {
         InboundLedger::Reason reason;
         uint256 finishLedgerHash;
-        uint256 startLedgerHash;
-        std::uint32_t finishLedgerSeq;
-        std::uint32_t startLedgerSeq;
-        std::uint32_t ledgersToBuild;  // including the start and the finish
-        std::vector<uint256> skipList;
+        uint256 startLedgerHash = {};
+        std::uint32_t finishLedgerSeq = 0;
+        std::uint32_t startLedgerSeq = 0;
+        std::uint32_t ledgersToBuild = 0;  // including the start and the finish
+        std::vector<uint256> skipList = {};
 
         bool
         isValid() const  // TODO name
