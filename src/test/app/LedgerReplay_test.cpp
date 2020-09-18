@@ -295,13 +295,53 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         BEAST_EXPECT(numTxns = history.param.numTxPerLedger);
 
         std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
-        for (int i = 0; i < numTxns; ++i)
+        SHAMap txMap(
+            SHAMapType::TRANSACTION, history.env.app().getNodeFamily());
+        try
         {
-            SerialIter sit(makeSlice(reply.transaction(i)));
-            auto tx = std::make_shared<STTx const>(sit);
-            BEAST_EXPECT(tx);
-            orderedTxns.emplace(i, std::move(tx));
+            for (int i = 0; i < numTxns; ++i)
+            {
+                // deserialize:
+                // -- TxShaMapItem for building a ShaMap for verification
+                // -- Tx
+                // -- TxMetaData for Tx ordering
+                Serializer shaMapItemData(
+                    reply.transaction(i).data(), reply.transaction(i).size());
+
+                SerialIter txMetaSit(makeSlice(reply.transaction(i)));
+                SerialIter txSit(
+                    txMetaSit.getSlice(txMetaSit.getVLDataLength()));
+                SerialIter metaSit(
+                    txMetaSit.getSlice(txMetaSit.getVLDataLength()));
+
+                auto tx = std::make_shared<STTx const>(txSit);
+                BEAST_EXPECT(tx);
+                if (!tx)
+                    return;
+                auto tid = tx->getTransactionID();
+                STObject meta(metaSit, sfMetadata);
+                orderedTxns.emplace(meta[sfTransactionIndex], std::move(tx));
+
+                auto item = std::make_shared<SHAMapItem const>(
+                    tid, std::move(shaMapItemData));
+                BEAST_EXPECT(item);
+                if (!item)
+                    return;
+                auto added = txMap.addGiveItem(std::move(item), true, true);
+                BEAST_EXPECT(added);
+                if (!added)
+                    return;
+            }
         }
+        catch (std::exception const&)
+        {
+            BEAST_EXPECT(false);
+            return;
+        }
+
+        BEAST_EXPECT(txMap.getHash().as_uint256() == info.txHash);
+        if (txMap.getHash().as_uint256() != info.txHash)
+            return;
 
         // create LedgerReplay object
         auto l_replay_temp = std::make_shared<Ledger>(

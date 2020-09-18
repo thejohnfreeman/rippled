@@ -29,6 +29,15 @@
 
 namespace ripple {
 
+using namespace std::chrono_literals;
+// Timeout interval in milliseconds
+auto constexpr LEDGER_REPLAY_TIMEOUT = 250ms;
+
+enum {
+    LEDGER_REPLAY_NORM_TIMEOUTS = 4,
+    LEDGER_REPLAY_MAX_TIMEOUTS = 20,
+};
+
 class LedgerDeltaAcquire;
 class SkipListAcquire;
 
@@ -160,7 +169,7 @@ public:
         std::vector<ripple::uint256> const& data);
 
     void
-    tryAdvance(std::shared_ptr<Ledger const> const& ledger);
+    tryAdvance(std::optional<std::shared_ptr<Ledger const> const> ledger);
 
     TaskParameter&
     getTaskTaskParameter()

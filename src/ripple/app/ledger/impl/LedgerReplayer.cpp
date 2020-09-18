@@ -35,10 +35,11 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
 {
     if (!parameter.isValid())
     {
-        JLOG(j_.warn()) << "LedgerReplayer: bad parameter";
+        JLOG(j_.warn()) << "Bad LedgerReplayTask parameter";
         return;
     }
 
+    JLOG(j_.warn()) << "Replay " << parameter.finishLedgerHash;
     bool needInit = false;
     std::shared_ptr<SkipListAcquire> skipList;
     {
@@ -61,6 +62,8 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
             skipLists_.emplace(parameter.finishLedgerHash, skipList);
             // TODO if parameter passed in is full already, don't init
             needInit = true;
+            JLOG(j_.trace())
+                << "Add SkipListAcquire " << parameter.finishLedgerHash;
         }
     }
 

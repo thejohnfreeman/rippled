@@ -81,10 +81,10 @@ private:
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
     mutable std::mutex lock_;
     beast::Journal j_;
+    // TODO retry of the failed ones should be delayed
+    // beast::aged_map<uint256, std::uint32_t> mRecentFailures;
 };
 
 }  // namespace ripple
 
 #endif
-
-// TODO beast::aged_map<uint256, std::uint32_t> mRecentFailures;

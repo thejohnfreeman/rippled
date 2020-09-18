@@ -1398,6 +1398,10 @@ LedgerMaster::findNewLedgersToPublish(
             0,
             0,
             {}};
+        JLOG(m_journal.debug())
+            << "Ask ledger replay from " << child->info().seq << " "
+            << child->info().hash << " to " << ret.back()->info().seq << ""
+            << ret.back()->info().hash;
         app_.getLedgerReplayer().replay(std::move(p));
     }
     return ret;

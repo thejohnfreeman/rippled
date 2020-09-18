@@ -50,7 +50,7 @@ public:
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq);
 
-    ~LedgerDeltaAcquire();
+    ~LedgerDeltaAcquire() override;
 
     void
     init(int numPeers);

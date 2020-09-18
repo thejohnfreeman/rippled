@@ -18,8 +18,9 @@
 //==============================================================================
 
 #include <ripple/app/ledger/BuildLedger.h>
-#include <ripple/app/ledger/InboundLedgers.h>
+#include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/LedgerReplay.h>
+#include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
 #include <ripple/app/main/Application.h>
@@ -31,16 +32,6 @@
 
 namespace ripple {
 
-using namespace std::chrono_literals;
-
-// Timeout interval in milliseconds
-auto constexpr ACQUIRE_TIMEOUT = 250ms;
-
-enum {
-    NORM_TIMEOUTS = 4,
-    MAX_TIMEOUTS = 20,
-};
-
 LedgerDeltaAcquire::LedgerDeltaAcquire(
     Application& app,
     uint256 const& ledgerHash,
@@ -48,15 +39,18 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     : PeerSet(
           app,
           ledgerHash,
-          ACQUIRE_TIMEOUT,
+          LEDGER_REPLAY_TIMEOUT,
           app.journal("LedgerDeltaAcquire"))
     , ledgerSeq_(ledgerSeq)
 {
+    JLOG(m_journal.debug())
+        << "Acquire ledger " << mHash << " Seq " << ledgerSeq;
 }
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
     app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
+    JLOG(m_journal.trace()) << "remove myself " << mHash;
 }
 
 void
@@ -69,6 +63,7 @@ LedgerDeltaAcquire::init(int numPeers)
         mComplete = true;
         replay_ = l;
         ledgerBuilt_ = true;
+        JLOG(m_journal.trace()) << "Acquire existing ledger " << mHash;
     }
     else
     {
@@ -88,35 +83,31 @@ LedgerDeltaAcquire::addPeers(std::size_t limit)
 void
 LedgerDeltaAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
 {
-    if (isDone())
+    if (isDone() || replay_ || !peer)
         return;
 
-    if (!replay_)
-    {
-        JLOG(m_journal.trace())
-            << "LedgerDeltaAcquire::trigger " << (peer ? "havePeer" : "noPeer")
-            << " hash " << mHash;
-        protocol::TMReplayDeltaRequest request;
-        request.set_ledgerhash(mHash.data(), mHash.size());
-        auto packet =
-            std::make_shared<Message>(request, protocol::mtReplayDeltaRequest);
-        sendRequest(packet, peer);
-    }
+    JLOG(m_journal.trace()) << "Add a peer " << peer->id() << " for " << mHash;
+    protocol::TMReplayDeltaRequest request;
+    request.set_ledgerhash(mHash.data(), mHash.size());
+    auto packet =
+        std::make_shared<Message>(request, protocol::mtReplayDeltaRequest);
+    sendRequest(packet, peer);
 }
 
 void
 LedgerDeltaAcquire::queueJob()
 {
     app_.getJobQueue().addJob(
-        jtREPLAY_DELTA_REQUEST,
-        "LedgerDeltaAcquire",
-        [ptr = shared_from_this()](Job&) { ptr->invokeOnTimer(); });
+        jtREPLAY_DELTA, "LedgerDeltaAcquire", [ptr = shared_from_this()](Job&) {
+            ptr->invokeOnTimer();
+        });
 }
 
 void
 LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
-    if (mTimeouts > MAX_TIMEOUTS)
+    JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
+    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
@@ -138,18 +129,20 @@ LedgerDeltaAcquire::processData(
     LedgerInfo const& info,
     std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns)
 {
+    JLOG(m_journal.trace()) << "got data for " << mHash;
+
     // create LedgerReplay object
     if (auto rp =
             std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
         rp)
     {
-        JLOG(m_journal.debug()) << "LedgerDeltaAcquire received " << mHash;
         ScopedLockType sl(mLock);
         if (mComplete)
             return;
         mComplete = true;
         replay_ = rp;
         orderedTxns_ = std::move(orderedTxns);
+        JLOG(m_journal.debug()) << "ready to replay " << mHash;
     }
 }
 
@@ -187,7 +180,8 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     auto const l = buildLedger(replayData, tapNONE, app_, m_journal);
     if (!l)
     {
-        JLOG(m_journal.error()) << "tryBuild failed";
+        JLOG(m_journal.error())
+            << "tryBuild failed " << mHash << " parent " << parent->info().hash;
         orderedTxns_ = replayData.orderedTxns();
         return {};
     }
@@ -195,6 +189,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
 
     replay_ = l;
     ledgerBuilt_ = true;
+    JLOG(m_journal.info()) << "Built " << mHash;
     onLedgerBuilt();
     return l;
 }
@@ -202,7 +197,8 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
 void
 LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
 {
-    JLOG(m_journal.info()) << "onLedgerBuilt " << mHash;
+    JLOG(m_journal.debug())
+        << "onLedgerBuilt " << mHash << (reason ? " for a reason" : "");
 
     auto store = [&](InboundLedger::Reason reason) {
         switch (reason)
@@ -230,6 +226,7 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
             return;
 
         store(*reason);
+        JLOG(m_journal.info()) << "stored " << mHash << " for reason";
     }
     else
     {
@@ -241,19 +238,9 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
             store(reason);
         }
 
-        // TODO needed ??
-        // Probably not a good place to run the following code.
-        // It could be confusing to caller. ??
-        app_.getJobQueue().addJob(
-            jtREPLAY_DELTA,
-            "LedgerDeltaDone",
-            [self = shared_from_this()](Job&) {
-                if (self->mComplete && !self->mFailed && self->ledgerBuilt_)
-                {
-                    self->app_.getLedgerMaster().checkAccept(self->replay_);
-                    self->app_.getLedgerMaster().tryAdvance();
-                }
-            });
+        app_.getLedgerMaster().checkAccept(replay_);
+        app_.getLedgerMaster().tryAdvance();
+        JLOG(m_journal.info()) << "stored " << mHash;
     }
 }
 

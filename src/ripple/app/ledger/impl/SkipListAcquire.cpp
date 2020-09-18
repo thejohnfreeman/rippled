@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#include <ripple/app/ledger/InboundLedgers.h>
+#include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
@@ -26,27 +26,25 @@
 
 namespace ripple {
 
-using namespace std::chrono_literals;
-// Timeout interval in milliseconds
-auto constexpr ACQUIRE_TIMEOUT = 250ms;
-
-enum {
-    NORM_TIMEOUTS = 4,
-    MAX_TIMEOUTS = 20,
-};
-
 SkipListAcquire::SkipListAcquire(
     Application& app,
     uint256 const& ledgerHash,
     std::uint32_t ledgerSeq)
-    : PeerSet(app, ledgerHash, ACQUIRE_TIMEOUT, app.journal("SkipListAcquire"))
+    : PeerSet(
+          app,
+          ledgerHash,
+          LEDGER_REPLAY_TIMEOUT,
+          app.journal("SkipListAcquire"))
     , ledgerSeq_(ledgerSeq)
 {
+    JLOG(m_journal.debug())
+        << "Acquire skip list " << mHash << " Seq " << ledgerSeq;
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
     app_.getLedgerReplayer().removeSkipListAcquire(mHash);
+    JLOG(m_journal.trace()) << "remove myself " << mHash;
 }
 
 void
@@ -67,9 +65,12 @@ SkipListAcquire::init(int numPeers)
                 {
                     t->updateSkipList(mHash, ledgerSeq_, skipList_);
                 }
+                JLOG(m_journal.trace())
+                    << "Acquire skip list from existing ledger " << mHash;
             }
         }
     }
+
     ScopedLockType sl(mLock);
     if (!mComplete)
     {
@@ -89,12 +90,10 @@ SkipListAcquire::addPeers(std::size_t limit)
 void
 SkipListAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
 {
-    if (isDone())
+    if (isDone() || !skipList_.empty() || !peer)
         return;
 
-    JLOG(m_journal.trace())
-        << "SkipListAcquire::trigger " << (peer ? "havePeer" : "noPeer")
-        << " hash " << mHash;
+    JLOG(m_journal.trace()) << "Add a peer " << peer->id() << " for " << mHash;
     protocol::TMProofPathRequest request;
     request.set_ledgerhash(mHash.data(), mHash.size());
     request.set_key(keylet::skip().key.data(), keylet::skip().key.size());
@@ -116,7 +115,8 @@ SkipListAcquire::queueJob()
 void
 SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
-    if (mTimeouts > MAX_TIMEOUTS)
+    JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
+    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
@@ -136,21 +136,23 @@ SkipListAcquire::pmDowncast()
 void
 SkipListAcquire::processData(std::shared_ptr<SHAMapItem const> const& item)
 {
-    auto sle = std::make_shared<SLE>(
-        SerialIter{item->data(), item->size()}, item->key());
-    if (!sle)
-        return;
+    JLOG(m_journal.trace()) << "got data for " << mHash;
 
-    ScopedLockType sl(mLock);
-    if (mComplete)
-        return;
-    mComplete = true;
-    skipList_ = sle->getFieldV256(sfHashes).value();
-    for (auto& t : tasks_)
+    if (auto sle = std::make_shared<SLE>(
+            SerialIter{item->data(), item->size()}, item->key());
+        sle)
     {
-        t->updateSkipList(mHash, ledgerSeq_, skipList_);
+        ScopedLockType sl(mLock);
+        if (mComplete)
+            return;
+        mComplete = true;
+        skipList_ = sle->getFieldV256(sfHashes).value();
+        for (auto& t : tasks_)
+        {
+            t->updateSkipList(mHash, ledgerSeq_, skipList_);
+        }
+        JLOG(m_journal.debug()) << "Skip list received " << mHash;
     }
-    JLOG(m_journal.debug()) << "SkipListAcquire received " << mHash;
 }
 
 bool

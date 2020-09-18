@@ -26,15 +26,6 @@
 
 namespace ripple {
 
-using namespace std::chrono_literals;
-// Timeout interval in milliseconds
-auto constexpr ACQUIRE_TIMEOUT = 250ms;
-
-enum {
-    NORM_TIMEOUTS = 4,
-    MAX_TIMEOUTS = 20,
-};
-
 LedgerReplayTask::LedgerReplayTask(
     Application& app,
     std::shared_ptr<SkipListAcquire>& skipListAcquirer,
@@ -42,7 +33,7 @@ LedgerReplayTask::LedgerReplayTask(
     : PeerSet(
           app,
           parameter.finishLedgerHash,
-          ACQUIRE_TIMEOUT,
+          LEDGER_REPLAY_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , parameter_(parameter)
     , skipListAcquirer_(skipListAcquirer)
@@ -54,6 +45,7 @@ LedgerReplayTask::init()
 {
     ScopedLockType sl(mLock);
     trigger();
+    JLOG(m_journal.debug()) << "Task started " << mHash;
 }
 
 void
@@ -75,13 +67,19 @@ LedgerReplayTask::trigger()
         }
         if (l)
         {
+            JLOG(m_journal.trace())
+                << "Got start ledger " << parameter_.startLedgerHash << " for "
+                << mHash;
             tryAdvance(l);
         }
-        else
-        {
-            setTimer();
-        }
     }
+    else
+    {
+        tryAdvance({});
+    }
+
+    if (!isDone())
+        setTimer();
 }
 
 void
@@ -96,13 +94,13 @@ LedgerReplayTask::queueJob()
 void
 LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
 {
-    if (mTimeouts > MAX_TIMEOUTS)
+    JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
+    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
     {
         mFailed = true;
         done();
         return;
     }
-
     trigger();
 }
 
@@ -121,7 +119,10 @@ LedgerReplayTask::updateSkipList(
     {
         ScopedLockType sl(mLock);
         if (!parameter_.update(hash, seq, data))
+        {
+            JLOG(m_journal.error()) << "Parameter update failed " << mHash;
             mFailed = true;
+        }
     }
 
     app_.getLedgerReplayer().createDeltas(shared_from_this());
@@ -144,26 +145,28 @@ LedgerReplayTask::done()
 }
 
 void
-LedgerReplayTask::tryAdvance(std::shared_ptr<Ledger const> const& ledger)
+LedgerReplayTask::tryAdvance(
+    std::optional<std::shared_ptr<Ledger const> const> ledger)
 {
-    JLOG(m_journal.trace()) << "LedgerReplayTask " << mHash << " tryAdvance "
-                            << ledger->info().hash;
-
-    // TODO for call from LedgerDeltaAcquire to be coded
+    JLOG(m_journal.trace()) << "tryAdvance " << mHash;
+    // TODO for call from LedgerDeltaAcquire, to be coded
     ScopedLockType sl(mLock);
-    if (ledgers_.empty())
+    if (ledger)
     {
-        if (ledger->info().hash == parameter_.startLedgerHash)
-            ledgers_.emplace_back(ledger);
+        if (ledgers_.empty())
+        {
+            if ((*ledger)->info().hash == parameter_.startLedgerHash)
+                ledgers_.emplace_back(*ledger);
+            else
+                return;
+        }
         else
-            return;
-    }
-    else
-    {
-        if (ledger->info().parentHash == ledgers_.back()->info().hash)
-            ledgers_.emplace_back(ledger);
-        else
-            return;
+        {
+            if ((*ledger)->info().parentHash == ledgers_.back()->info().hash)
+                ledgers_.emplace_back(*ledger);
+            else
+                return;
+        }
     }
 
     while (ledgers_.size() <= deltas_.size())
@@ -185,7 +188,7 @@ LedgerReplayTask::tryAdvance(std::shared_ptr<Ledger const> const& ledger)
 void
 LedgerReplayTask::subTaskFailed(uint256 const& hash)
 {
-    JLOG(m_journal.warn()) << "sub task failed " << hash;
+    JLOG(m_journal.warn()) << "Task " << mHash << " subtask failed " << hash;
     ScopedLockType sl(mLock);
     mFailed = true;
     done();

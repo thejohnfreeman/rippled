@@ -1575,13 +1575,19 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
     protocol::TMProofPathResponse& reply = *m;
     if (reply.has_error() || !reply.has_key() || !reply.has_ledgerheader() ||
         reply.path_size() == 0)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Error reply";
         return;
+    }
 
     // deserialize the header
     auto info = deserializeHeader(
         {reply.ledgerheader().data(), reply.ledgerheader().size()});
     if (calculateLedgerHash(info) != info.hash)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
         return;
+    }
 
     // verify the skip list
     std::vector<Blob> path;
@@ -1592,18 +1598,30 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
     }
     uint256 key(reply.key());
     if (!SHAMap::verifyProofPath(info.accountHash, key, path))
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Proof path verify failed";
         return;
+    }
 
     if (key != keylet::skip().key)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Unknown key " << key;
         return;
+    }
 
     // deserialize the SHAMapItem
     auto node = SHAMapAbstractNode::makeFromWire(makeSlice(path.front()));
     if (!node || !node->isLeaf())
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
         return;
+    }
     auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
     if (!item)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Cannot get ShaMapItem";
         return;
+    }
 
     app_.getLedgerReplayer().gotSkipList(info, item);
 }
@@ -1624,14 +1642,21 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 {
+    JLOG(p_journal_.trace()) << "onMessage, TMReplayDeltaResponse";
     protocol::TMReplayDeltaResponse& reply = *m;
     if (reply.has_error() || !reply.has_ledgerheader())
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Error reply";
         return;
+    }
 
     auto info = deserializeHeader(
         {reply.ledgerheader().data(), reply.ledgerheader().size()});
     if (calculateLedgerHash(info) != info.hash)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
         return;
+    }
 
     auto numTxns = reply.transaction_size();
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
@@ -1653,26 +1678,36 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 
             auto tx = std::make_shared<STTx const>(txSit);
             if (!tx)
+            {
+                JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
                 return;
+            }
+            auto tid = tx->getTransactionID();
             STObject meta(metaSit, sfMetadata);
             orderedTxns.emplace(meta[sfTransactionIndex], std::move(tx));
 
             auto item = std::make_shared<SHAMapItem const>(
-                tx->getTransactionID(), std::move(shaMapItemData));
+                tid, std::move(shaMapItemData));
             if (!item || !txMap.addGiveItem(std::move(item), true, true))
+            {
+                JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
                 return;
+            }
         }
     }
     catch (std::exception const&)
     {
-        JLOG(p_journal_.warn()) << "Peer sends us junky ledger delta data";
+        JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
         return;
     }
 
     if (txMap.getHash().as_uint256() != info.txHash)
-        // TODO confirm if work for 0 Txns
-        // reply.transaction_size() == 0, info.txHash.isZero()
+    // TODO confirm if work for 0 Txns
+    // reply.transaction_size() == 0, info.txHash.isZero()
+    {
+        JLOG(p_journal_.trace()) << "Bad message: Transactions verify failed";
         return;
+    }
 
     app_.getLedgerReplayer().gotReplayDelta(info, std::move(orderedTxns));
 }
