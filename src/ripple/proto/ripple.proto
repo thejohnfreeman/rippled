@@ -378,9 +378,10 @@ message TMProofPathResponse
 {
     optional bytes key = 1;
     optional bytes ledgerHash = 2;
-    optional bytes ledgerHeader = 3;
-    repeated bytes path = 4;
-    optional TMReplyError error = 5;
+    optional TMLedgerMapType type = 3;
+    optional bytes ledgerHeader = 4;
+    repeated bytes path = 5;
+    optional TMReplyError error = 6;
 }
 
 message TMReplayDeltaRequest

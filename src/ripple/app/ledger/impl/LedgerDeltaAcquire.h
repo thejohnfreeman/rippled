@@ -93,6 +93,8 @@ private:
     hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
     bool ledgerBuilt_ = false;
+
+    friend class LedgerReplayTask;
 };
 
 }  // namespace ripple

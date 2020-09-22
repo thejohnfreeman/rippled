@@ -56,7 +56,9 @@ public:
     init(int numPeers);
 
     void
-    processData(std::shared_ptr<SHAMapItem const> const& item);
+    processData(
+        std::uint32_t ledgerSeq,
+        std::shared_ptr<SHAMapItem const> const& item);
 
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);

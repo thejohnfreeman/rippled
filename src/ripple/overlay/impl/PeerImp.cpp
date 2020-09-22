@@ -1573,19 +1573,38 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
 {
     JLOG(p_journal_.trace()) << "onMessage, TMProofPathResponse";
     protocol::TMProofPathResponse& reply = *m;
-    if (reply.has_error() || !reply.has_key() || !reply.has_ledgerheader() ||
+    if (reply.has_error() || !reply.has_key() || !reply.has_ledgerhash() ||
+        !reply.has_type() || !reply.has_ledgerheader() ||
         reply.path_size() == 0)
     {
         JLOG(p_journal_.trace()) << "Bad message: Error reply";
         return;
     }
 
+    if (reply.type() != protocol::lmAS_NODE)
+    {
+        JLOG(p_journal_.trace())
+            << "Bad message: we only support the state ShaMap for now";
+        return;
+    }
+
     // deserialize the header
     auto info = deserializeHeader(
         {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    if (calculateLedgerHash(info) != info.hash)
+    uint256 replyHash(reply.ledgerhash());
+    if (calculateLedgerHash(info) != replyHash)
     {
         JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
+        return;
+    }
+    info.hash = replyHash;
+
+    uint256 key(reply.key());
+    if (key != keylet::skip().key)
+    {
+        JLOG(p_journal_.trace()) << "Bad message: we only support the short "
+                                    "skip list for now. Key in reply "
+                                 << key;
         return;
     }
 
@@ -1596,16 +1615,10 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
     {
         path.emplace_back(reply.path(i).begin(), reply.path(i).end());
     }
-    uint256 key(reply.key());
+
     if (!SHAMap::verifyProofPath(info.accountHash, key, path))
     {
         JLOG(p_journal_.trace()) << "Bad message: Proof path verify failed";
-        return;
-    }
-
-    if (key != keylet::skip().key)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Unknown key " << key;
         return;
     }
 
@@ -1652,11 +1665,13 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 
     auto info = deserializeHeader(
         {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    if (calculateLedgerHash(info) != info.hash)
+    uint256 replyHash(reply.ledgerhash());
+    if (calculateLedgerHash(info) != replyHash)
     {
         JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
         return;
     }
+    info.hash = replyHash;
 
     auto numTxns = reply.transaction_size();
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;

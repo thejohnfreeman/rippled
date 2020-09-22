@@ -61,6 +61,7 @@ SkipListAcquire::init(int numPeers)
                 ScopedLockType sl(mLock);
                 mComplete = true;
                 skipList_ = slist;
+                ledgerSeq_ = l->seq();
                 for (auto& t : tasks_)
                 {
                     t->updateSkipList(mHash, ledgerSeq_, skipList_);
@@ -134,7 +135,9 @@ SkipListAcquire::pmDowncast()
 }
 
 void
-SkipListAcquire::processData(std::shared_ptr<SHAMapItem const> const& item)
+SkipListAcquire::processData(
+    std::uint32_t ledgerSeq,
+    std::shared_ptr<SHAMapItem const> const& item)
 {
     JLOG(m_journal.trace()) << "got data for " << mHash;
 
@@ -147,6 +150,7 @@ SkipListAcquire::processData(std::shared_ptr<SHAMapItem const> const& item)
             return;
         mComplete = true;
         skipList_ = sle->getFieldV256(sfHashes).value();
+        ledgerSeq_ = ledgerSeq;
         for (auto& t : tasks_)
         {
             t->updateSkipList(mHash, ledgerSeq_, skipList_);

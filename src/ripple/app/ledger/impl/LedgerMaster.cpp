@@ -1291,6 +1291,25 @@ LedgerMaster::findNewLedgersToPublish(
         return {};
     }
 
+    {
+        // TODO remove, force a replay for test
+        //        static bool called_once = false;
+        //        if(!called_once)
+        //        {
+        //            called_once = true;
+        //            LedgerReplayTask::TaskParameter p{
+        //                InboundLedger::Reason::GENERIC,
+        //                mValidLedger.get()->info().parentHash};
+        //            p.ledgersToBuild = 5;
+        //            JLOG(m_journal.debug())
+        //                << "LFR end with " << mValidLedger.get()->info().seq
+        //                << " "
+        //                << mValidLedger.get()->info().hash << " back "
+        //                << p.ledgersToBuild << " ledgers";
+        //            app_.getLedgerReplayer().replay(std::move(p));
+        //        }
+    }
+
     if (!mPubLedger)
     {
         JLOG(m_journal.info())
@@ -2230,7 +2249,7 @@ LedgerMaster::getProofPathResponse(
     protocol::TMProofPathRequest& packet = *request;
     protocol::TMProofPathResponse reply;
 
-    if (!packet.has_ledgerhash() || !packet.has_key() || !packet.has_type() ||
+    if (!packet.has_key() || !packet.has_ledgerhash() || !packet.has_type() ||
         packet.ledgerhash().size() != uint256::size() ||
         packet.key().size() != uint256::size() ||
         !protocol::TMLedgerMapType_IsValid(packet.type()))
@@ -2240,6 +2259,8 @@ LedgerMaster::getProofPathResponse(
         return reply;
     }
     reply.set_key(packet.key());
+    reply.set_ledgerhash(packet.ledgerhash());
+    reply.set_type(packet.type());
 
     uint256 const key{packet.key()};
     uint256 const ledgerHash{packet.ledgerhash()};
@@ -2248,7 +2269,6 @@ LedgerMaster::getProofPathResponse(
     {
         JLOG(m_journal.debug())
             << "getProofPath: Don't have ledger " << ledgerHash;
-        reply.set_ledgerhash(packet.ledgerhash());
         reply.set_error(protocol::TMReplyError::reNO_LEDGER);
         return reply;
     }
@@ -2271,7 +2291,6 @@ LedgerMaster::getProofPathResponse(
     {
         JLOG(m_journal.debug()) << "getProofPath: Don't have the node " << key
                                 << " of ledger " << ledgerHash;
-        reply.set_ledgerhash(packet.ledgerhash());
         reply.set_error(protocol::TMReplyError::reNO_NODE);
         return reply;
     }
@@ -2316,37 +2335,12 @@ LedgerMaster::getReplayDeltaResponse(
         return reply;
     }
 
-    auto const& txMap = ledger->txMap();
-    //    std::map<uint32_t, Slice> transactions;
-    //
-    //    try
-    //    {
-    //        txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const&
-    //        txNode) {
-    //            SerialIter sit(txNode->slice());
-    //            auto txSlice = sit.getSlice(sit.getVLDataLength());
-    //            SerialIter s(sit.getSlice(sit.getVLDataLength()));
-    //            STObject meta(s, sfMetadata);
-    //            transactions.insert({meta[sfTransactionIndex], txSlice});
-    //        });
-    //    }
-    //    catch (std::exception const&)
-    //    {
-    //        JLOG(m_journal.warn())
-    //            << "getReplayDelta: bad data in ledger " << ledgerHash;
-    //        reply.set_error(protocol::TMReplyError::reNO_LEDGER);
-    //        return reply;
-    //    }
-
     // pack header
     Serializer nData(128);
     addRaw(ledger->info(), nData);
     reply.set_ledgerheader(nData.getDataPtr(), nData.getLength());
     // pack transactions
-    //    for (auto const& [_, txSlice] : transactions)
-    //    {
-    //        reply.add_transaction(txSlice.data(), txSlice.size());
-    //    }
+    auto const& txMap = ledger->txMap();
     txMap.visitLeaves([&](std::shared_ptr<SHAMapItem const> const& txNode) {
         reply.add_transaction(txNode->data(), txNode->size());
     });

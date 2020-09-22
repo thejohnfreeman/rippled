@@ -130,8 +130,9 @@ LedgerDeltaAcquire::processData(
     std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns)
 {
     JLOG(m_journal.trace()) << "got data for " << mHash;
+    assert(info.seq == ledgerSeq_);
 
-    // create LedgerReplay object
+    // create a temp ledger for building a LedgerReplay object later
     if (auto rp =
             std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
         rp)

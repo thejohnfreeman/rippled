@@ -61,8 +61,10 @@ private:
         add(jtPROPOSAL_ut, "untrustedProposal", maxLimit, false, 500ms, 1250ms);
         add(jtLEDGER_DATA, "ledgerData", 2, false, 0ms, 0ms);
         // TODO understand the parameters
-        add(jtPROOF_PATH_REQUEST, "proofPathRequest", 2, false, 0ms, 0ms);
-        add(jtREPLAY_DELTA_REQUEST, "replayDeltaRequest", 2, false, 0ms, 0ms);
+        add(jtREPLAY_TASK, "ledgerReplayTask", maxLimit, false, 0ms, 0ms);
+        add(jtREPLAY_DELTA, "ledgerReplayDelta", maxLimit, false, 0ms, 0ms);
+        add(jtPROOF_PATH_REQUEST, "proofPathRequest", 10, false, 0ms, 0ms);
+        add(jtREPLAY_DELTA_REQUEST, "replayDeltaRequest", 10, false, 0ms, 0ms);
 
         add(jtCLIENT, "clientCommand", maxLimit, false, 2000ms, 5000ms);
         add(jtRPC, "RPC", maxLimit, false, 0ms, 0ms);

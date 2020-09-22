@@ -169,6 +169,9 @@ public:
         std::vector<ripple::uint256> const& data);
 
     void
+    pushBackDeltaAcquire(std::shared_ptr<LedgerDeltaAcquire> delta);
+
+    void
     tryAdvance(std::optional<std::shared_ptr<Ledger const> const> ledger);
 
     TaskParameter&

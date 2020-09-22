@@ -54,28 +54,31 @@ LedgerReplayTask::trigger()
     if (isDone())
         return;
 
-    if (ledgers_.empty())
+    if (parameter_.startLedgerHash.isNonZero())
     {
-        auto l =
-            app_.getLedgerMaster().getLedgerByHash(parameter_.startLedgerHash);
-        if (!l)
+        if (ledgers_.empty())
         {
-            l = app_.getInboundLedgers().acquire(
-                parameter_.startLedgerHash,
-                parameter_.startLedgerSeq,
-                InboundLedger::Reason::GENERIC);
+            auto l = app_.getLedgerMaster().getLedgerByHash(
+                parameter_.startLedgerHash);
+            if (!l)
+            {
+                l = app_.getInboundLedgers().acquire(
+                    parameter_.startLedgerHash,
+                    parameter_.startLedgerSeq,
+                    InboundLedger::Reason::GENERIC);
+            }
+            if (l)
+            {
+                JLOG(m_journal.trace())
+                    << "Got start ledger " << parameter_.startLedgerHash
+                    << " for " << mHash;
+                tryAdvance(l);
+            }
         }
-        if (l)
+        else
         {
-            JLOG(m_journal.trace())
-                << "Got start ledger " << parameter_.startLedgerHash << " for "
-                << mHash;
-            tryAdvance(l);
+            tryAdvance({});
         }
-    }
-    else
-    {
-        tryAdvance({});
     }
 
     if (!isDone())
@@ -142,6 +145,15 @@ LedgerReplayTask::done()
     {
         JLOG(m_journal.info()) << "LedgerReplayTask Completed " << mHash;
     }
+}
+
+void
+LedgerReplayTask::pushBackDeltaAcquire(
+    std::shared_ptr<LedgerDeltaAcquire> delta)
+{
+    assert(
+        deltas_.empty() || deltas_.back()->ledgerSeq_ + 1 == delta->ledgerSeq_);
+    deltas_.emplace_back(std::move(delta));
 }
 
 void

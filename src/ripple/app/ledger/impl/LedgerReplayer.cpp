@@ -40,7 +40,7 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
         return;
     }
 
-    JLOG(j_.warn()) << "Replay " << parameter.finishLedgerHash;
+    JLOG(j_.info()) << "Replay " << parameter.finishLedgerHash;
     bool needInit = false;
     std::shared_ptr<SkipListAcquire> skipList;
     {
@@ -98,6 +98,11 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             assert(false);
             return;
         }
+        if (++skipListItem == parameter.skipList.end())
+        {
+            assert(false);
+            return;
+        }
         for (std::uint32_t seq = parameter.startLedgerSeq + 1;
              seq <= parameter.finishLedgerSeq &&
              skipListItem < parameter.skipList.end();
@@ -130,6 +135,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             if (newDelta)  // TODO rate limit ?? by only init a subset
                 delta->init(1);
 
+            task->pushBackDeltaAcquire(delta);
             delta->addTask(task);
         }
     }
@@ -146,7 +152,7 @@ LedgerReplayer::gotSkipList(
         auto i = skipLists_.find(info.hash);
         if (i == skipLists_.end())
             return;
-        auto skipList = i->second.lock();
+        skipList = i->second.lock();
         if (!skipList)
         {
             skipLists_.erase(i);
@@ -154,7 +160,7 @@ LedgerReplayer::gotSkipList(
             return;
         }
     }
-    skipList->processData(item);
+    skipList->processData(info.seq, item);
 }
 
 void
@@ -168,7 +174,7 @@ LedgerReplayer::gotReplayDelta(
         auto i = deltas_.find(info.hash);
         if (i == deltas_.end())
             return;
-        auto delta = i->second.lock();
+        delta = i->second.lock();
         if (!delta)
         {
             deltas_.erase(i);
