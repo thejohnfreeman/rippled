@@ -212,10 +212,3 @@ private:
 }  // namespace ripple
 
 #endif
-
-//    enum class SubTaskType {
-//        START_LEDGER,  // Acquiring the first ledger of the task
-//        SKIP_LIST,     // Acquiring the skip list
-//        LEDGER_DELTA,  // Acquiring a ledger delta
-//    };
-//

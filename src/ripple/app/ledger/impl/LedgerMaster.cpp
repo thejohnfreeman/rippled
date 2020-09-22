@@ -140,7 +140,7 @@ public:
 }  // namespace
 
 // Don't catch up more than 100 ledgers (cannot exceed 256)
-static constexpr int MAX_LEDGER_GAP{100};
+static constexpr int MAX_LEDGER_GAP{200};
 
 // Don't acquire history if ledger is too old
 static constexpr std::chrono::minutes MAX_LEDGER_AGE_ACQUIRE{1};
@@ -1377,27 +1377,30 @@ LedgerMaster::findNewLedgersToPublish(
             << "Exception while trying to find ledgers to publish.";
     }
 
-    auto const& startHash = ret.back()->info().hash;
-    if (startHash != valLedger->info().hash)
+    auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
+    auto finishLedger = valLedger;
+    while (startLedger->info().seq + 1 < finishLedger->info().seq)
     {
-        auto child = valLedger;
-        while (child->info().parentHash != startHash)
+        auto const parent =
+            mLedgerHistory.getLedgerByHash(finishLedger->info().parentHash);
+        if (parent)
+            finishLedger = parent;
+        else
         {
-            auto const parent =
-                mLedgerHistory.getLedgerByHash(child->info().parentHash);
-            if (parent)
-                child = parent;
-            else
-                break;
+            LedgerReplayTask::TaskParameter p{
+                InboundLedger::Reason::GENERIC,
+                finishLedger->info().hash,
+                startLedger->info().hash};
+
+            JLOG(m_journal.debug())
+                << "Ask ledger replay from " << startLedger->info().seq << " "
+                << startLedger->info().hash << " to "
+                << finishLedger->info().seq << " " << finishLedger->info().hash;
+            app_.getLedgerReplayer().replay(std::move(p));
+            break;
         }
-        LedgerReplayTask::TaskParameter p{
-            InboundLedger::Reason::GENERIC, child->info().hash, startHash};
-        JLOG(m_journal.debug())
-            << "Ask ledger replay from " << child->info().seq << " "
-            << child->info().hash << " to " << ret.back()->info().seq << ""
-            << ret.back()->info().hash;
-        app_.getLedgerReplayer().replay(std::move(p));
     }
+
     return ret;
 }
 

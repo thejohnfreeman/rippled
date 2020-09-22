@@ -28,6 +28,7 @@ namespace ripple {
 LedgerReplayer::LedgerReplayer(Application& app, clock_type& clock)
     : app_(app), clock_(clock), j_(app.journal("LedgerReplayer"))
 {
+    JLOG(j_.debug()) << "LedgerReplayer constructed";
 }
 
 void
