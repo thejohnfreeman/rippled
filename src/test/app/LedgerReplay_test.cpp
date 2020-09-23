@@ -368,12 +368,43 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     }
 
     void
+    testConfig()
+    {
+        testcase("ledger replay config test");
+        {
+            Config c;
+            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == false);
+        }
+
+        {
+            Config c;
+            std::string toLoad(R"rippleConfig(
+[ledger_replay]
+enable=1
+)rippleConfig");
+            c.loadFromString(toLoad);
+            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == true);
+        }
+
+        {
+            Config c;
+            std::string toLoad = (R"rippleConfig(
+[ledger_replay]
+enable=0
+)rippleConfig");
+            c.loadFromString(toLoad);
+            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == false);
+        }
+    }
+
+    void
     run() override
     {
         testSkipList();
         testLedgerReplayBuild();
         testLedgerDeltaReplayBuild();
         testLedgerDeltaReplayBuild(0);
+        testConfig();
     }
 };
 

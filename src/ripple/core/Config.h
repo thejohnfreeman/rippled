@@ -179,6 +179,9 @@ public:
     // Thread pool configuration
     std::size_t WORKERS = 0;
 
+    // Enable the experimental Ledger Replay functionality
+    bool LEDGER_REPLAY_ENABLE = false;
+
     // These override the command line client settings
     boost::optional<beast::IP::Endpoint> rpc_ip;
 

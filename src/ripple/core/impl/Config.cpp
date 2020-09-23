@@ -481,6 +481,12 @@ Config::loadFromString(std::string const& fileContents)
     if (getSingleSection(secConfig, SECTION_COMPRESSION, strTemp, j_))
         COMPRESSION = beast::lexicalCastThrow<bool>(strTemp);
 
+    if (exists(SECTION_LEDGER_REPLAY))
+    {
+        auto sec = section(SECTION_LEDGER_REPLAY);
+        LEDGER_REPLAY_ENABLE = sec.value_or("enable", false);
+    }
+
     if (getSingleSection(
             secConfig, SECTION_AMENDMENT_MAJORITY_TIME, strTemp, j_))
     {

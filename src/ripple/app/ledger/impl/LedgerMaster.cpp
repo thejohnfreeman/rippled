@@ -1293,21 +1293,20 @@ LedgerMaster::findNewLedgersToPublish(
 
     {
         // TODO remove, force a replay for test
-        //        static bool called_once = false;
-        //        if(!called_once)
-        //        {
-        //            called_once = true;
-        //            LedgerReplayTask::TaskParameter p{
-        //                InboundLedger::Reason::GENERIC,
-        //                mValidLedger.get()->info().parentHash};
-        //            p.ledgersToBuild = 5;
-        //            JLOG(m_journal.debug())
-        //                << "LFR end with " << mValidLedger.get()->info().seq
-        //                << " "
-        //                << mValidLedger.get()->info().hash << " back "
-        //                << p.ledgersToBuild << " ledgers";
-        //            app_.getLedgerReplayer().replay(std::move(p));
-        //        }
+//        static bool called_once = false;
+//        if (!called_once)
+//        {
+//            called_once = true;
+//            LedgerReplayTask::TaskParameter p{
+//                InboundLedger::Reason::GENERIC,
+//                mValidLedger.get()->info().hash};
+//            p.ledgersToBuild = 50;
+//            JLOG(m_journal.debug())
+//                << "LFR end with " << mValidLedger.get()->info().seq << " "
+//                << mValidLedger.get()->info().hash << " back "
+//                << p.ledgersToBuild << " ledgers";
+//            app_.getLedgerReplayer().replay(std::move(p));
+//        }
     }
 
     if (!mPubLedger)
@@ -1336,7 +1335,7 @@ LedgerMaster::findNewLedgersToPublish(
         return {};
     }
 
-    //    int acqCount = 0;
+    int acqCount = 0;
 
     auto pubSeq = mPubLedgerSeq + 1;  // Next sequence to publish
     auto valLedger = mValidLedger.get();
@@ -1373,10 +1372,11 @@ LedgerMaster::findNewLedgersToPublish(
                 ledger = mLedgerHistory.getLedgerByHash(*hash);
             }
 
-            //            // Can we try to acquire the ledger we need?
-            //            if (!ledger && (++acqCount < ledger_fetch_size_))
-            //                ledger = app_.getInboundLedgers().acquire(
-            //                    *hash, seq, InboundLedger::Reason::GENERIC);
+            if (!app_.config().LEDGER_REPLAY_ENABLE)
+                // Can we try to acquire the ledger we need?
+                if (!ledger && (++acqCount < ledger_fetch_size_))
+                    ledger = app_.getInboundLedgers().acquire(
+                        *hash, seq, InboundLedger::Reason::GENERIC);
 
             // Did we acquire the next ledger we need to publish?
             if (ledger && (ledger->info().seq == pubSeq))
@@ -1396,27 +1396,31 @@ LedgerMaster::findNewLedgersToPublish(
             << "Exception while trying to find ledgers to publish.";
     }
 
-    auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
-    auto finishLedger = valLedger;
-    while (startLedger->info().seq + 1 < finishLedger->info().seq)
+    if (app_.config().LEDGER_REPLAY_ENABLE)
     {
-        auto const parent =
-            mLedgerHistory.getLedgerByHash(finishLedger->info().parentHash);
-        if (parent)
-            finishLedger = parent;
-        else
+        auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
+        auto finishLedger = valLedger;
+        while (startLedger->info().seq + 1 < finishLedger->info().seq)
         {
-            LedgerReplayTask::TaskParameter p{
-                InboundLedger::Reason::GENERIC,
-                finishLedger->info().hash,
-                startLedger->info().hash};
+            auto const parent =
+                mLedgerHistory.getLedgerByHash(finishLedger->info().parentHash);
+            if (parent)
+                finishLedger = parent;
+            else
+            {
+                LedgerReplayTask::TaskParameter p{
+                    InboundLedger::Reason::GENERIC,
+                    finishLedger->info().hash,
+                    startLedger->info().hash};
 
-            JLOG(m_journal.debug())
-                << "Ask ledger replay from " << startLedger->info().seq << " "
-                << startLedger->info().hash << " to "
-                << finishLedger->info().seq << " " << finishLedger->info().hash;
-            app_.getLedgerReplayer().replay(std::move(p));
-            break;
+                JLOG(m_journal.debug())
+                    << "Ask ledger replay from " << startLedger->info().seq
+                    << " " << startLedger->info().hash << " to "
+                    << finishLedger->info().seq << " "
+                    << finishLedger->info().hash;
+                app_.getLedgerReplayer().replay(std::move(p));
+                break;
+            }
         }
     }
 
