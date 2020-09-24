@@ -40,12 +40,12 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
         return;
     }
 
-    JLOG(j_.info()) << "Replay " << parameter.finishLedgerHash;
+    JLOG(j_.info()) << "Replay " << parameter.finishHash;
     bool needInit = false;
     std::shared_ptr<SkipListAcquire> skipList;
     {
         std::lock_guard<std::mutex> lock(lock_);
-        auto i = skipLists_.find(parameter.finishLedgerHash);
+        auto i = skipLists_.find(parameter.finishHash);
         if (i != skipLists_.end())
         {
             skipList = i->second.lock();
@@ -59,12 +59,11 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
         if (!skipList)
         {
             skipList = std::make_shared<SkipListAcquire>(
-                app_, parameter.finishLedgerHash, parameter.finishLedgerSeq);
-            skipLists_.emplace(parameter.finishLedgerHash, skipList);
-            // TODO if parameter passed in is full already, don't init
+                app_, parameter.finishHash, parameter.finishSeq);
+            skipLists_.emplace(parameter.finishHash, skipList);
             needInit = true;
             JLOG(j_.trace())
-                << "Add SkipListAcquire " << parameter.finishLedgerHash;
+                << "Add SkipListAcquire " << parameter.finishHash;
         }
     }
 
@@ -87,12 +86,12 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
         // has to be downloaded, if so expand the task to start with l.
     }
     auto const& parameter = task->getTaskTaskParameter();
-    if (parameter.ledgersToBuild > 1)
+    if (parameter.totalLedgers > 1)
     {
         auto skipListItem = std::find(
             parameter.skipList.begin(),
             parameter.skipList.end(),
-            parameter.startLedgerHash);
+            parameter.startHash);
         if (skipListItem == parameter.skipList.end())
         {
             assert(false);
@@ -103,8 +102,8 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             assert(false);
             return;
         }
-        for (std::uint32_t seq = parameter.startLedgerSeq + 1;
-             seq <= parameter.finishLedgerSeq &&
+        for (std::uint32_t seq = parameter.startSeq + 1;
+             seq <= parameter.finishSeq &&
              skipListItem < parameter.skipList.end();
              ++seq, ++skipListItem)
         {

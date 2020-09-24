@@ -49,28 +49,41 @@ class LedgerReplayTask final
 public:
     struct TaskParameter
     {
+        //TODO refactor after coding usa cases
+
         InboundLedger::Reason reason;
-        uint256 finishLedgerHash;
-        uint256 startLedgerHash = {};
-        std::uint32_t finishLedgerSeq = 0;
-        std::uint32_t startLedgerSeq = 0;
-        std::uint32_t ledgersToBuild = 0;  // including the start and the finish
+        uint256 finishHash;
+        uint256 startHash = {};
+        std::uint32_t finishSeq = 0;
+        std::uint32_t startSeq = 0;
+        std::uint32_t totalLedgers = 0;  // including the start and the finish
         std::vector<uint256> skipList = {};
 
-        bool
-        isValid() const  // TODO name
+        TaskParameter(
+            InboundLedger::Reason r,
+            uint256 finishLedgerHash,
+            std::uint32_t totalNumLedgers)
+        : reason(r)
+        , finishHash(finishLedgerHash)
+        , totalLedgers(totalNumLedgers)
         {
-            if (finishLedgerHash.isZero())
+            assert(isValid());
+        }
+
+        bool
+        isValid() const
+        {
+            if (finishHash.isZero())
                 return false;
-            if (ledgersToBuild > 256)
+            if (totalLedgers > 256)
                 return false;
 
-            if (startLedgerSeq != 0 && finishLedgerSeq != 0)
+            if (startSeq != 0 && finishSeq != 0)
             {
-                auto size = finishLedgerSeq - startLedgerSeq + 1;
+                auto size = finishSeq - startSeq + 1;
                 if (size > 256)
                     return false;
-                if (ledgersToBuild != 0 && ledgersToBuild != size)
+                if (totalLedgers != 0 && totalLedgers != size)
                     return false;
             }
             return true;
@@ -85,49 +98,48 @@ public:
             if (!isValid())
                 return false;
 
-            if (finishLedgerHash != hash)
+            if (finishHash != hash)
                 return false;
-            if (finishLedgerSeq != 0 && finishLedgerSeq != seq)
+            if (finishSeq != 0 && finishSeq != seq)
                 return false;
-            finishLedgerSeq = seq;
+            finishSeq = seq;
 
             skipList = sList;
-            skipList.emplace_back(finishLedgerHash);
-            if (startLedgerHash.isZero() && !startLedgerSeq && !ledgersToBuild)
+            skipList.emplace_back(finishHash);
+            if (startHash.isZero() && !startSeq && !totalLedgers)
             {
-                ledgersToBuild = 1;
-                startLedgerSeq = finishLedgerSeq;
-                startLedgerHash = finishLedgerHash;
+                startHash = finishHash;
+                startSeq = seq;
+                totalLedgers = 1;
             }
             else
             {
-                if (startLedgerHash.isNonZero())
+                if (startHash.isNonZero())
                 {
-                    auto i = std::find(
-                        skipList.begin(), skipList.end(), startLedgerHash);
+                    auto i =
+                        std::find(skipList.begin(), skipList.end(), startHash);
                     std::uint32_t size = skipList.end() - i;
                     if (size == 0)
                         return false;
-                    if (ledgersToBuild == 0)
-                        ledgersToBuild = size;
-                    if (startLedgerSeq == 0)
-                        startLedgerSeq = finishLedgerSeq - size + 1;
+                    if (totalLedgers == 0)
+                        totalLedgers = size;
+                    if (startSeq == 0)
+                        startSeq = finishSeq - size + 1;
                 }
                 else
                 {
-                    if (ledgersToBuild != 0 && startLedgerSeq == 0)
-                        startLedgerSeq = finishLedgerSeq - ledgersToBuild + 1;
-                    if (ledgersToBuild == 0 && startLedgerSeq != 0)
-                        ledgersToBuild = finishLedgerSeq - startLedgerSeq + 1;
-                    if (ledgersToBuild > skipList.size())
+                    if (totalLedgers != 0 && startSeq == 0)
+                        startSeq = finishSeq - totalLedgers + 1;
+                    if (totalLedgers == 0 && startSeq != 0)
+                        totalLedgers = finishSeq - startSeq + 1;
+                    if (totalLedgers > skipList.size())
                         return false;
                     if (auto i = std::find(
-                            skipList.begin(), skipList.end(), startLedgerHash);
-                        i != skipList.end() && *i != startLedgerHash)
+                            skipList.begin(), skipList.end(), startHash);
+                        i != skipList.end() && *i != startHash)
                         return false;
                     else
-                        startLedgerHash =
-                            skipList[skipList.size() - ledgersToBuild];
+                        startHash = skipList[skipList.size() - totalLedgers];
                 }
             }
 
@@ -139,7 +151,10 @@ public:
         bool
         canMergeInto(TaskParameter const& existingTask)
         {
-            // TODO
+            if (reason == existingTask.reason &&
+                startSeq >= existingTask.startSeq &&
+                finishSeq <= existingTask.finishSeq)
+                return true;
             return false;
         }
     };
@@ -206,9 +221,8 @@ private:
 
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
-    // when it's done, ledgers_.size() == deltas_.size() + 1
-    // TODO keeping too many ledgers??
-    std::vector<std::shared_ptr<Ledger const>> ledgers_;
+    std::shared_ptr<Ledger const> parent = {};
+    int deltaToBuild = -1; //should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
 };
 

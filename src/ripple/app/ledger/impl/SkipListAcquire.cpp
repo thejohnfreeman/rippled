@@ -151,11 +151,11 @@ SkipListAcquire::processData(
         mComplete = true;
         skipList_ = sle->getFieldV256(sfHashes).value();
         ledgerSeq_ = ledgerSeq;
+        JLOG(m_journal.debug()) << "Skip list received " << mHash;
         for (auto& t : tasks_)
         {
             t->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
-        JLOG(m_journal.debug()) << "Skip list received " << mHash;
     }
 }
 

@@ -176,6 +176,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
         return {};
 
     // build ledger
+    assert(parent->seq() + 1 == replay_->seq());
     assert(parent->info().hash == replay_->info().parentHash);
     LedgerReplay replayData(parent, replay_, std::move(orderedTxns_));
     auto const l = buildLedger(replayData, tapNONE, app_, m_journal);

@@ -45,7 +45,6 @@ public:
 
     void
     replay(LedgerReplayTask::TaskParameter&& parameter);
-    // TODO move in parameter?
 
     void
     createDeltas(std::shared_ptr<LedgerReplayTask> task);

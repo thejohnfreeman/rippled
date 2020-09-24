@@ -1297,10 +1297,9 @@ LedgerMaster::findNewLedgersToPublish(
 //        if (!called_once)
 //        {
 //            called_once = true;
-//            LedgerReplayTask::TaskParameter p{
+//            LedgerReplayTask::TaskParameter p(
 //                InboundLedger::Reason::GENERIC,
-//                mValidLedger.get()->info().hash};
-//            p.ledgersToBuild = 50;
+//                mValidLedger.get()->info().hash, 50);
 //            JLOG(m_journal.debug())
 //                << "LFR end with " << mValidLedger.get()->info().seq << " "
 //                << mValidLedger.get()->info().hash << " back "
@@ -1400,7 +1399,7 @@ LedgerMaster::findNewLedgersToPublish(
     {
         auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
         auto finishLedger = valLedger;
-        while (startLedger->info().seq + 1 < finishLedger->info().seq)
+        while (startLedger->seq() + 1 < finishLedger->seq())
         {
             auto const parent =
                 mLedgerHistory.getLedgerByHash(finishLedger->info().parentHash);
@@ -1408,10 +1407,10 @@ LedgerMaster::findNewLedgersToPublish(
                 finishLedger = parent;
             else
             {
-                LedgerReplayTask::TaskParameter p{
+                LedgerReplayTask::TaskParameter p(
                     InboundLedger::Reason::GENERIC,
                     finishLedger->info().hash,
-                    startLedger->info().hash};
+                    finishLedger->seq() - startLedger->seq() + 1);
 
                 JLOG(m_journal.debug())
                     << "Ask ledger replay from " << startLedger->info().seq

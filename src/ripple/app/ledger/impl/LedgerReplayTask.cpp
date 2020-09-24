@@ -32,7 +32,7 @@ LedgerReplayTask::LedgerReplayTask(
     TaskParameter&& parameter)
     : PeerSet(
           app,
-          parameter.finishLedgerHash,
+          parameter.finishHash,
           LEDGER_REPLAY_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , parameter_(parameter)
@@ -54,24 +54,24 @@ LedgerReplayTask::trigger()
     if (isDone())
         return;
 
-    if (parameter_.startLedgerHash.isNonZero())
+    if (parameter_.startHash.isNonZero())
     {
-        if (ledgers_.empty())
+        //if (ledgers_.empty())
+        if(!parent)
         {
             auto l = app_.getLedgerMaster().getLedgerByHash(
-                parameter_.startLedgerHash);
+                parameter_.startHash);
             if (!l)
             {
                 l = app_.getInboundLedgers().acquire(
-                    parameter_.startLedgerHash,
-                    parameter_.startLedgerSeq,
+                    parameter_.startHash,
+                    parameter_.startSeq,
                     InboundLedger::Reason::GENERIC);
             }
             if (l)
             {
                 JLOG(m_journal.trace())
-                    << "Got start ledger " << parameter_.startLedgerHash
-                    << " for " << mHash;
+                    << "Got start ledger " << parameter_.startHash << " for " << mHash;
                 tryAdvance(l);
             }
         }
@@ -134,9 +134,8 @@ LedgerReplayTask::updateSkipList(
 void
 LedgerReplayTask::done()
 {
-    skipListAcquirer_ = nullptr;
-    ledgers_.clear();
-    deltas_.clear();
+    skipListAcquirer_ = nullptr;//TODO make sure no access after this point
+
     if (mFailed)
     {
         JLOG(m_journal.warn()) << "LedgerReplayTask Failed " << mHash;
@@ -165,32 +164,32 @@ LedgerReplayTask::tryAdvance(
     ScopedLockType sl(mLock);
     if (ledger)
     {
-        if (ledgers_.empty())
+        if ((!parent && parameter_.startHash == (*ledger)->info().hash) ||
+            (parent && parent->info().hash == (*ledger)->info().parentHash))
         {
-            if ((*ledger)->info().hash == parameter_.startLedgerHash)
-                ledgers_.emplace_back(*ledger);
-            else
-                return;
+            parent = *ledger;
+            ++deltaToBuild;
         }
         else
-        {
-            if ((*ledger)->info().parentHash == ledgers_.back()->info().hash)
-                ledgers_.emplace_back(*ledger);
-            else
-                return;
-        }
+            return;
     }
 
-    while (ledgers_.size() <= deltas_.size())
+    if(deltaToBuild >= 0)
     {
-        auto l = deltas_[ledgers_.size() - 1]->tryBuild(ledgers_.back());
-        if (l)
-            ledgers_.emplace_back(l);
-        else
-            break;
+        while (deltaToBuild < deltas_.size())
+        {
+            assert(parent->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
+            if (auto l = deltas_[deltaToBuild]->tryBuild(parent); l)
+            {
+                parent = l;
+                ++deltaToBuild;
+            }
+            else
+                break;
+        }
     }
 
-    if (ledgers_.size() == deltas_.size() + 1)
+    if (deltaToBuild >= deltas_.size())
     {
         mComplete = true;
         done();
