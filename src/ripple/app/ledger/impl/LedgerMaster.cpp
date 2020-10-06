@@ -1293,18 +1293,21 @@ LedgerMaster::findNewLedgersToPublish(
 
     {
         // TODO remove, force a replay for test
-//        static bool called_once = false;
-//        if (!called_once)
+//        if (app_.config().LEDGER_REPLAY_ENABLE)
 //        {
-//            called_once = true;
-//            LedgerReplayTask::TaskParameter p(
-//                InboundLedger::Reason::GENERIC,
-//                mValidLedger.get()->info().hash, 50);
-//            JLOG(m_journal.debug())
-//                << "LFR end with " << mValidLedger.get()->info().seq << " "
-//                << mValidLedger.get()->info().hash << " back "
-//                << p.ledgersToBuild << " ledgers";
-//            app_.getLedgerReplayer().replay(std::move(p));
+//            static bool called_once = false;
+//            if (!called_once)
+//            {
+//                called_once = true;
+//                LedgerReplayTask::TaskParameter p(
+//                    InboundLedger::Reason::GENERIC,
+//                    mValidLedger.get()->info().hash, 5);
+//                JLOG(m_journal.debug())
+//                    << "LFR end with " << mValidLedger.get()->info().seq << " "
+//                    << mValidLedger.get()->info().hash << " back "
+//                    << p.totalLedgers << " ledgers";
+//                app_.getLedgerReplayer().replay(std::move(p));
+//            }
 //        }
     }
 
