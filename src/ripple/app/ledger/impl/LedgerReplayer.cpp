@@ -17,7 +17,6 @@
 */
 //==============================================================================
 
-#include <ripple/app/ledger/InboundLedgers.h>
 #include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
 #include <ripple/app/ledger/impl/SkipListAcquire.h>
@@ -25,20 +24,26 @@
 
 namespace ripple {
 
-LedgerReplayer::LedgerReplayer(Application& app, clock_type& clock)
-    : app_(app), clock_(clock), j_(app.journal("LedgerReplayer"))
+LedgerReplayer::LedgerReplayer(
+    Application& app,
+    std::unique_ptr<PeerSetBuilder> peerSetBuilder,
+    Stoppable& parent)
+    : Stoppable("LedgerReplayer", parent)
+    , app_(app)
+    , peerSetBuilder_(std::move(peerSetBuilder))
+    , j_(app.journal("LedgerReplayer"))
 {
     JLOG(j_.debug()) << "LedgerReplayer constructed";
 }
 
 void
-LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
+LedgerReplayer::replay(
+    InboundLedger::Reason r,
+    uint256 const& finishLedgerHash,
+    std::uint32_t totalNumLedgers)
 {
-    if (!parameter.isValid())
-    {
-        JLOG(j_.warn()) << "Bad LedgerReplayTask parameter";
-        return;
-    }
+    LedgerReplayTask::TaskParameter parameter(
+        r, finishLedgerHash, totalNumLedgers);
 
     JLOG(j_.info()) << "Replay " << parameter.finishHash;
     bool needInit = false;
@@ -59,11 +64,14 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
         if (!skipList)
         {
             skipList = std::make_shared<SkipListAcquire>(
-                app_, parameter.finishHash, parameter.finishSeq);
+                app_,
+                *this,
+                parameter.finishHash,
+                parameter.finishSeq,
+                peerSetBuilder_->build(app_));
             skipLists_.emplace(parameter.finishHash, skipList);
             needInit = true;
-            JLOG(j_.trace())
-                << "Add SkipListAcquire " << parameter.finishHash;
+            JLOG(j_.trace()) << "Add SkipListAcquire " << parameter.finishHash;
         }
     }
 
@@ -71,7 +79,7 @@ LedgerReplayer::replay(LedgerReplayTask::TaskParameter&& parameter)
         skipList->init(1);
 
     auto task = std::make_shared<LedgerReplayTask>(
-        app_, skipList, std::move(parameter));
+        app_, *this, skipList, std::move(parameter));
     if (skipList->addTask(task))
         task->init();
 }
@@ -125,7 +133,11 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 if (!delta)
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
-                        app_, *skipListItem, seq);
+                        app_,
+                        *this,
+                        *skipListItem,
+                        seq,
+                        peerSetBuilder_->build(app_));
                     deltas_.emplace(*skipListItem, delta);
                     newDelta = true;
                 }
@@ -182,6 +194,25 @@ LedgerReplayer::gotReplayDelta(
         }
     }
     delta->processData(info, std::move(txns));
+}
+
+void
+LedgerReplayer::onStop()
+{
+    hash_set<std::shared_ptr<LedgerReplayTask>> tasks;
+    std::lock_guard<std::mutex> lock(lock_);
+    for(auto & [_, sl] : skipLists_)
+    {
+        auto skipList = sl.lock();
+        if (skipList)
+        {
+            for(auto & t : skipList->getAllTasks())
+            {
+                t->cancel();
+            }
+        }
+    }
+    stopped();
 }
 
 }  // namespace ripple

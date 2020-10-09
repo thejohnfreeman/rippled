@@ -368,11 +368,13 @@ target_sources (rippled PRIVATE
   src/ripple/app/ledger/impl/LedgerMaster.cpp
   src/ripple/app/ledger/impl/LedgerReplay.cpp
   src/ripple/app/ledger/impl/LedgerReplayer.cpp
+  src/ripple/app/ledger/impl/LedgerReplayMsgHandler.cpp
   src/ripple/app/ledger/impl/LedgerReplayTask.cpp
   src/ripple/app/ledger/impl/LedgerToJson.cpp
   src/ripple/app/ledger/impl/LocalTxs.cpp
   src/ripple/app/ledger/impl/OpenLedger.cpp
   src/ripple/app/ledger/impl/SkipListAcquire.cpp
+  src/ripple/app/ledger/impl/TimeoutCounter.cpp
   src/ripple/app/ledger/impl/TransactionAcquire.cpp
   src/ripple/app/ledger/impl/TransactionMaster.cpp
   src/ripple/app/main/Application.cpp

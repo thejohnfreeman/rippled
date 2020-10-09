@@ -154,9 +154,9 @@ struct NetworkHistory
     jtx::Env env;
     Parameter param;
     std::vector<jtx::Account> accounts;
-    LedgerMaster& ledgerMaster;
 };
 
+#if 0
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {
     void
@@ -413,3 +413,4 @@ BEAST_DEFINE_TESTSUITE(LedgerForwardReplay, app, ripple);
 
 }  // namespace test
 }  // namespace ripple
+#endif

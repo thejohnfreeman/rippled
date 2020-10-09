@@ -24,32 +24,55 @@
 
 namespace ripple {
 
-using namespace std::chrono_literals;
-
-PeerSet::PeerSet(
-    Application& app,
-    uint256 const& hash,
-    std::chrono::milliseconds interval,
-    beast::Journal journal)
-    : app_(app)
-    , m_journal(journal)
-    , mHash(hash)
-    , mTimeouts(0)
-    , mComplete(false)
-    , mFailed(false)
-    , mProgress(false)
-    , mTimerInterval(interval)
-    , mTimer(app_.getIOService())
+class PeerSetImpl : public PeerSet
 {
-    assert((mTimerInterval > 10ms) && (mTimerInterval < 30s));
+public:
+    using ScopedLockType = std::unique_lock<std::recursive_mutex>;
+
+    PeerSetImpl(Application& app);
+
+    ~PeerSetImpl() override = default;
+
+    void
+    addPeers(
+        std::size_t limit,
+        std::function<bool(std::shared_ptr<Peer> const&)> hasItem,
+        std::function<void(std::shared_ptr<Peer> const&)> onPeerAdded) override;
+
+    /** Send a GetLedger message to one or all peers. */
+    void
+    sendRequest(
+        ::google::protobuf::Message const& message,
+        protocol::MessageType type,
+        std::shared_ptr<Peer> const& peer) override;
+
+    void
+    visitAddedPeers(std::function<void(Peer::id_t)> onPeer) override;
+
+    std::size_t
+    countAddedPeers() override;
+
+private:
+    // Used in this class for access to boost::asio::io_service and
+    // ripple::Overlay.
+    Application& app_;
+    beast::Journal m_journal;
+    std::recursive_mutex mLock;
+
+    /** The identifiers of the peers we are tracking. */
+    std::set<Peer::id_t> mPeers;
+};
+
+PeerSetImpl::PeerSetImpl(Application& app)
+    : app_(app), m_journal(app.journal("PeerSet"))
+{
 }
 
-PeerSet::~PeerSet() = default;
-
 void
-PeerSet::addPeers(
+PeerSetImpl::addPeers(
     std::size_t limit,
-    std::function<bool(std::shared_ptr<Peer> const&)> hasItem)
+    std::function<bool(std::shared_ptr<Peer> const&)> hasItem,
+    std::function<void(std::shared_ptr<Peer> const&)> onPeerAdded)
 {
     using ScoredPeer = std::pair<int, std::shared_ptr<Peer>>;
 
@@ -84,53 +107,12 @@ PeerSet::addPeers(
 }
 
 void
-PeerSet::setTimer()
-{
-    mTimer.expires_after(mTimerInterval);
-    mTimer.async_wait(
-        [wptr = pmDowncast()](boost::system::error_code const& ec) {
-            if (ec == boost::asio::error::operation_aborted)
-                return;
-
-            if (auto ptr = wptr.lock())
-                ptr->queueJob();
-        });
-}
-
-void
-PeerSet::invokeOnTimer()
-{
-    ScopedLockType sl(mLock);
-
-    if (isDone())
-        return;
-
-    if (!mProgress)
-    {
-        ++mTimeouts;
-        JLOG(m_journal.debug())
-            << "Timeout(" << mTimeouts << ") pc=" << mPeers.size()
-            << " acquiring " << mHash;
-        onTimer(false, sl);
-    }
-    else
-    {
-        mProgress = false;
-        onTimer(true, sl);
-    }
-
-    if (!isDone())
-        setTimer();
-}
-
-void
-PeerSet::sendRequest(
-    std::shared_ptr<Message> const&
-        packet,  // const protocol::TMGetLedger& tmGL,
+PeerSetImpl::sendRequest(
+    ::google::protobuf::Message const& message,
+    protocol::MessageType type,
     std::shared_ptr<Peer> const& peer)
 {
-    //    auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
-
+    auto packet = std::make_shared<Message>(message, type);
     if (peer)
     {
         peer->send(packet);
@@ -138,12 +120,44 @@ PeerSet::sendRequest(
     }
 
     ScopedLockType sl(mLock);
-
     for (auto id : mPeers)
     {
         if (auto p = app_.overlay().findPeerByShortID(id))
             p->send(packet);
     }
+}
+
+void
+PeerSetImpl::visitAddedPeers(std::function<void(Peer::id_t)> onPeer)
+{
+    ScopedLockType sl(mLock);
+    for (auto id : mPeers)
+    {
+        onPeer(id);
+    }
+}
+
+std::size_t
+PeerSetImpl::countAddedPeers()
+{
+    ScopedLockType sl(mLock);
+    return mPeers.size();
+}
+
+class PeerSetBuilderImpl : public PeerSetBuilder
+{
+public:
+    virtual std::unique_ptr<PeerSet>
+    build(Application& app) override
+    {
+        return std::make_unique<PeerSetImpl>(app);
+    }
+};
+
+std::unique_ptr<PeerSetBuilder>
+make_PeerSetBuilder()
+{
+    return std::make_unique<PeerSetBuilderImpl>();
 }
 
 }  // namespace ripple

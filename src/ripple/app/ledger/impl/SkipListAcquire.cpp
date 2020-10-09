@@ -28,14 +28,18 @@ namespace ripple {
 
 SkipListAcquire::SkipListAcquire(
     Application& app,
+    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
-    std::uint32_t ledgerSeq)
-    : PeerSet(
+    std::uint32_t ledgerSeq,
+    std::unique_ptr<PeerSet>&& peerSet)
+    : TimeoutCounter(
           app,
           ledgerHash,
           LEDGER_REPLAY_TIMEOUT,
           app.journal("SkipListAcquire"))
+    , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
+    , peerSet_(std::move(peerSet))
 {
     JLOG(m_journal.debug())
         << "Acquire skip list " << mHash << " Seq " << ledgerSeq;
@@ -43,7 +47,7 @@ SkipListAcquire::SkipListAcquire(
 
 SkipListAcquire::~SkipListAcquire()
 {
-    app_.getLedgerReplayer().removeSkipListAcquire(mHash);
+    replayer_.removeSkipListAcquire(mHash);
     JLOG(m_journal.trace()) << "remove myself " << mHash;
 }
 
@@ -83,25 +87,24 @@ SkipListAcquire::init(int numPeers)
 void
 SkipListAcquire::addPeers(std::size_t limit)
 {
-    PeerSet::addPeers(limit, [this](auto peer) {
-        return peer->hasLedger(mHash, ledgerSeq_);
-    });
-}
+    peerSet_->addPeers(
+        limit,
+        [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
+        [this](auto peer) {
+            if (isDone() || !skipList_.empty() || !peer)//TODO need??
+                return;
 
-void
-SkipListAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
-{
-    if (isDone() || !skipList_.empty() || !peer)
-        return;
-
-    JLOG(m_journal.trace()) << "Add a peer " << peer->id() << " for " << mHash;
-    protocol::TMProofPathRequest request;
-    request.set_ledgerhash(mHash.data(), mHash.size());
-    request.set_key(keylet::skip().key.data(), keylet::skip().key.size());
-    request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
-    auto packet =
-        std::make_shared<Message>(request, protocol::mtProofPathRequest);
-    sendRequest(packet, peer);
+            JLOG(m_journal.trace())
+                << "Add a peer " << peer->id() << " for " << mHash;
+            protocol::TMProofPathRequest request;
+            request.set_ledgerhash(mHash.data(), mHash.size());
+            request.set_key(
+                keylet::skip().key.data(), keylet::skip().key.size());
+            request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
+//            auto packet = std::make_shared<Message>(
+//                request, protocol::mtProofPathRequest);
+            peerSet_->sendRequest(request, protocol::mtProofPathRequest, peer);
+        });
 }
 
 void
@@ -121,14 +124,14 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
     {
         mFailed = true;
         for (auto& t : tasks_)
-            t->subTaskFailed(mHash);
+            t->cancel();
         return;
     }
 
     addPeers(1);
 }
 
-std::weak_ptr<PeerSet>
+std::weak_ptr<TimeoutCounter>
 SkipListAcquire::pmDowncast()
 {
     return shared_from_this();
@@ -165,7 +168,7 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     ScopedLockType sl(mLock);
     if (mFailed)
     {
-        task->subTaskFailed(mHash);
+        task->cancel();
         return false;
     }
     for (auto const& t : tasks_)
@@ -181,6 +184,20 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
         task->updateSkipList(mHash, ledgerSeq_, skipList_);
     }
     return true;
+}
+
+void
+SkipListAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
+{
+    ScopedLockType sl(mLock);
+    tasks_.erase(task);
+}
+
+hash_set<std::shared_ptr<LedgerReplayTask>>
+SkipListAcquire::getAllTasks()
+{
+    ScopedLockType sl(mLock);
+    return tasks_;
 }
 
 }  // namespace ripple

@@ -34,14 +34,18 @@ namespace ripple {
 
 LedgerDeltaAcquire::LedgerDeltaAcquire(
     Application& app,
+    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
-    std::uint32_t ledgerSeq)
-    : PeerSet(
+    std::uint32_t ledgerSeq,
+    std::unique_ptr<PeerSet> peerSet)
+    : TimeoutCounter(
           app,
           ledgerHash,
           LEDGER_REPLAY_TIMEOUT,
           app.journal("LedgerDeltaAcquire"))
+    , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
+    , peerSet_(std::move(peerSet))
 {
     JLOG(m_journal.debug())
         << "Acquire ledger " << mHash << " Seq " << ledgerSeq;
@@ -49,7 +53,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
-    app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
+    replayer_.removeLedgerDeltaAcquire(mHash);
     JLOG(m_journal.trace()) << "remove myself " << mHash;
 }
 
@@ -75,23 +79,19 @@ LedgerDeltaAcquire::init(int numPeers)
 void
 LedgerDeltaAcquire::addPeers(std::size_t limit)
 {
-    PeerSet::addPeers(limit, [this](auto peer) {
-        return peer->hasLedger(mHash, ledgerSeq_);
-    });
-}
+    peerSet_->addPeers(
+        limit,
+        [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
+        [this](auto peer) {
+            if (isDone() || replay_ || !peer)  // TODO need??
+                return;
 
-void
-LedgerDeltaAcquire::onPeerAdded(std::shared_ptr<Peer> const& peer)
-{
-    if (isDone() || replay_ || !peer)
-        return;
-
-    JLOG(m_journal.trace()) << "Add a peer " << peer->id() << " for " << mHash;
-    protocol::TMReplayDeltaRequest request;
-    request.set_ledgerhash(mHash.data(), mHash.size());
-    auto packet =
-        std::make_shared<Message>(request, protocol::mtReplayDeltaRequest);
-    sendRequest(packet, peer);
+            JLOG(m_journal.trace())
+                << "Add a peer " << peer->id() << " for " << mHash;
+            protocol::TMReplayDeltaRequest request;
+            request.set_ledgerhash(mHash.data(), mHash.size());
+            peerSet_->sendRequest(request, protocol::mtReplayDeltaRequest, peer);
+        });
 }
 
 void
@@ -111,14 +111,14 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     {
         mFailed = true;
         for (auto& t : tasks_)
-            t->subTaskFailed(mHash);
+            t->cancel();
         return;
     }
 
     addPeers(1);
 }
 
-std::weak_ptr<PeerSet>
+std::weak_ptr<TimeoutCounter>
 LedgerDeltaAcquire::pmDowncast()
 {
     return shared_from_this();
@@ -141,9 +141,12 @@ LedgerDeltaAcquire::processData(
         if (mComplete)
             return;
         mComplete = true;
+        mFailed = false;
         replay_ = rp;
         orderedTxns_ = std::move(orderedTxns);
         JLOG(m_journal.debug()) << "ready to replay " << mHash;
+        for(auto &t : tasks_)
+            t->tryAdvance({});
     }
 }
 
@@ -161,7 +164,14 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
             onLedgerBuilt(reason);
     }
     if (mFailed)
-        task->subTaskFailed(mHash);
+        task->cancel();
+}
+
+void
+LedgerDeltaAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
+{
+    ScopedLockType sl(mLock);
+    tasks_.erase(task);
 }
 
 std::shared_ptr<Ledger const>

@@ -20,6 +20,7 @@
 #ifndef RIPPLE_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
 #define RIPPLE_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
 
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/main/Application.h>
@@ -32,7 +33,7 @@ namespace ripple {
 class LedgerReplayTask;
 
 class SkipListAcquire final
-    : public PeerSet,
+    : public TimeoutCounter,
       public std::enable_shared_from_this<SkipListAcquire>,
       public CountedObject<SkipListAcquire>
 {
@@ -47,8 +48,10 @@ public:
 
     SkipListAcquire(
         Application& app,
+        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
-        std::uint32_t ledgerSeq);
+        std::uint32_t ledgerSeq,
+        std::unique_ptr<PeerSet> &&peerSet);
 
     ~SkipListAcquire() override;
 
@@ -63,6 +66,12 @@ public:
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
+    void
+    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
+
+    hash_set<std::shared_ptr<LedgerReplayTask>>
+    getAllTasks();
+
 private:
     void
     queueJob() override;
@@ -70,18 +79,19 @@ private:
     void
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
-    void
-    onPeerAdded(std::shared_ptr<Peer> const& peer) override;
-
-    std::weak_ptr<PeerSet>
+    std::weak_ptr<TimeoutCounter>
     pmDowncast() override;
 
     void
     addPeers(std::size_t limit);
 
+    LedgerReplayer& replayer_;
     std::uint32_t ledgerSeq_;
+    std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
     hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
+
+    friend class LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

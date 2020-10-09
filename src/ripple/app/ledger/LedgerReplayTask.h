@@ -20,6 +20,7 @@
 #ifndef RIPPLE_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
 #define RIPPLE_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
 
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/main/Application.h>
@@ -42,7 +43,7 @@ class LedgerDeltaAcquire;
 class SkipListAcquire;
 
 class LedgerReplayTask final
-    : public PeerSet,  // TODO using PeerSet's timer, change??
+    : public TimeoutCounter,
       public std::enable_shared_from_this<LedgerReplayTask>,
       public CountedObject<LedgerReplayTask>
 {
@@ -61,7 +62,7 @@ public:
 
         TaskParameter(
             InboundLedger::Reason r,
-            uint256 finishLedgerHash,
+            uint256 const& finishLedgerHash,
             std::uint32_t totalNumLedgers)
         : reason(r)
         , finishHash(finishLedgerHash)
@@ -169,6 +170,7 @@ public:
 
     LedgerReplayTask(
         Application& app,
+        LedgerReplayer& replayer,
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,
         TaskParameter&& parameter);
 
@@ -196,7 +198,7 @@ public:
     }
 
     void
-    subTaskFailed(uint256 const& hash);
+    cancel();
 
 private:
     void
@@ -205,12 +207,7 @@ private:
     void
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
-    void
-    onPeerAdded(std::shared_ptr<Peer> const& peer) override
-    {
-    }
-
-    std::weak_ptr<PeerSet>
+    std::weak_ptr<TimeoutCounter>
     pmDowncast() override;
 
     void
@@ -219,11 +216,14 @@ private:
     void
     trigger();
 
+    LedgerReplayer& replayer_;
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
     std::shared_ptr<Ledger const> parent = {};
     int deltaToBuild = -1; //should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
+
+    friend class LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

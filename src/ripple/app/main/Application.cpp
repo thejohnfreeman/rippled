@@ -57,6 +57,7 @@
 #include <ripple/nodestore/DummyScheduler.h>
 #include <ripple/overlay/Cluster.h>
 #include <ripple/overlay/PeerReservationTable.h>
+#include <ripple/overlay/PeerSet.h>
 #include <ripple/overlay/make_Overlay.h>
 #include <ripple/protocol/BuildInfo.h>
 #include <ripple/protocol/Feature.h>
@@ -335,8 +336,10 @@ public:
               m_collectorManager->collector(),
               logs_->journal("LedgerMaster")))
 
-        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(*this, stopwatch()))
-        // logs_->journal("LedgerReplayer")))
+        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
+              *this,
+              make_PeerSetBuilder(),
+              *m_jobQueue))
 
         // VFALCO NOTE must come before NetworkOPs to prevent a crash due
         //             to dependencies in the destructor.
@@ -1967,7 +1970,8 @@ ApplicationImp::loadOldLedger(
                         hash,
                         0,
                         InboundLedger::Reason::GENERIC,
-                        stopwatch());
+                        stopwatch(),
+                        nullptr);  // TODO local only, don't need a peerSet
                     if (il->checkLocal())
                         loadLedger = il->getLedger();
                 }
@@ -2010,7 +2014,8 @@ ApplicationImp::loadOldLedger(
                     replayLedger->info().parentHash,
                     0,
                     InboundLedger::Reason::GENERIC,
-                    stopwatch());
+                    stopwatch(),
+                    nullptr);  // TODO local only, don't need a peerSet
 
                 if (il->checkLocal())
                     loadLedger = il->getLedger();

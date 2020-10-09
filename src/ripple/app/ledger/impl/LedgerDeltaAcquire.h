@@ -32,9 +32,9 @@ class LedgerReplayTask;
 
 // A ledger delta (header and transactions) we are trying to acquire
 class LedgerDeltaAcquire final
-    : public PeerSet,
+    : public TimeoutCounter,
       public std::enable_shared_from_this<LedgerDeltaAcquire>,
-      public CountedObject<LedgerDeltaAcquire>
+      public CountedObject<LedgerDeltaAcquire> //TODO needed??
 {
 public:
     static char const*
@@ -43,12 +43,12 @@ public:
         return "LedgerDeltaAcquire";
     }
 
-    using pointer = std::shared_ptr<LedgerDeltaAcquire>;
-
     LedgerDeltaAcquire(
         Application& app,
+        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
-        std::uint32_t ledgerSeq);
+        std::uint32_t ledgerSeq,
+        std::unique_ptr<PeerSet> peerSet);
 
     ~LedgerDeltaAcquire() override;
 
@@ -66,6 +66,9 @@ public:
     void
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
+    void
+    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
+
 private:
     void
     queueJob() override;
@@ -73,10 +76,7 @@ private:
     void
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
-    void
-    onPeerAdded(std::shared_ptr<Peer> const& peer) override;
-
-    std::weak_ptr<PeerSet>
+    std::weak_ptr<TimeoutCounter>
     pmDowncast() override;
 
     void
@@ -85,16 +85,17 @@ private:
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
+    LedgerReplayer& replayer_;
     std::uint32_t ledgerSeq_;
+    std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replay_;
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
-    // TODO call tryAdvance() for all in tasks_ ??
-    // std::shared_ptr<Ledger const> parent_;
     hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
     bool ledgerBuilt_ = false;
 
     friend class LedgerReplayTask;
+    friend class LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

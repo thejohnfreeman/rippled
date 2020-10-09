@@ -94,6 +94,7 @@ PeerImp::PeerImp(
     , compressionEnabled_(
           headers_["X-Offer-Compression"] == "lz4" ? Compressed::On
                                                    : Compressed::Off)
+    , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
 {
 }
 
@@ -1565,78 +1566,10 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
         });
 }
 
-// TODO how to unit test
-// TODO handle error
-// TODO app_.getJobQueue().addJob()
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
 {
-    JLOG(p_journal_.trace()) << "onMessage, TMProofPathResponse";
-    protocol::TMProofPathResponse& reply = *m;
-    if (reply.has_error() || !reply.has_key() || !reply.has_ledgerhash() ||
-        !reply.has_type() || !reply.has_ledgerheader() ||
-        reply.path_size() == 0)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Error reply";
-        return;
-    }
-
-    if (reply.type() != protocol::lmAS_NODE)
-    {
-        JLOG(p_journal_.trace())
-            << "Bad message: we only support the state ShaMap for now";
-        return;
-    }
-
-    // deserialize the header
-    auto info = deserializeHeader(
-        {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    uint256 replyHash(reply.ledgerhash());
-    if (calculateLedgerHash(info) != replyHash)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
-        return;
-    }
-    info.hash = replyHash;
-
-    uint256 key(reply.key());
-    if (key != keylet::skip().key)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: we only support the short "
-                                    "skip list for now. Key in reply "
-                                 << key;
-        return;
-    }
-
-    // verify the skip list
-    std::vector<Blob> path;
-    path.reserve(reply.path_size());
-    for (int i = 0; i < reply.path_size(); ++i)
-    {
-        path.emplace_back(reply.path(i).begin(), reply.path(i).end());
-    }
-
-    if (!SHAMap::verifyProofPath(info.accountHash, key, path))
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Proof path verify failed";
-        return;
-    }
-
-    // deserialize the SHAMapItem
-    auto node = SHAMapAbstractNode::makeFromWire(makeSlice(path.front()));
-    if (!node || !node->isLeaf())
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
-        return;
-    }
-    auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
-    if (!item)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Cannot get ShaMapItem";
-        return;
-    }
-
-    app_.getLedgerReplayer().gotSkipList(info, item);
+    ledgerReplayMsgHandler_.processProofPathResponse(m);
 }
 
 void
@@ -1655,74 +1588,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 {
-    JLOG(p_journal_.trace()) << "onMessage, TMReplayDeltaResponse";
-    protocol::TMReplayDeltaResponse& reply = *m;
-    if (reply.has_error() || !reply.has_ledgerheader())
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Error reply";
-        return;
-    }
-
-    auto info = deserializeHeader(
-        {reply.ledgerheader().data(), reply.ledgerheader().size()});
-    uint256 replyHash(reply.ledgerhash());
-    if (calculateLedgerHash(info) != replyHash)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Hash mismatch";
-        return;
-    }
-    info.hash = replyHash;
-
-    auto numTxns = reply.transaction_size();
-    std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
-    SHAMap txMap(SHAMapType::TRANSACTION, app_.getNodeFamily());
-    try
-    {
-        for (int i = 0; i < numTxns; ++i)
-        {
-            // deserialize:
-            // -- TxShaMapItem for building a ShaMap for verification
-            // -- Tx
-            // -- TxMetaData for Tx ordering
-            Serializer shaMapItemData(
-                reply.transaction(i).data(), reply.transaction(i).size());
-
-            SerialIter txMetaSit(makeSlice(reply.transaction(i)));
-            SerialIter txSit(txMetaSit.getSlice(txMetaSit.getVLDataLength()));
-            SerialIter metaSit(txMetaSit.getSlice(txMetaSit.getVLDataLength()));
-
-            auto tx = std::make_shared<STTx const>(txSit);
-            if (!tx)
-            {
-                JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
-                return;
-            }
-            auto tid = tx->getTransactionID();
-            STObject meta(metaSit, sfMetadata);
-            orderedTxns.emplace(meta[sfTransactionIndex], std::move(tx));
-
-            auto item = std::make_shared<SHAMapItem const>(
-                tid, std::move(shaMapItemData));
-            if (!item || !txMap.addGiveItem(std::move(item), true, true))
-            {
-                JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
-                return;
-            }
-        }
-    }
-    catch (std::exception const&)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Cannot deserialize";
-        return;
-    }
-
-    if (txMap.getHash().as_uint256() != info.txHash)
-    {
-        JLOG(p_journal_.trace()) << "Bad message: Transactions verify failed";
-        return;
-    }
-
-    app_.getLedgerReplayer().gotReplayDelta(info, std::move(orderedTxns));
+    ledgerReplayMsgHandler_.processReplayDeltaResponse(m);
 }
 
 void
@@ -3161,7 +3027,7 @@ void
 PeerImp::getProofPath(
     std::shared_ptr<protocol::TMProofPathRequest> const& request)
 {
-    auto reply = app_.getLedgerMaster().getProofPathResponse(request);
+    auto reply = ledgerReplayMsgHandler_.processProofPathRequest(request);
     if (reply.has_error() &&
         reply.error() == protocol::TMReplyError::reBAD_REQUEST)
         charge(Resource::feeInvalidRequest);
@@ -3174,7 +3040,7 @@ void
 PeerImp::getReplayDelta(
     std::shared_ptr<protocol::TMReplayDeltaRequest> const& request)
 {
-    auto reply = app_.getLedgerMaster().getReplayDeltaResponse(request);
+    auto reply = ledgerReplayMsgHandler_.processReplayDeltaRequest(request);
     if (reply.has_error() &&
         reply.error() == protocol::TMReplyError::reBAD_REQUEST)
         charge(Resource::feeInvalidRequest);

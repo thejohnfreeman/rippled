@@ -28,13 +28,15 @@ namespace ripple {
 
 LedgerReplayTask::LedgerReplayTask(
     Application& app,
+    LedgerReplayer& replayer,
     std::shared_ptr<SkipListAcquire>& skipListAcquirer,
     TaskParameter&& parameter)
-    : PeerSet(
+    : TimeoutCounter(
           app,
           parameter.finishHash,
           LEDGER_REPLAY_TIMEOUT,
           app.journal("LedgerReplayTask"))
+    , replayer_(replayer)
     , parameter_(parameter)
     , skipListAcquirer_(skipListAcquirer)
 {
@@ -107,7 +109,7 @@ LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
     trigger();
 }
 
-std::weak_ptr<PeerSet>
+std::weak_ptr<TimeoutCounter>
 LedgerReplayTask::pmDowncast()
 {
     return shared_from_this();
@@ -128,13 +130,20 @@ LedgerReplayTask::updateSkipList(
         }
     }
 
-    app_.getLedgerReplayer().createDeltas(shared_from_this());
+    replayer_.createDeltas(shared_from_this());
 }
 
 void
 LedgerReplayTask::done()
 {
+    auto me = shared_from_this();
+    skipListAcquirer_->removeTask(me);
     skipListAcquirer_ = nullptr;//TODO make sure no access after this point
+    for(auto & delta : deltas_)
+    {
+        delta->removeTask(me);
+    }
+    deltas_.clear();
 
     if (mFailed)
     {
@@ -160,7 +169,7 @@ LedgerReplayTask::tryAdvance(
     std::optional<std::shared_ptr<Ledger const> const> ledger)
 {
     JLOG(m_journal.trace()) << "tryAdvance " << mHash;
-    // TODO for call from LedgerDeltaAcquire, to be coded
+
     ScopedLockType sl(mLock);
     if (ledger)
     {
@@ -197,9 +206,9 @@ LedgerReplayTask::tryAdvance(
 }
 
 void
-LedgerReplayTask::subTaskFailed(uint256 const& hash)
+LedgerReplayTask::cancel()
 {
-    JLOG(m_journal.warn()) << "Task " << mHash << " subtask failed " << hash;
+    JLOG(m_journal.warn()) << "Cancel Task " << mHash;
     ScopedLockType sl(mLock);
     mFailed = true;
     done();

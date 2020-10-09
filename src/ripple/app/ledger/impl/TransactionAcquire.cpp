@@ -39,9 +39,17 @@ enum {
     MAX_TIMEOUTS = 20,
 };
 
-TransactionAcquire::TransactionAcquire(Application& app, uint256 const& hash)
-    : PeerSet(app, hash, TX_ACQUIRE_TIMEOUT, app.journal("TransactionAcquire"))
+TransactionAcquire::TransactionAcquire(
+    Application& app,
+    uint256 const& hash,
+    std::unique_ptr<PeerSet> peerSet)
+    : TimeoutCounter(
+          app,
+          hash,
+          TX_ACQUIRE_TIMEOUT,
+          app.journal("TransactionAcquire"))
     , mHaveRoot(false)
+    , mPeerSet(std::move(peerSet))
 {
     mMap = std::make_shared<SHAMap>(
         SHAMapType::TRANSACTION, hash, app_.getNodeFamily());
@@ -102,7 +110,7 @@ TransactionAcquire::onTimer(bool progress, ScopedLockType& psl)
     addPeers(1);
 }
 
-std::weak_ptr<PeerSet>
+std::weak_ptr<TimeoutCounter>
 TransactionAcquire::pmDowncast()
 {
     return shared_from_this();
@@ -135,8 +143,9 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
             tmGL.set_querytype(protocol::qtINDIRECT);
 
         *(tmGL.add_nodeids()) = SHAMapNodeID().getRawString();
-        auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
-        sendRequest(packet, peer);
+        //        auto packet = std::make_shared<Message>(tmGL,
+        //        protocol::mtGET_LEDGER); sendRequest(packet, peer);
+        mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
     }
     else if (!mMap->isValid())
     {
@@ -170,8 +179,9 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
         {
             *tmGL.add_nodeids() = node.first.getRawString();
         }
-        auto packet = std::make_shared<Message>(tmGL, protocol::mtGET_LEDGER);
-        sendRequest(packet, peer);
+        //        auto packet = std::make_shared<Message>(tmGL,
+        //        protocol::mtGET_LEDGER); sendRequest(packet, peer);
+        mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
     }
 }
 
@@ -247,8 +257,10 @@ TransactionAcquire::takeNodes(
 void
 TransactionAcquire::addPeers(std::size_t limit)
 {
-    PeerSet::addPeers(
-        limit, [this](auto peer) { return peer->hasTxSet(mHash); });
+    mPeerSet->addPeers(
+        limit,
+        [this](auto peer) { return peer->hasTxSet(mHash); },
+        [this](auto peer) { trigger(peer); });
 }
 
 void

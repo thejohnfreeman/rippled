@@ -21,6 +21,7 @@
 #define RIPPLE_OVERLAY_PEERIMP_H_INCLUDED
 
 #include <ripple/app/consensus/RCLCxPeerPos.h>
+#include <ripple/app/ledger/impl/LedgerReplayMsgHandler.h>
 #include <ripple/basics/Log.h>
 #include <ripple/basics/RangeSet.h>
 #include <ripple/beast/utility/WrappedSink.h>
@@ -195,6 +196,7 @@ private:
     hash_map<PublicKey, ShardInfo> shardInfo_;
 
     Compressed compressionEnabled_ = Compressed::Off;
+    LedgerReplayMsgHandler ledgerReplayMsgHandler_;
 
     friend class OverlayImpl;
 
@@ -668,6 +670,7 @@ PeerImp::PeerImp(
           headers_["X-Offer-Compression"] == "lz4" && app_.config().COMPRESSION
               ? Compressed::On
               : Compressed::Off)
+    , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
 {
     read_buffer_.commit(boost::asio::buffer_copy(
         read_buffer_.prepare(boost::asio::buffer_size(buffers)), buffers));

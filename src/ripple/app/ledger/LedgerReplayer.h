@@ -21,30 +21,35 @@
 #define RIPPLE_APP_LEDGER_LEDGERFORWARDREPLAYER_H_INCLUDED
 
 #include <ripple/app/ledger/LedgerReplayTask.h>
-//#include <ripple/beast/container/aged_map.h>
-//#include <ripple/core/Stoppable.h>
 #include <ripple/app/ledger/LedgerMaster.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/beast/utility/Journal.h>
-#include <memory>
+#include <ripple/core/Stoppable.h>
 
+#include <memory>
 #include <mutex>
+
 namespace ripple {
 
 /**
  * Manages the lifetime of ledger replay tasks.
  */
-class LedgerReplayer  //: public Stoppable
+class LedgerReplayer : public Stoppable
 {
 public:
     using clock_type = beast::abstract_clock<std::chrono::steady_clock>;
 
-    LedgerReplayer(Application& app, clock_type& clock);
-    // TODO ,                   Stoppable& parent);
+    LedgerReplayer(
+        Application& app,
+        std::unique_ptr<PeerSetBuilder> peerSetBuilder,
+        Stoppable& parent);
     ~LedgerReplayer() = default;
 
     void
-    replay(LedgerReplayTask::TaskParameter&& parameter);
+    replay(
+        InboundLedger::Reason r,
+        uint256 const& finishLedgerHash,
+        std::uint32_t totalNumLedgers);
 
     void
     createDeltas(std::shared_ptr<LedgerReplayTask> task);
@@ -73,15 +78,18 @@ public:
         skipLists_.erase(hash);
     }
 
+    void
+    onStop() override;
+
 private:
-    Application& app_;
-    clock_type& clock_;
+    mutable std::mutex lock_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
-    mutable std::mutex lock_;
+    Application& app_;
+    std::unique_ptr<PeerSetBuilder> peerSetBuilder_;
     beast::Journal j_;
-    // TODO retry of the failed ones should be delayed
-    // beast::aged_map<uint256, std::uint32_t> mRecentFailures;
+
+    friend class LedgerForwardReplay_test;
 };
 
 }  // namespace ripple
