@@ -48,7 +48,7 @@ SkipListAcquire::SkipListAcquire(
 SkipListAcquire::~SkipListAcquire()
 {
     replayer_.removeSkipListAcquire(mHash);
-    JLOG(m_journal.trace()) << "remove myself " << mHash;
+    JLOG(m_journal.trace()) << "SkipList dtor, remove myself " << mHash;
 }
 
 void
@@ -91,7 +91,7 @@ SkipListAcquire::addPeers(std::size_t limit)
         limit,
         [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
         [this](auto peer) {
-            if (isDone() || !skipList_.empty() || !peer)//TODO need??
+            if (isDone() || !skipList_.empty() || !peer)  // TODO need??
                 return;
 
             JLOG(m_journal.trace())
@@ -101,8 +101,6 @@ SkipListAcquire::addPeers(std::size_t limit)
             request.set_key(
                 keylet::skip().key.data(), keylet::skip().key.size());
             request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
-//            auto packet = std::make_shared<Message>(
-//                request, protocol::mtProofPathRequest);
             peerSet_->sendRequest(request, protocol::mtProofPathRequest, peer);
         });
 }
@@ -173,8 +171,9 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     }
     for (auto const& t : tasks_)
     {
-        if (task->getTaskTaskParameter().canMergeInto(
-                t->getTaskTaskParameter()))
+        if (task->getTaskTaskParameter()
+                .canMergeInto(  // TODO consider no merge
+                    t->getTaskTaskParameter()))
             return false;
     }
     auto r = tasks_.emplace(task);
@@ -186,12 +185,13 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     return true;
 }
 
-void
-SkipListAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
-{
-    ScopedLockType sl(mLock);
-    tasks_.erase(task);
-}
+// void
+// SkipListAcquire::removeTask(std::shared_ptr<LedgerReplayTask> const& task)
+//{
+//    JLOG(m_journal.debug()) << "remove task " << mHash;
+//    ScopedLockType sl(mLock);
+//    tasks_.erase(task);
+//}
 
 hash_set<std::shared_ptr<LedgerReplayTask>>
 SkipListAcquire::getAllTasks()

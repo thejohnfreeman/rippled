@@ -68,7 +68,7 @@ LedgerReplayer::replay(
                 *this,
                 parameter.finishHash,
                 parameter.finishSeq,
-                peerSetBuilder_->build(app_));
+                peerSetBuilder_->build());
             skipLists_.emplace(parameter.finishHash, skipList);
             needInit = true;
             JLOG(j_.trace()) << "Add SkipListAcquire " << parameter.finishHash;
@@ -137,7 +137,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                         *this,
                         *skipListItem,
                         seq,
-                        peerSetBuilder_->build(app_));
+                        peerSetBuilder_->build());
                     deltas_.emplace(*skipListItem, delta);
                     newDelta = true;
                 }
@@ -201,12 +201,12 @@ LedgerReplayer::onStop()
 {
     hash_set<std::shared_ptr<LedgerReplayTask>> tasks;
     std::lock_guard<std::mutex> lock(lock_);
-    for(auto & [_, sl] : skipLists_)
+    for (auto& [_, sl] : skipLists_)
     {
         auto skipList = sl.lock();
         if (skipList)
         {
-            for(auto & t : skipList->getAllTasks())
+            for (auto& t : skipList->getAllTasks())
             {
                 t->cancel();
             }

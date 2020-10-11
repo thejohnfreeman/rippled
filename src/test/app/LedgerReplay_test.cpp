@@ -20,6 +20,8 @@
 #include <ripple/app/ledger/BuildLedger.h>
 #include <ripple/app/ledger/LedgerMaster.h>
 #include <ripple/app/ledger/LedgerReplay.h>
+#include <ripple/app/ledger/LedgerReplayer.h>
+#include <ripple/overlay/PeerSet.h>
 #include <ripple/overlay/impl/PeerImp.h>
 #include <test/jtx.h>
 
@@ -58,10 +60,208 @@ struct LedgerReplay_test : public beast::unit_test::suite
     }
 };
 
+class ReplayTestPeer : public Peer
+{
+public:
+    void
+    send(std::shared_ptr<Message> const& m) override
+    {
+    }
+    beast::IP::Endpoint
+    getRemoteAddress() const override
+    {
+        return {};
+    }
+    void
+    charge(Resource::Charge const& fee) override
+    {
+    }
+    id_t
+    id() const override
+    {
+        return 1234;
+    }
+    bool
+    cluster() const override
+    {
+        return false;
+    }
+    bool
+    isHighLatency() const override
+    {
+        return false;
+    }
+    int
+    getScore(bool) const override
+    {
+        return 0;
+    }
+    PublicKey const&
+    getNodePublic() const override
+    {
+        static PublicKey key{};
+        return key;
+    }
+    Json::Value
+    json() override
+    {
+        return {};
+    }
+    bool
+    supportsFeature(ProtocolFeature f) const override
+    {
+        return false;
+    }
+    boost::optional<std::size_t>
+    publisherListSequence(PublicKey const&) const override
+    {
+        return {};
+    }
+    void
+    setPublisherListSequence(PublicKey const&, std::size_t const) override
+    {
+    }
+    uint256 const&
+    getClosedLedgerHash() const override
+    {
+        static uint256 hash{};
+        return hash;
+    }
+    bool
+    hasLedger(uint256 const& hash, std::uint32_t seq) const override
+    {
+        return true;
+    }
+    void
+    ledgerRange(std::uint32_t& minSeq, std::uint32_t& maxSeq) const override
+    {
+    }
+    bool
+    hasShard(std::uint32_t shardIndex) const override
+    {
+        return false;
+    }
+    bool
+    hasTxSet(uint256 const& hash) const override
+    {
+        return false;
+    }
+    void
+    cycleStatus() override
+    {
+    }
+    bool
+    hasRange(std::uint32_t uMin, std::uint32_t uMax) override
+    {
+        return false;
+    }
+    bool
+    compressionEnabled() const override
+    {
+        return false;
+    }
+};
+
+struct ReplayPeerSet : public PeerSet
+{
+    ReplayPeerSet(
+        LedgerReplayMsgHandler& me,
+        LedgerReplayMsgHandler& other,
+        int drop)
+        : local(me)
+        , remote(other)
+        , dummyPeer(std::make_shared<ReplayTestPeer>())
+        , dropRate(drop)
+    {
+    }
+
+    void
+    addPeers(
+        std::size_t limit,
+        std::function<bool(std::shared_ptr<Peer> const&)> hasItem,
+        std::function<void(std::shared_ptr<Peer> const&)> onPeerAdded) override
+    {
+        hasItem(dummyPeer);
+        onPeerAdded(dummyPeer);
+    }
+
+    void
+    sendRequest(
+        ::google::protobuf::Message const& msg,
+        protocol::MessageType type,
+        std::shared_ptr<Peer> const& peer) override
+    {
+        if ((rand() % 100 + 1) <= dropRate)
+            return;
+
+        switch (type)
+        {
+            case protocol::mtProofPathRequest: {
+                auto request = std::make_shared<protocol::TMProofPathRequest>(
+                    dynamic_cast<protocol::TMProofPathRequest const&>(msg));
+                auto reply = std::make_shared<protocol::TMProofPathResponse>(
+                    remote.processProofPathRequest(request));
+                local.processProofPathResponse(reply);
+                break;
+            }
+            case protocol::mtReplayDeltaRequest: {
+                auto request = std::make_shared<protocol::TMReplayDeltaRequest>(
+                    dynamic_cast<protocol::TMReplayDeltaRequest const&>(msg));
+                auto reply = std::make_shared<protocol::TMReplayDeltaResponse>(
+                    remote.processReplayDeltaRequest(request));
+                local.processReplayDeltaResponse(reply);
+                break;
+            }
+            default:
+                return;
+        }
+    }
+
+    void
+    visitAddedPeers(std::function<void(Peer::id_t)> onPeer) override
+    {
+        onPeer(dummyPeer->id());
+    }
+
+    std::size_t
+    countAddedPeers() override
+    {
+        return 1;
+    }
+
+    LedgerReplayMsgHandler& local;
+    LedgerReplayMsgHandler& remote;
+    std::shared_ptr<ReplayTestPeer> dummyPeer;
+    int dropRate;
+};
+
+class ReplayPeerSetBuilder : public PeerSetBuilder
+{
+public:
+    ReplayPeerSetBuilder(
+        LedgerReplayMsgHandler& me,
+        LedgerReplayMsgHandler& other,
+        int drop)
+        : local(me), remote(other), dropRate(drop)
+    {
+    }
+
+    std::unique_ptr<PeerSet>
+    build() override
+    {
+        return std::make_unique<ReplayPeerSet>(local, remote, dropRate);
+    }
+
+private:
+    LedgerReplayMsgHandler& local;
+    LedgerReplayMsgHandler& remote;
+    int dropRate;
+};
+
 /**
  * Utility class for creating ledger history
  */
-struct NetworkHistory
+struct LedgerServer
 {
     struct Parameter
     {
@@ -72,14 +272,17 @@ struct NetworkHistory
         int txAmount = 10;
     };
 
-    NetworkHistory(beast::unit_test::suite& suite, Parameter const& p)
-        : env(suite, jtx::supported_amendments() | featureNegativeUNL)
-        , param(p)
+    LedgerServer(beast::unit_test::suite& suite, Parameter const& p)
+        : env(suite)
+        , app(env.app())
         , ledgerMaster(env.app().getLedgerMaster())
+        , msgHandler(env.app(), env.app().getLedgerReplayer())
+        , param(p)
     {
         assert(param.initLedgers > 0);
         createAccounts(param.initAccounts);
         createLedgerHistory();
+        app.logs().threshold(beast::severities::Severity::kAll);
     }
 
     /**
@@ -152,18 +355,128 @@ struct NetworkHistory
     }
 
     jtx::Env env;
+    Application& app;
+    LedgerMaster& ledgerMaster;
+    LedgerReplayMsgHandler msgHandler;
     Parameter param;
     std::vector<jtx::Account> accounts;
 };
 
-#if 0
+extern void
+incPorts();
+
+struct ReplayClient
+{
+    ReplayClient(
+        beast::unit_test::suite& suite,
+        LedgerServer& server,
+        int drop = 0)
+        : env(suite)
+        , app(env.app())
+        , ledgerMaster(env.app().getLedgerMaster())
+        , serverMsgHandler(server.app, server.app.getLedgerReplayer())
+        , clientMsgHandler(env.app(), replayer)
+        , replayer(
+              env.app(),
+              std::make_unique<ReplayPeerSetBuilder>(
+                  clientMsgHandler,
+                  serverMsgHandler,
+                  drop),
+              env.app().getJobQueue())
+    {
+    }
+
+    void
+    addLedger(std::shared_ptr<Ledger const> const& l)
+    {
+        ledgerMaster.storeLedger(l);
+    }
+
+    jtx::Env env;
+    Application& app;
+    LedgerMaster& ledgerMaster;
+    LedgerReplayMsgHandler serverMsgHandler;
+    LedgerReplayMsgHandler clientMsgHandler;
+    LedgerReplayer replayer;
+};
+
+void
+logAll(
+    LedgerServer& server,
+    ReplayClient& client,
+    beast::severities::Severity level = beast::severities::Severity::kAll)
+{
+    server.app.logs().threshold(level);
+    client.app.logs().threshold(level);
+}
+
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {
+    void
+    testMsgDrop()
+    {
+        testcase("drop all msg test");
+        int totalReplay = 10;
+        LedgerServer server(*this, {totalReplay + 1});
+        incPorts();
+        ReplayClient client(*this, server, 20);
+        auto l = server.ledgerMaster.getClosedLedger();
+        auto finalHash = l->info().hash;
+        for (int i = 0; i < totalReplay - 1; ++i)
+        {
+            l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
+        }
+        client.ledgerMaster.storeLedger(l);
+        logAll(server, client);
+        client.replayer.replay(
+            InboundLedger::Reason::GENERIC, finalHash, totalReplay);
+        while (!client.replayer.skipLists_.empty())
+            usleep(1000000);
+
+        BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
+    }
+
+#if 0
+    void
+    testSimple()
+    {
+        testcase("simple test");
+        int totalReplay = 30;
+        LedgerServer server(*this, {totalReplay+1});
+        incPorts();
+        ReplayClient client(*this, server);
+        auto l = server.ledgerMaster.getClosedLedger();
+        auto finalHash = l->info().hash;
+        for(int i = 0; i < totalReplay - 1; ++i)
+        {
+            l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
+        }
+        client.ledgerMaster.storeLedger(l);
+        logAll(server, client);
+        client.replayer.replay(
+            InboundLedger::Reason::GENERIC,
+            finalHash,
+            totalReplay);
+        l = client.ledgerMaster.getLedgerByHash(finalHash);
+        BEAST_EXPECT(l);
+        if(l)
+        {
+            for(int i = 0; i < totalReplay - 1; ++i)
+            {
+                l = client.ledgerMaster.getLedgerByHash(l->info().parentHash);
+                BEAST_EXPECT(l);
+                if(!l)
+                    break;
+            }
+        }
+        //client.replayer.onStop();
+    }
+
     void
     testSkipList()
     {
         testcase("skip list with proof");
-        NetworkHistory history(*this, {3});
+        LedgerServer history(*this, {3});
         auto const l = history.ledgerMaster.getClosedLedger();
 
         // create request
@@ -229,7 +542,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     testLedgerReplayBuild()
     {
         testcase("ledger replay build");
-        NetworkHistory history(*this, {3});
+        LedgerServer history(*this, {3});
         auto const l = history.ledgerMaster.getClosedLedger();
         auto const parent =
             history.ledgerMaster.getLedgerByHash(l->info().parentHash);
@@ -269,9 +582,9 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     testLedgerDeltaReplayBuild(int numTxPerLedger = 10)
     {
         testcase("ledger delta replay build");
-        NetworkHistory::Parameter p = {3};
+        LedgerServer::Parameter p = {3};
         p.numTxPerLedger = numTxPerLedger;
-        NetworkHistory history(*this, p);
+        LedgerServer history(*this, p);
 
         auto const l = history.ledgerMaster.getClosedLedger();
         auto const parent =
@@ -396,15 +709,16 @@ enable=0
             BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == false);
         }
     }
-
+#endif
     void
     run() override
     {
-        testSkipList();
-        testLedgerReplayBuild();
-        testLedgerDeltaReplayBuild();
-        testLedgerDeltaReplayBuild(0);
-        testConfig();
+        testAllMsgDropped();
+        //        testSkipList();
+        //        testLedgerReplayBuild();
+        //        testLedgerDeltaReplayBuild();
+        //        testLedgerDeltaReplayBuild(0);
+        //        testConfig();
     }
 };
 
@@ -413,4 +727,3 @@ BEAST_DEFINE_TESTSUITE(LedgerForwardReplay, app, ripple);
 
 }  // namespace test
 }  // namespace ripple
-#endif

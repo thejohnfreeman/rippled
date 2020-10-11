@@ -42,6 +42,11 @@ LedgerReplayTask::LedgerReplayTask(
 {
 }
 
+LedgerReplayTask::~LedgerReplayTask()
+{
+    JLOG(m_journal.debug()) << "Task dtor " << mHash;
+}
+
 void
 LedgerReplayTask::init()
 {
@@ -58,11 +63,11 @@ LedgerReplayTask::trigger()
 
     if (parameter_.startHash.isNonZero())
     {
-        //if (ledgers_.empty())
-        if(!parent)
+        // if (ledgers_.empty())
+        if (!parent)
         {
-            auto l = app_.getLedgerMaster().getLedgerByHash(
-                parameter_.startHash);
+            auto l =
+                app_.getLedgerMaster().getLedgerByHash(parameter_.startHash);
             if (!l)
             {
                 l = app_.getInboundLedgers().acquire(
@@ -73,7 +78,8 @@ LedgerReplayTask::trigger()
             if (l)
             {
                 JLOG(m_journal.trace())
-                    << "Got start ledger " << parameter_.startHash << " for " << mHash;
+                    << "Got start ledger " << parameter_.startHash << " for "
+                    << mHash;
                 tryAdvance(l);
             }
         }
@@ -136,14 +142,14 @@ LedgerReplayTask::updateSkipList(
 void
 LedgerReplayTask::done()
 {
-    auto me = shared_from_this();
-    skipListAcquirer_->removeTask(me);
-    skipListAcquirer_ = nullptr;//TODO make sure no access after this point
-    for(auto & delta : deltas_)
-    {
-        delta->removeTask(me);
-    }
-    deltas_.clear();
+    //    auto me = shared_from_this();
+    //    skipListAcquirer_->removeTask(me);
+    skipListAcquirer_ = nullptr;  // TODO make sure no access after this point
+    //    for(auto & delta : deltas_)
+    //    {
+    //        //delta->removeTask(me);
+    //    }
+    //    deltas_.clear();
 
     if (mFailed)
     {
@@ -183,7 +189,7 @@ LedgerReplayTask::tryAdvance(
             return;
     }
 
-    if(deltaToBuild >= 0)
+    if (deltaToBuild >= 0)
     {
         while (deltaToBuild < deltas_.size())
         {

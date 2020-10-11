@@ -54,7 +54,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
     replayer_.removeLedgerDeltaAcquire(mHash);
-    JLOG(m_journal.trace()) << "remove myself " << mHash;
+    JLOG(m_journal.trace()) << "Delta dtor, remove myself " << mHash;
 }
 
 void
@@ -90,7 +90,8 @@ LedgerDeltaAcquire::addPeers(std::size_t limit)
                 << "Add a peer " << peer->id() << " for " << mHash;
             protocol::TMReplayDeltaRequest request;
             request.set_ledgerhash(mHash.data(), mHash.size());
-            peerSet_->sendRequest(request, protocol::mtReplayDeltaRequest, peer);
+            peerSet_->sendRequest(
+                request, protocol::mtReplayDeltaRequest, peer);
         });
 }
 
@@ -145,7 +146,7 @@ LedgerDeltaAcquire::processData(
         replay_ = rp;
         orderedTxns_ = std::move(orderedTxns);
         JLOG(m_journal.debug()) << "ready to replay " << mHash;
-        for(auto &t : tasks_)
+        for (auto& t : tasks_)
             t->tryAdvance({});
     }
 }
@@ -167,12 +168,12 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
         task->cancel();
 }
 
-void
-LedgerDeltaAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
-{
-    ScopedLockType sl(mLock);
-    tasks_.erase(task);
-}
+// void
+// LedgerDeltaAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
+//{
+//    ScopedLockType sl(mLock);
+//    tasks_.erase(task);
+//}
 
 std::shared_ptr<Ledger const>
 LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)

@@ -122,7 +122,7 @@ public:
                 return std::shared_ptr<SHAMap>();
 
             ta = std::make_shared<TransactionAcquire>(
-                app_, hash, m_peerSetBuilder->build(app_));
+                app_, hash, m_peerSetBuilder->build());
 
             auto& obj = m_map[hash];
             obj.mAcquire = ta;
@@ -273,7 +273,7 @@ make_InboundTransactions(
     std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet)
 {
     return std::make_unique<InboundTransactionsImp>(
-        app, parent, collector, std::move(gotSet), make_PeerSetBuilder());
+        app, parent, collector, std::move(gotSet), make_PeerSetBuilder(app));
 }
 
 }  // namespace ripple

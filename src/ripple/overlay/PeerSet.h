@@ -44,7 +44,7 @@ namespace ripple {
 class PeerSet
 {
 public:
-    virtual ~PeerSet()  = default;
+    virtual ~PeerSet() = default;
 
     virtual void
     addPeers(
@@ -69,13 +69,13 @@ class PeerSetBuilder
 {
 public:
     virtual std::unique_ptr<PeerSet>
-    build(Application& app) = 0;
+    build() = 0;
 
     virtual ~PeerSetBuilder() = default;
 };
 
 std::unique_ptr<PeerSetBuilder>
-make_PeerSetBuilder();
+make_PeerSetBuilder(Application& app);
 
 }  // namespace ripple
 

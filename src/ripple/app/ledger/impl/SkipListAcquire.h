@@ -20,9 +20,9 @@
 #ifndef RIPPLE_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
 #define RIPPLE_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
 
-#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/Ledger.h>
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/overlay/PeerSet.h>
 #include <ripple/shamap/SHAMap.h>
@@ -31,6 +31,9 @@
 namespace ripple {
 
 class LedgerReplayTask;
+namespace test {
+class LedgerForwardReplay_test;
+}  // namespace test
 
 class SkipListAcquire final
     : public TimeoutCounter,
@@ -51,7 +54,7 @@ public:
         LedgerReplayer& replayer,
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq,
-        std::unique_ptr<PeerSet> &&peerSet);
+        std::unique_ptr<PeerSet>&& peerSet);
 
     ~SkipListAcquire() override;
 
@@ -66,8 +69,8 @@ public:
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
-    void
-    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
+    //    void
+    //    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
 
     hash_set<std::shared_ptr<LedgerReplayTask>>
     getAllTasks();
@@ -91,7 +94,7 @@ private:
     std::vector<ripple::uint256> skipList_;
     hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
 
-    friend class LedgerForwardReplay_test;
+    friend class test::LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

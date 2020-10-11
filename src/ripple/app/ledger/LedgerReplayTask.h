@@ -20,9 +20,9 @@
 #ifndef RIPPLE_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
 #define RIPPLE_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
 
-#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/Ledger.h>
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/overlay/PeerSet.h>
 #include <ripple/shamap/SHAMap.h>
@@ -32,15 +32,18 @@ namespace ripple {
 
 using namespace std::chrono_literals;
 // Timeout interval in milliseconds
-auto constexpr LEDGER_REPLAY_TIMEOUT = 250ms;
+// TODO
+auto constexpr LEDGER_REPLAY_TIMEOUT = 100ms;
 
 enum {
-    LEDGER_REPLAY_NORM_TIMEOUTS = 4,
-    LEDGER_REPLAY_MAX_TIMEOUTS = 20,
+    LEDGER_REPLAY_MAX_TIMEOUTS = 10,
 };
 
 class LedgerDeltaAcquire;
 class SkipListAcquire;
+namespace test {
+class LedgerForwardReplay_test;
+}  // namespace test
 
 class LedgerReplayTask final
     : public TimeoutCounter,
@@ -50,7 +53,7 @@ class LedgerReplayTask final
 public:
     struct TaskParameter
     {
-        //TODO refactor after coding usa cases
+        // TODO refactor after coding usa cases
 
         InboundLedger::Reason reason;
         uint256 finishHash;
@@ -64,9 +67,9 @@ public:
             InboundLedger::Reason r,
             uint256 const& finishLedgerHash,
             std::uint32_t totalNumLedgers)
-        : reason(r)
-        , finishHash(finishLedgerHash)
-        , totalLedgers(totalNumLedgers)
+            : reason(r)
+            , finishHash(finishLedgerHash)
+            , totalLedgers(totalNumLedgers)
         {
             assert(isValid());
         }
@@ -174,7 +177,7 @@ public:
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,
         TaskParameter&& parameter);
 
-    ~LedgerReplayTask() = default;
+    ~LedgerReplayTask();
 
     void
     init();
@@ -220,10 +223,10 @@ private:
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
     std::shared_ptr<Ledger const> parent = {};
-    int deltaToBuild = -1; //should not build until have parent
+    int deltaToBuild = -1;  // should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
 
-    friend class LedgerForwardReplay_test;
+    friend class test::LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

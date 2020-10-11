@@ -92,8 +92,12 @@ public:
             else
             {
                 inbound = std::make_shared<InboundLedger>(
-                    app_, hash, seq, reason, std::ref(m_clock),
-                    mPeerSetBuilder->build(app_));
+                    app_,
+                    hash,
+                    seq,
+                    reason,
+                    std::ref(m_clock),
+                    mPeerSetBuilder->build());
                 mLedgers.emplace(hash, inbound);
                 inbound->init(sl);
                 ++mCounter;
@@ -437,7 +441,8 @@ make_InboundLedgers(
     Stoppable& parent,
     beast::insight::Collector::ptr const& collector)
 {
-    return std::make_unique<InboundLedgersImp>(app, clock, parent, collector, make_PeerSetBuilder());
+    return std::make_unique<InboundLedgersImp>(
+        app, clock, parent, collector, make_PeerSetBuilder(app));
 }
 
 }  // namespace ripple

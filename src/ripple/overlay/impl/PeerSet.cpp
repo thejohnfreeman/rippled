@@ -31,8 +31,8 @@ public:
 
     PeerSetImpl(Application& app);
 
-    ~PeerSetImpl() override = default;
-
+    //    ~PeerSetImpl() override = default;
+    //
     void
     addPeers(
         std::size_t limit,
@@ -147,17 +147,24 @@ PeerSetImpl::countAddedPeers()
 class PeerSetBuilderImpl : public PeerSetBuilder
 {
 public:
-    virtual std::unique_ptr<PeerSet>
-    build(Application& app) override
+    PeerSetBuilderImpl(Application& app) : app_(app)
     {
-        return std::make_unique<PeerSetImpl>(app);
     }
+
+    virtual std::unique_ptr<PeerSet>
+    build() override
+    {
+        return std::make_unique<PeerSetImpl>(app_);
+    }
+
+private:
+    Application& app_;
 };
 
 std::unique_ptr<PeerSetBuilder>
-make_PeerSetBuilder()
+make_PeerSetBuilder(Application& app)
 {
-    return std::make_unique<PeerSetBuilderImpl>();
+    return std::make_unique<PeerSetBuilderImpl>(app);
 }
 
 }  // namespace ripple

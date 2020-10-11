@@ -338,7 +338,7 @@ public:
 
         , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
               *this,
-              make_PeerSetBuilder(),
+              make_PeerSetBuilder(*this),
               *m_jobQueue))
 
         // VFALCO NOTE must come before NetworkOPs to prevent a crash due

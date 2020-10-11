@@ -43,8 +43,10 @@ public:
     using pointer = std::shared_ptr<TransactionAcquire>;
 
 public:
-    TransactionAcquire(Application& app, uint256 const& hash,
-                       std::unique_ptr<PeerSet> peerSet);
+    TransactionAcquire(
+        Application& app,
+        uint256 const& hash,
+        std::unique_ptr<PeerSet> peerSet);
     ~TransactionAcquire() = default;
 
     SHAMapAddNode

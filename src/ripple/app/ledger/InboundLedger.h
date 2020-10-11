@@ -20,8 +20,8 @@
 #ifndef RIPPLE_APP_LEDGER_INBOUNDLEDGER_H_INCLUDED
 #define RIPPLE_APP_LEDGER_INBOUNDLEDGER_H_INCLUDED
 
-#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/ledger/Ledger.h>
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/basics/CountedObject.h>
 #include <ripple/overlay/PeerSet.h>

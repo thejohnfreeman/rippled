@@ -29,12 +29,15 @@
 namespace ripple {
 
 class LedgerReplayTask;
+namespace test {
+class LedgerForwardReplay_test;
+}  // namespace test
 
 // A ledger delta (header and transactions) we are trying to acquire
 class LedgerDeltaAcquire final
     : public TimeoutCounter,
       public std::enable_shared_from_this<LedgerDeltaAcquire>,
-      public CountedObject<LedgerDeltaAcquire> //TODO needed??
+      public CountedObject<LedgerDeltaAcquire>  // TODO needed??
 {
 public:
     static char const*
@@ -66,8 +69,8 @@ public:
     void
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
-    void
-    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
+    //    void
+    //    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
 
 private:
     void
@@ -95,7 +98,7 @@ private:
     bool ledgerBuilt_ = false;
 
     friend class LedgerReplayTask;
-    friend class LedgerForwardReplay_test;
+    friend class test::LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

@@ -1293,22 +1293,23 @@ LedgerMaster::findNewLedgersToPublish(
 
     {
         // TODO remove, force a replay for test
-//        if (app_.config().LEDGER_REPLAY_ENABLE)
-//        {
-//            static bool called_once = false;
-//            if (!called_once)
-//            {
-//                called_once = true;
-//                std::uint32_t totalLedgers = 5;
-//                JLOG(m_journal.debug())
-//                    << "LFR end with " << mValidLedger.get()->info().seq << " "
-//                    << mValidLedger.get()->info().hash << " back "
-//                    << totalLedgers << " ledgers";
-//                app_.getLedgerReplayer().replay(
-//                    InboundLedger::Reason::GENERIC,
-//                    mValidLedger.get()->info().hash, totalLedgers);
-//            }
-//        }
+        //        if (app_.config().LEDGER_REPLAY_ENABLE)
+        //        {
+        //            static bool called_once = false;
+        //            if (!called_once)
+        //            {
+        //                called_once = true;
+        //                std::uint32_t totalLedgers = 5;
+        //                JLOG(m_journal.debug())
+        //                    << "LFR end with " <<
+        //                    mValidLedger.get()->info().seq << " "
+        //                    << mValidLedger.get()->info().hash << " back "
+        //                    << totalLedgers << " ledgers";
+        //                app_.getLedgerReplayer().replay(
+        //                    InboundLedger::Reason::GENERIC,
+        //                    mValidLedger.get()->info().hash, totalLedgers);
+        //            }
+        //        }
     }
 
     if (!mPubLedger)

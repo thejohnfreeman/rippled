@@ -20,8 +20,8 @@
 #ifndef RIPPLE_APP_LEDGER_LEDGERFORWARDREPLAYER_H_INCLUDED
 #define RIPPLE_APP_LEDGER_LEDGERFORWARDREPLAYER_H_INCLUDED
 
-#include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/ledger/LedgerMaster.h>
+#include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/main/Application.h>
 #include <ripple/beast/utility/Journal.h>
 #include <ripple/core/Stoppable.h>
@@ -30,6 +30,9 @@
 #include <mutex>
 
 namespace ripple {
+namespace test {
+class LedgerForwardReplay_test;
+}  // namespace test
 
 /**
  * Manages the lifetime of ledger replay tasks.
@@ -89,7 +92,7 @@ private:
     std::unique_ptr<PeerSetBuilder> peerSetBuilder_;
     beast::Journal j_;
 
-    friend class LedgerForwardReplay_test;
+    friend class test::LedgerForwardReplay_test;
 };
 
 }  // namespace ripple
