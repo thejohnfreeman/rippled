@@ -42,6 +42,8 @@ LedgerReplayer::replay(
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
 {
+    if (finishLedgerHash.isZero() || totalNumLedgers > 256)
+        return;
     LedgerReplayTask::TaskParameter parameter(
         r, finishLedgerHash, totalNumLedgers);
 
@@ -88,8 +90,8 @@ void
 LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
 {
     {
-        // TODO check if the last closed or validated ledger l the local node
-        // has
+        // TODO for use case like Consensus:
+        // check if the last closed or validated ledger l the local node has
         // is in the skip list and is an ancestor of parameter.startLedger that
         // has to be downloaded, if so expand the task to start with l.
     }

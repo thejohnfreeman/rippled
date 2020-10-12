@@ -31,13 +31,6 @@
 namespace ripple {
 
 using namespace std::chrono_literals;
-// Timeout interval in milliseconds
-// TODO
-auto constexpr LEDGER_REPLAY_TIMEOUT = 100ms;
-
-enum {
-    LEDGER_REPLAY_MAX_TIMEOUTS = 10,
-};
 
 class LedgerDeltaAcquire;
 class SkipListAcquire;
@@ -51,116 +44,42 @@ class LedgerReplayTask final
       public CountedObject<LedgerReplayTask>
 {
 public:
+    static auto constexpr TASK_TIMEOUT = 1000ms;
+    static auto constexpr SUB_TASK_TIMEOUT = 100ms;
+    static int constexpr SUB_TASK_MAX_TIMEOUTS = 10;
+
     struct TaskParameter
     {
-        // TODO refactor after coding usa cases
-
+        //input
         InboundLedger::Reason reason;
         uint256 finishHash;
-        uint256 startHash = {};
+        std::uint32_t totalLedgers;  // including the start and the finish
+        //to be filled
         std::uint32_t finishSeq = 0;
+        std::vector<uint256> skipList = {};// including the start and the finish
+        uint256 startHash = {};
         std::uint32_t startSeq = 0;
-        std::uint32_t totalLedgers = 0;  // including the start and the finish
-        std::vector<uint256> skipList = {};
 
         TaskParameter(
             InboundLedger::Reason r,
             uint256 const& finishLedgerHash,
-            std::uint32_t totalNumLedgers)
-            : reason(r)
-            , finishHash(finishLedgerHash)
-            , totalLedgers(totalNumLedgers)
-        {
-            assert(isValid());
-        }
+            std::uint32_t totalNumLedgers);
 
-        bool
-        isValid() const
-        {
-            if (finishHash.isZero())
-                return false;
-            if (totalLedgers > 256)
-                return false;
-
-            if (startSeq != 0 && finishSeq != 0)
-            {
-                auto size = finishSeq - startSeq + 1;
-                if (size > 256)
-                    return false;
-                if (totalLedgers != 0 && totalLedgers != size)
-                    return false;
-            }
-            return true;
-        }
-
+        /**
+         * @note called with validated data
+         * @param hash
+         * @param seq
+         * @param sList
+         * @return
+         */
         bool
         update(
             uint256 const& hash,
             std::uint32_t seq,
-            std::vector<uint256> const& sList)
-        {
-            if (!isValid())
-                return false;
-
-            if (finishHash != hash)
-                return false;
-            if (finishSeq != 0 && finishSeq != seq)
-                return false;
-            finishSeq = seq;
-
-            skipList = sList;
-            skipList.emplace_back(finishHash);
-            if (startHash.isZero() && !startSeq && !totalLedgers)
-            {
-                startHash = finishHash;
-                startSeq = seq;
-                totalLedgers = 1;
-            }
-            else
-            {
-                if (startHash.isNonZero())
-                {
-                    auto i =
-                        std::find(skipList.begin(), skipList.end(), startHash);
-                    std::uint32_t size = skipList.end() - i;
-                    if (size == 0)
-                        return false;
-                    if (totalLedgers == 0)
-                        totalLedgers = size;
-                    if (startSeq == 0)
-                        startSeq = finishSeq - size + 1;
-                }
-                else
-                {
-                    if (totalLedgers != 0 && startSeq == 0)
-                        startSeq = finishSeq - totalLedgers + 1;
-                    if (totalLedgers == 0 && startSeq != 0)
-                        totalLedgers = finishSeq - startSeq + 1;
-                    if (totalLedgers > skipList.size())
-                        return false;
-                    if (auto i = std::find(
-                            skipList.begin(), skipList.end(), startHash);
-                        i != skipList.end() && *i != startHash)
-                        return false;
-                    else
-                        startHash = skipList[skipList.size() - totalLedgers];
-                }
-            }
-
-            if (!isValid())
-                return false;
-            return true;
-        }
+            std::vector<uint256> const& sList);
 
         bool
-        canMergeInto(TaskParameter const& existingTask)
-        {
-            if (reason == existingTask.reason &&
-                startSeq >= existingTask.startSeq &&
-                finishSeq <= existingTask.finishSeq)
-                return true;
-            return false;
-        }
+        canMergeInto(TaskParameter const& existingTask);
     };
 
     static char const*

@@ -41,7 +41,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     : TimeoutCounter(
           app,
           ledgerHash,
-          LEDGER_REPLAY_TIMEOUT,
+          LedgerReplayTask::SUB_TASK_TIMEOUT,
           app.journal("LedgerDeltaAcquire"))
     , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
@@ -83,9 +83,6 @@ LedgerDeltaAcquire::addPeers(std::size_t limit)
         limit,
         [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
         [this](auto peer) {
-            if (isDone() || replay_ || !peer)  // TODO need??
-                return;
-
             JLOG(m_journal.trace())
                 << "Add a peer " << peer->id() << " for " << mHash;
             protocol::TMReplayDeltaRequest request;
@@ -108,7 +105,7 @@ void
 LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
@@ -167,13 +164,6 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     if (mFailed)
         task->cancel();
 }
-
-// void
-// LedgerDeltaAcquire::removeTask(std::shared_ptr<LedgerReplayTask>const& task)
-//{
-//    ScopedLockType sl(mLock);
-//    tasks_.erase(task);
-//}
 
 std::shared_ptr<Ledger const>
 LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)

@@ -69,9 +69,6 @@ public:
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
-    //    void
-    //    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
-
     hash_set<std::shared_ptr<LedgerReplayTask>>
     getAllTasks();
 

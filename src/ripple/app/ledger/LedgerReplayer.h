@@ -40,7 +40,6 @@ class LedgerForwardReplay_test;
 class LedgerReplayer : public Stoppable
 {
 public:
-    using clock_type = beast::abstract_clock<std::chrono::steady_clock>;
 
     LedgerReplayer(
         Application& app,

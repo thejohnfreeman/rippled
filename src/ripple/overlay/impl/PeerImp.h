@@ -612,14 +612,14 @@ private:
         beast::Journal journal);
 
     /**
-     * //TODO
+     *
      * @param request
      */
     void
     getProofPath(std::shared_ptr<protocol::TMProofPathRequest> const& request);
 
     /**
-     * //TODO
+     *
      * @param request
      */
     void

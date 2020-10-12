@@ -35,7 +35,7 @@ SkipListAcquire::SkipListAcquire(
     : TimeoutCounter(
           app,
           ledgerHash,
-          LEDGER_REPLAY_TIMEOUT,
+          LedgerReplayTask::SUB_TASK_TIMEOUT,
           app.journal("SkipListAcquire"))
     , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
@@ -91,9 +91,6 @@ SkipListAcquire::addPeers(std::size_t limit)
         limit,
         [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
         [this](auto peer) {
-            if (isDone() || !skipList_.empty() || !peer)  // TODO need??
-                return;
-
             JLOG(m_journal.trace())
                 << "Add a peer " << peer->id() << " for " << mHash;
             protocol::TMProofPathRequest request;
@@ -118,7 +115,7 @@ void
 SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
@@ -172,7 +169,7 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     for (auto const& t : tasks_)
     {
         if (task->getTaskTaskParameter()
-                .canMergeInto(  // TODO consider no merge
+                .canMergeInto(
                     t->getTaskTaskParameter()))
             return false;
     }
@@ -184,14 +181,6 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     }
     return true;
 }
-
-// void
-// SkipListAcquire::removeTask(std::shared_ptr<LedgerReplayTask> const& task)
-//{
-//    JLOG(m_journal.debug()) << "remove task " << mHash;
-//    ScopedLockType sl(mLock);
-//    tasks_.erase(task);
-//}
 
 hash_set<std::shared_ptr<LedgerReplayTask>>
 SkipListAcquire::getAllTasks()

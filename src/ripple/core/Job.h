@@ -42,8 +42,12 @@ enum JobType {
     jtPUBOLDLEDGER,   // An old ledger has been accepted
     jtVALIDATION_ut,  // A validation from an untrusted source
     jtTRANSACTION_l,  // A local transaction
+    jtPROOFPATH_REQ,  // Peer requests a ShaMap proof path
+    jtREPLYDLTA_REQ,  // Peer request a ledger delta
     jtLEDGER_REQ,     // Peer request ledger/txnset data
     jtPROPOSAL_ut,    // A proposal from an untrusted source
+    jtREPLAY_TASK,    // A Ledger replay task
+    jtREPLAY_DELTA,   // A Ledger replay sub-task
     jtLEDGER_DATA,    // Received data for a ledger we're acquiring
     jtCLIENT,         // A websocket command from the client
     jtRPC,            // A websocket command from the client
@@ -62,11 +66,6 @@ enum JobType {
     jtNETOP_CLUSTER,  // NetworkOPs cluster peer report
     jtNETOP_TIMER,    // NetworkOPs net timer processing
     jtADMIN,          // An administrative operation
-
-    jtREPLAY_TASK,           // A Ledger replay task
-    jtREPLAY_DELTA,          // A Ledger replay sub-task
-    jtPROOF_PATH_REQUEST,    // Peer requests a ShaMap proof path
-    jtREPLAY_DELTA_REQUEST,  // Peer request a ledger delta
 
     // Special job types which are not dispatched by the job pool
     jtPEER,

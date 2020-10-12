@@ -410,6 +410,14 @@ logAll(
     client.app.logs().threshold(level);
 }
 
+void
+shortenTimeouts()
+{
+    *const_cast<std::chrono::milliseconds *>(&LedgerReplayTask::TASK_TIMEOUT) = 5ms;
+    *const_cast<std::chrono::milliseconds *>(&LedgerReplayTask::SUB_TASK_TIMEOUT) = 2ms;
+    *const_cast<int *>(&LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS) = 3;
+};
+
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {
     void
@@ -713,12 +721,13 @@ enable=0
     void
     run() override
     {
-        testAllMsgDropped();
+        testMsgDrop();
         //        testSkipList();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();
         //        testLedgerDeltaReplayBuild(0);
         //        testConfig();
+
     }
 };
 

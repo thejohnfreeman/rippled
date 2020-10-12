@@ -69,9 +69,6 @@ public:
     void
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
-    //    void
-    //    removeTask(std::shared_ptr<LedgerReplayTask>const& task);
-
 private:
     void
     queueJob() override;

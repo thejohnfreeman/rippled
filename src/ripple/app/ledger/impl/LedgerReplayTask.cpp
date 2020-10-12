@@ -26,6 +26,43 @@
 
 namespace ripple {
 
+LedgerReplayTask::TaskParameter::TaskParameter(
+    InboundLedger::Reason r,
+    uint256 const& finishLedgerHash,
+    std::uint32_t totalNumLedgers)
+    : reason(r)
+    , finishHash(finishLedgerHash)
+    , totalLedgers(totalNumLedgers)
+{
+}
+
+bool
+LedgerReplayTask::TaskParameter::update(
+    uint256 const& hash,
+    std::uint32_t seq,
+    std::vector<uint256> const& sList)
+{
+    if (finishHash != hash || sList.size() + 1 < totalLedgers)
+        return false;
+
+    finishSeq = seq;
+    skipList = sList;
+    skipList.emplace_back(finishHash);
+    startHash = skipList[skipList.size() - totalLedgers];
+    startSeq = finishSeq - totalLedgers + 1;
+    return true;
+}
+
+bool
+LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
+{
+    if (reason == existingTask.reason &&
+        startSeq >= existingTask.startSeq &&
+        finishSeq <= existingTask.finishSeq)
+        return true;
+    return false;
+}
+
 LedgerReplayTask::LedgerReplayTask(
     Application& app,
     LedgerReplayer& replayer,
@@ -34,7 +71,7 @@ LedgerReplayTask::LedgerReplayTask(
     : TimeoutCounter(
           app,
           parameter.finishHash,
-          LEDGER_REPLAY_TIMEOUT,
+          TASK_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , replayer_(replayer)
     , parameter_(parameter)
@@ -44,7 +81,7 @@ LedgerReplayTask::LedgerReplayTask(
 
 LedgerReplayTask::~LedgerReplayTask()
 {
-    JLOG(m_journal.debug()) << "Task dtor " << mHash;
+    JLOG(m_journal.trace()) << "Task dtor " << mHash;
 }
 
 void
@@ -63,7 +100,6 @@ LedgerReplayTask::trigger()
 
     if (parameter_.startHash.isNonZero())
     {
-        // if (ledgers_.empty())
         if (!parent)
         {
             auto l =
@@ -106,7 +142,7 @@ void
 LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LEDGER_REPLAY_MAX_TIMEOUTS)
+    if (mTimeouts > parameter_.totalLedgers)
     {
         mFailed = true;
         done();
@@ -142,15 +178,6 @@ LedgerReplayTask::updateSkipList(
 void
 LedgerReplayTask::done()
 {
-    //    auto me = shared_from_this();
-    //    skipListAcquirer_->removeTask(me);
-    skipListAcquirer_ = nullptr;  // TODO make sure no access after this point
-    //    for(auto & delta : deltas_)
-    //    {
-    //        //delta->removeTask(me);
-    //    }
-    //    deltas_.clear();
-
     if (mFailed)
     {
         JLOG(m_journal.warn()) << "LedgerReplayTask Failed " << mHash;
@@ -159,6 +186,11 @@ LedgerReplayTask::done()
     {
         JLOG(m_journal.info()) << "LedgerReplayTask Completed " << mHash;
     }
+
+    // if this skipListAcquirer is not used by other tasks,
+    // destruct this skipListAcquirer, this task,
+    // and deltas if not used by other tasks
+    skipListAcquirer_ = nullptr;
 }
 
 void
