@@ -81,10 +81,18 @@ public:
     }
 
     void
+    removeTask(std::shared_ptr<LedgerReplayTask> const& task)
+    {
+        std::lock_guard<std::mutex> lock(lock_);
+        tasks_.erase(task);
+    }
+
+    void
     onStop() override;
 
 private:
     mutable std::mutex lock_;
+    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
     Application& app_;

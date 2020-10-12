@@ -68,7 +68,8 @@ SkipListAcquire::init(int numPeers)
                 ledgerSeq_ = l->seq();
                 for (auto& t : tasks_)
                 {
-                    t->updateSkipList(mHash, ledgerSeq_, skipList_);
+                    if(auto sptr = t.lock(); sptr)
+                        sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
                 }
                 JLOG(m_journal.trace())
                     << "Acquire skip list from existing ledger " << mHash;
@@ -119,7 +120,10 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
     {
         mFailed = true;
         for (auto& t : tasks_)
-            t->cancel();
+        {
+            if(auto sptr = t.lock(); sptr)
+                sptr->cancel();
+        }
         return;
     }
 
@@ -152,7 +156,8 @@ SkipListAcquire::processData(
         JLOG(m_journal.debug()) << "Skip list received " << mHash;
         for (auto& t : tasks_)
         {
-            t->updateSkipList(mHash, ledgerSeq_, skipList_);
+            if(auto sptr = t.lock(); sptr)
+                sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
     }
 }
@@ -161,32 +166,20 @@ bool
 SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
 {
     ScopedLockType sl(mLock);
+    tasks_.emplace_back(task);
     if (mFailed)
     {
         task->cancel();
         return false;
     }
-    for (auto const& t : tasks_)
+    else
     {
-        if (task->getTaskTaskParameter()
-                .canMergeInto(
-                    t->getTaskTaskParameter()))
-            return false;
+        if (mComplete)
+        {
+            task->updateSkipList(mHash, ledgerSeq_, skipList_);
+        }
+        return true;
     }
-    auto r = tasks_.emplace(task);
-    assert(r.second);
-    if (mComplete)
-    {
-        task->updateSkipList(mHash, ledgerSeq_, skipList_);
-    }
-    return true;
-}
-
-hash_set<std::shared_ptr<LedgerReplayTask>>
-SkipListAcquire::getAllTasks()
-{
-    ScopedLockType sl(mLock);
-    return tasks_;
 }
 
 }  // namespace ripple

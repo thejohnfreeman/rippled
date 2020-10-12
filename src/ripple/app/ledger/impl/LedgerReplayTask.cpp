@@ -187,10 +187,7 @@ LedgerReplayTask::done()
         JLOG(m_journal.info()) << "LedgerReplayTask Completed " << mHash;
     }
 
-    // if this skipListAcquirer is not used by other tasks,
-    // destruct this skipListAcquirer, this task,
-    // and deltas if not used by other tasks
-    skipListAcquirer_ = nullptr;
+    replayer_.removeTask(shared_from_this());
 }
 
 void

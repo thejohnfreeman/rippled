@@ -109,7 +109,10 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     {
         mFailed = true;
         for (auto& t : tasks_)
-            t->cancel();
+        {
+            if(auto sptr = t.lock(); sptr)
+                sptr->cancel();
+        }
         return;
     }
 
@@ -144,7 +147,10 @@ LedgerDeltaAcquire::processData(
         orderedTxns_ = std::move(orderedTxns);
         JLOG(m_journal.debug()) << "ready to replay " << mHash;
         for (auto& t : tasks_)
-            t->tryAdvance({});
+        {
+            if(auto sptr = t.lock(); sptr)
+                sptr->tryAdvance({});
+        }
     }
 }
 
@@ -152,8 +158,8 @@ void
 LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
 {
     ScopedLockType sl(mLock);
-    auto r = tasks_.emplace(task);
-    assert(r.second);
+    tasks_.emplace_back(task);
+
     auto reason = task->getTaskTaskParameter().reason;
     if (reasons_.count(reason) == 0)
     {

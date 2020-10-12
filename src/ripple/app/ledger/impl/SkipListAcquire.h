@@ -69,9 +69,6 @@ public:
     bool
     addTask(std::shared_ptr<LedgerReplayTask>& task);
 
-    hash_set<std::shared_ptr<LedgerReplayTask>>
-    getAllTasks();
-
 private:
     void
     queueJob() override;
@@ -89,7 +86,7 @@ private:
     std::uint32_t ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
-    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
+    std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
 
     friend class test::LedgerForwardReplay_test;
 };

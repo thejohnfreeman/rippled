@@ -47,11 +47,25 @@ LedgerReplayer::replay(
     LedgerReplayTask::TaskParameter parameter(
         r, finishLedgerHash, totalNumLedgers);
 
-    JLOG(j_.info()) << "Replay " << parameter.finishHash;
-    bool needInit = false;
+    std::shared_ptr<LedgerReplayTask> task;
     std::shared_ptr<SkipListAcquire> skipList;
+    bool skipListNeedInit = false;
     {
         std::lock_guard<std::mutex> lock(lock_);
+        for (auto const& t : tasks_)
+        {
+            if(parameter.canMergeInto(t->getTaskTaskParameter()))
+            {
+                JLOG(j_.info()) << "Replay task "
+                        << parameter.finishHash << " with " << totalNumLedgers
+                        << " ledgers merged into an existing task.";
+                return;
+            }
+        }
+        JLOG(j_.info()) << "Replay " << totalNumLedgers
+                        << " ledgers. Finish ledger hash "
+                        << parameter.finishHash;
+
         auto i = skipLists_.find(parameter.finishHash);
         if (i != skipLists_.end())
         {
@@ -72,16 +86,18 @@ LedgerReplayer::replay(
                 parameter.finishSeq,
                 peerSetBuilder_->build());
             skipLists_.emplace(parameter.finishHash, skipList);
-            needInit = true;
+            skipListNeedInit = true;
             JLOG(j_.trace()) << "Add SkipListAcquire " << parameter.finishHash;
         }
+
+        task = std::make_shared<LedgerReplayTask>(
+            app_, *this, skipList, std::move(parameter));
+        tasks_.insert(task);
     }
 
-    if (needInit)
+    if (skipListNeedInit)
         skipList->init(1);
 
-    auto task = std::make_shared<LedgerReplayTask>(
-        app_, *this, skipList, std::move(parameter));
     if (skipList->addTask(task))
         task->init();
 }
@@ -201,18 +217,10 @@ LedgerReplayer::gotReplayDelta(
 void
 LedgerReplayer::onStop()
 {
-    hash_set<std::shared_ptr<LedgerReplayTask>> tasks;
     std::lock_guard<std::mutex> lock(lock_);
-    for (auto& [_, sl] : skipLists_)
+    for (auto & t : tasks_)
     {
-        auto skipList = sl.lock();
-        if (skipList)
-        {
-            for (auto& t : skipList->getAllTasks())
-            {
-                t->cancel();
-            }
-        }
+        t->cancel();
     }
     stopped();
 }

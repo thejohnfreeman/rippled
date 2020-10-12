@@ -90,7 +90,7 @@ private:
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replay_;
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
-    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
+    std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
     bool ledgerBuilt_ = false;
 
