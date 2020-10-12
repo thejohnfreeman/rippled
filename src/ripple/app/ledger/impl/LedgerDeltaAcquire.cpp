@@ -95,9 +95,11 @@ LedgerDeltaAcquire::addPeers(std::size_t limit)
 void
 LedgerDeltaAcquire::queueJob()
 {
+    std::weak_ptr<LedgerDeltaAcquire> wptr = shared_from_this();
     app_.getJobQueue().addJob(
-        jtREPLAY_DELTA, "LedgerDeltaAcquire", [ptr = shared_from_this()](Job&) {
-            ptr->invokeOnTimer();
+        jtREPLAY_DELTA, "LedgerDeltaAcquire", [wptr](Job&) {
+          if(auto sptr = wptr.lock(); sptr)
+              sptr->invokeOnTimer();
         });
 }
 

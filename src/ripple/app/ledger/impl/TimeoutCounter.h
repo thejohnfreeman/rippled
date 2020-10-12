@@ -67,10 +67,6 @@ protected:
         return mComplete || mFailed;
     }
 
-    /** Calls onTimer() if in the right state. */
-    void
-    invokeOnTimer();
-
     /** Schedule a call to queueJob() after mTimerInterval. */
     void
     setTimer();
@@ -90,6 +86,9 @@ protected:
     /** Whether forward progress has been made. */
     bool mProgress;
 
+    /** Calls onTimer() if in the right state. */
+    void
+    invokeOnTimer();
 private:
     /** The minimum time to wait between calls to execute(). */
     std::chrono::milliseconds mTimerInterval;

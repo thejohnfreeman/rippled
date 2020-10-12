@@ -132,9 +132,11 @@ LedgerReplayTask::trigger()
 void
 LedgerReplayTask::queueJob()
 {
+    std::weak_ptr<LedgerReplayTask> wptr = shared_from_this();
     app_.getJobQueue().addJob(
-        jtREPLAY_TASK, "LedgerReplayTask", [ptr = shared_from_this()](Job&) {
-            ptr->invokeOnTimer();
+        jtREPLAY_TASK, "LedgerReplayTask", [wptr](Job&) {
+          if(auto sptr = wptr.lock(); sptr)
+                sptr->invokeOnTimer();
         });
 }
 

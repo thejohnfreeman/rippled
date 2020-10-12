@@ -421,35 +421,10 @@ shortenTimeouts()
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {
     void
-    testMsgDrop()
-    {
-        testcase("drop all msg test");
-        int totalReplay = 10;
-        LedgerServer server(*this, {totalReplay + 1});
-        incPorts();
-        ReplayClient client(*this, server, 20);
-        auto l = server.ledgerMaster.getClosedLedger();
-        auto finalHash = l->info().hash;
-        for (int i = 0; i < totalReplay - 1; ++i)
-        {
-            l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
-        }
-        client.ledgerMaster.storeLedger(l);
-        logAll(server, client);
-        client.replayer.replay(
-            InboundLedger::Reason::GENERIC, finalHash, totalReplay);
-        while (!client.replayer.skipLists_.empty())
-            usleep(1000000);
-
-        BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
-    }
-
-#if 0
-    void
     testSimple()
     {
         testcase("simple test");
-        int totalReplay = 30;
+        int totalReplay = 5;
         LedgerServer server(*this, {totalReplay+1});
         incPorts();
         ReplayClient client(*this, server);
@@ -477,9 +452,33 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
                     break;
             }
         }
-        //client.replayer.onStop();
     }
 
+    void
+    testMsgDrop(int dropRate)
+    {
+        testcase("drop all msg test");
+        int totalReplay = 5;
+        LedgerServer server(*this, {totalReplay + 1});
+        incPorts();
+        ReplayClient client(*this, server, dropRate);
+        auto l = server.ledgerMaster.getClosedLedger();
+        auto finalHash = l->info().hash;
+        for (int i = 0; i < totalReplay - 1; ++i)
+        {
+            l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
+        }
+        client.ledgerMaster.storeLedger(l);
+        logAll(server, client);
+        client.replayer.replay(
+            InboundLedger::Reason::GENERIC, finalHash, totalReplay);
+        while (!client.replayer.skipLists_.empty())
+            usleep(1000000);
+
+        BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
+    }
+
+#if 0
     void
     testSkipList()
     {
@@ -721,7 +720,8 @@ enable=0
     void
     run() override
     {
-        testMsgDrop();
+        testSimple();
+        testMsgDrop(20);
         //        testSkipList();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();

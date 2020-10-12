@@ -106,9 +106,11 @@ SkipListAcquire::addPeers(std::size_t limit)
 void
 SkipListAcquire::queueJob()
 {
+    std::weak_ptr<SkipListAcquire> wptr = shared_from_this();
     app_.getJobQueue().addJob(
-        jtREPLAY_TASK, "SkipListAcquire", [ptr = shared_from_this()](Job&) {
-            ptr->invokeOnTimer();
+        jtREPLAY_TASK, "SkipListAcquire", [wptr](Job&) {
+          if(auto sptr = wptr.lock(); sptr)
+                sptr->invokeOnTimer();
         });
 }
 
