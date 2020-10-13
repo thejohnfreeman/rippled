@@ -37,7 +37,7 @@ class LedgerForwardReplay_test;
 class LedgerDeltaAcquire final
     : public TimeoutCounter,
       public std::enable_shared_from_this<LedgerDeltaAcquire>,
-      public CountedObject<LedgerDeltaAcquire>  // TODO needed??
+      public CountedObject<LedgerDeltaAcquire>
 {
 public:
     static char const*
@@ -86,7 +86,7 @@ private:
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
     LedgerReplayer& replayer_;
-    std::uint32_t ledgerSeq_;
+    std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replay_;
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;

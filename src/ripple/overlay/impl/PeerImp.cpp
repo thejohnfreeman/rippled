@@ -1560,7 +1560,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
     fee_ = Resource::feeMediumBurdenPeer;  // TODO understand
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
-        jtPROOFPATH_REQ, "recvProofPathRequest", [weak, m](Job&) {
+        jtREPLAY_REQ, "recvProofPathRequest", [weak, m](Job&) {
             if (auto peer = weak.lock())
                 peer->getProofPath(m);
         });
@@ -1579,7 +1579,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
     fee_ = Resource::feeMediumBurdenPeer;
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
-        jtREPLYDLTA_REQ, "recvReplayDeltaRequest", [weak, m](Job&) {
+        jtREPLAY_REQ, "recvReplayDeltaRequest", [weak, m](Job&) {
             if (auto peer = weak.lock())
                 peer->getReplayDelta(m);
         });

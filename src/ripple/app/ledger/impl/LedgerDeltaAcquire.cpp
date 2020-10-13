@@ -41,8 +41,8 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     : TimeoutCounter(
           app,
           ledgerHash,
-          LedgerReplayTask::SUB_TASK_TIMEOUT,
-          app.journal("LedgerDeltaAcquire"))
+          LedgerReplayer::SUB_TASK_TIMEOUT,
+          app.journal("LedgerReplayDelta"))
     , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
@@ -53,8 +53,8 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
-    replayer_.removeLedgerDeltaAcquire(mHash);
     JLOG(m_journal.trace()) << "Delta dtor, remove myself " << mHash;
+    replayer_.removeLedgerDeltaAcquire(mHash);
 }
 
 void
@@ -68,6 +68,11 @@ LedgerDeltaAcquire::init(int numPeers)
         replay_ = l;
         ledgerBuilt_ = true;
         JLOG(m_journal.trace()) << "Acquire existing ledger " << mHash;
+        for (auto& t : tasks_)
+        {
+            if (auto sptr = t.lock(); sptr)
+                sptr->tryAdvance();
+        }
     }
     else
     {
@@ -95,11 +100,20 @@ LedgerDeltaAcquire::addPeers(std::size_t limit)
 void
 LedgerDeltaAcquire::queueJob()
 {
+    if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
+        LedgerReplayer::MAX_QUEUED_TASKS)
+    {
+        JLOG(m_journal.debug())
+            << "Deferring LedgerDeltaAcquire timer due to load";
+        setTimer();
+        return;
+    }
+
     std::weak_ptr<LedgerDeltaAcquire> wptr = shared_from_this();
     app_.getJobQueue().addJob(
-        jtREPLAY_DELTA, "LedgerDeltaAcquire", [wptr](Job&) {
-          if(auto sptr = wptr.lock(); sptr)
-              sptr->invokeOnTimer();
+        jtREPLAY_TASK, "LedgerDeltaAcquire", [wptr](Job&) {
+            if (auto sptr = wptr.lock(); sptr)
+                sptr->invokeOnTimer();
         });
 }
 
@@ -107,18 +121,19 @@ void
 LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
         {
-            if(auto sptr = t.lock(); sptr)
+            if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
-        return;
     }
-
-    addPeers(1);
+    else
+    {
+        addPeers(1);
+    }
 }
 
 std::weak_ptr<TimeoutCounter>
@@ -132,7 +147,10 @@ LedgerDeltaAcquire::processData(
     LedgerInfo const& info,
     std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns)
 {
+    ScopedLockType sl(mLock);
     JLOG(m_journal.trace()) << "got data for " << mHash;
+    if (isDone())
+        return;
     assert(info.seq == ledgerSeq_);
 
     // create a temp ledger for building a LedgerReplay object later
@@ -140,18 +158,14 @@ LedgerDeltaAcquire::processData(
             std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
         rp)
     {
-        ScopedLockType sl(mLock);
-        if (mComplete)
-            return;
         mComplete = true;
-        mFailed = false;
         replay_ = rp;
         orderedTxns_ = std::move(orderedTxns);
         JLOG(m_journal.debug()) << "ready to replay " << mHash;
         for (auto& t : tasks_)
         {
-            if(auto sptr = t.lock(); sptr)
-                sptr->tryAdvance({});
+            if (auto sptr = t.lock(); sptr)
+                sptr->tryAdvance();
         }
     }
 }
@@ -162,7 +176,7 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     ScopedLockType sl(mLock);
     tasks_.emplace_back(task);
 
-    auto reason = task->getTaskTaskParameter().reason;
+    auto reason = task->getTaskParameter().reason;
     if (reasons_.count(reason) == 0)
     {
         reasons_.emplace(reason);
@@ -171,6 +185,8 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     }
     if (mFailed)
         task->cancel();
+    else if (mComplete)
+        task->tryAdvance();
 }
 
 std::shared_ptr<Ledger const>

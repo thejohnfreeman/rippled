@@ -89,6 +89,7 @@ protected:
     /** Calls onTimer() if in the right state. */
     void
     invokeOnTimer();
+
 private:
     /** The minimum time to wait between calls to execute(). */
     std::chrono::milliseconds mTimerInterval;

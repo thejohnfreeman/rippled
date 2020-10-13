@@ -30,9 +30,7 @@ LedgerReplayTask::TaskParameter::TaskParameter(
     InboundLedger::Reason r,
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
-    : reason(r)
-    , finishHash(finishLedgerHash)
-    , totalLedgers(totalNumLedgers)
+    : reason(r), finishHash(finishLedgerHash), totalLedgers(totalNumLedgers)
 {
 }
 
@@ -49,18 +47,27 @@ LedgerReplayTask::TaskParameter::update(
     skipList = sList;
     skipList.emplace_back(finishHash);
     startHash = skipList[skipList.size() - totalLedgers];
+    assert(startHash.isNonZero());
     startSeq = finishSeq - totalLedgers + 1;
+    full = true;
     return true;
 }
 
 bool
 LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
 {
-    if (reason == existingTask.reason &&
-        startSeq >= existingTask.startSeq &&
-        finishSeq <= existingTask.finishSeq)
-        return true;
-    return false;
+    if (full)
+    {
+        return reason == existingTask.reason &&
+            startSeq >= existingTask.startSeq &&
+            finishSeq <= existingTask.finishSeq;
+    }
+    else
+    {
+        return reason == existingTask.reason &&
+            finishHash == existingTask.finishHash &&
+            totalLedgers == existingTask.totalLedgers;
+    }
 }
 
 LedgerReplayTask::LedgerReplayTask(
@@ -71,7 +78,7 @@ LedgerReplayTask::LedgerReplayTask(
     : TimeoutCounter(
           app,
           parameter.finishHash,
-          TASK_TIMEOUT,
+          LedgerReplayer::TASK_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , replayer_(replayer)
     , parameter_(parameter)
@@ -87,94 +94,130 @@ LedgerReplayTask::~LedgerReplayTask()
 void
 LedgerReplayTask::init()
 {
+    JLOG(m_journal.debug()) << "Task start " << mHash;
     ScopedLockType sl(mLock);
     trigger();
-    JLOG(m_journal.debug()) << "Task started " << mHash;
+    if(!isDone())
+        setTimer();
 }
 
 void
 LedgerReplayTask::trigger()
 {
-    if (isDone())
+    if (isDone() || !parameter_.full)
         return;
 
-    if (parameter_.startHash.isNonZero())
+    if (!parent)
     {
+        parent = app_.getLedgerMaster().getLedgerByHash(parameter_.startHash);
         if (!parent)
         {
-            auto l =
-                app_.getLedgerMaster().getLedgerByHash(parameter_.startHash);
-            if (!l)
-            {
-                l = app_.getInboundLedgers().acquire(
-                    parameter_.startHash,
-                    parameter_.startSeq,
-                    InboundLedger::Reason::GENERIC);
-            }
-            if (l)
-            {
-                JLOG(m_journal.trace())
-                    << "Got start ledger " << parameter_.startHash << " for "
-                    << mHash;
-                tryAdvance(l);
-            }
+            parent = app_.getInboundLedgers().acquire(
+                parameter_.startHash,
+                parameter_.startSeq,
+                InboundLedger::Reason::GENERIC);
         }
-        else
+        if (parent)
         {
-            tryAdvance({});
+            JLOG(m_journal.trace()) << "Got start ledger "
+                                    << parameter_.startHash << " for " << mHash;
+            deltaToBuild = 0;
+            tryAdvance();
+        }
+    }
+    else
+    {
+        tryAdvance();
+    }
+}
+
+void
+LedgerReplayTask::tryAdvance()
+{
+    JLOG(m_journal.trace()) << "tryAdvance " << mHash;
+
+    ScopedLockType sl(mLock);
+    if (deltaToBuild >= 0 && deltas_.size() > 0)
+    {
+        assert(
+            parent && parent->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
+        while (deltaToBuild < deltas_.size())
+        {
+            if (auto l = deltas_[deltaToBuild]->tryBuild(parent); l)
+            {
+                parent = l;
+                ++deltaToBuild;
+            }
+            else
+                break;
         }
     }
 
-    if (!isDone())
-        setTimer();
-}
-
-void
-LedgerReplayTask::queueJob()
-{
-    std::weak_ptr<LedgerReplayTask> wptr = shared_from_this();
-    app_.getJobQueue().addJob(
-        jtREPLAY_TASK, "LedgerReplayTask", [wptr](Job&) {
-          if(auto sptr = wptr.lock(); sptr)
-                sptr->invokeOnTimer();
-        });
-}
-
-void
-LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
-{
-    JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > parameter_.totalLedgers)
+    if (deltaToBuild >= deltas_.size())
     {
-        mFailed = true;
+        mComplete = true;
         done();
-        return;
     }
-    trigger();
-}
-
-std::weak_ptr<TimeoutCounter>
-LedgerReplayTask::pmDowncast()
-{
-    return shared_from_this();
 }
 
 void
 LedgerReplayTask::updateSkipList(
     uint256 const& hash,
     std::uint32_t seq,
-    std::vector<ripple::uint256> const& data)
+    std::vector<ripple::uint256> const& sList)
 {
     {
         ScopedLockType sl(mLock);
-        if (!parameter_.update(hash, seq, data))
+        if (!parameter_.update(hash, seq, sList))
         {
             JLOG(m_journal.error()) << "Parameter update failed " << mHash;
-            mFailed = true;
+            cancel();
+            return;
         }
     }
 
     replayer_.createDeltas(shared_from_this());
+}
+
+void
+LedgerReplayTask::queueJob()
+{
+    if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
+        LedgerReplayer::MAX_QUEUED_TASKS)
+    {
+        JLOG(m_journal.debug())
+            << "Deferring LedgerReplayTask timer due to load";
+        setTimer();
+        return;
+    }
+
+    std::weak_ptr<LedgerReplayTask> wptr = shared_from_this();
+    app_.getJobQueue().addJob(jtREPLAY_TASK, "LedgerReplayTask", [wptr](Job&) {
+        if (auto sptr = wptr.lock(); sptr)
+            sptr->invokeOnTimer();
+    });
+}
+
+void
+LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
+{
+    JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
+    if (mTimeouts >
+        parameter_.totalLedgers * LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER)
+    {
+        mFailed = true;
+        done();
+    }
+    else
+    {
+        trigger();
+    }
+}
+
+std::weak_ptr<TimeoutCounter>
+LedgerReplayTask::pmDowncast()
+{
+    return shared_from_this();
 }
 
 void
@@ -193,53 +236,11 @@ LedgerReplayTask::done()
 }
 
 void
-LedgerReplayTask::pushBackDeltaAcquire(
-    std::shared_ptr<LedgerDeltaAcquire> delta)
+LedgerReplayTask::addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta)
 {
     assert(
         deltas_.empty() || deltas_.back()->ledgerSeq_ + 1 == delta->ledgerSeq_);
-    deltas_.emplace_back(std::move(delta));
-}
-
-void
-LedgerReplayTask::tryAdvance(
-    std::optional<std::shared_ptr<Ledger const> const> ledger)
-{
-    JLOG(m_journal.trace()) << "tryAdvance " << mHash;
-
-    ScopedLockType sl(mLock);
-    if (ledger)
-    {
-        if ((!parent && parameter_.startHash == (*ledger)->info().hash) ||
-            (parent && parent->info().hash == (*ledger)->info().parentHash))
-        {
-            parent = *ledger;
-            ++deltaToBuild;
-        }
-        else
-            return;
-    }
-
-    if (deltaToBuild >= 0)
-    {
-        while (deltaToBuild < deltas_.size())
-        {
-            assert(parent->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
-            if (auto l = deltas_[deltaToBuild]->tryBuild(parent); l)
-            {
-                parent = l;
-                ++deltaToBuild;
-            }
-            else
-                break;
-        }
-    }
-
-    if (deltaToBuild >= deltas_.size())
-    {
-        mComplete = true;
-        done();
-    }
+    deltas_.push_back(delta);
 }
 
 void

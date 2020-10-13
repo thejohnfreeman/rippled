@@ -44,21 +44,19 @@ class LedgerReplayTask final
       public CountedObject<LedgerReplayTask>
 {
 public:
-    static auto constexpr TASK_TIMEOUT = 1000ms;
-    static auto constexpr SUB_TASK_TIMEOUT = 100ms;
-    static int constexpr SUB_TASK_MAX_TIMEOUTS = 10;
-
     struct TaskParameter
     {
-        //input
+        // input
         InboundLedger::Reason reason;
         uint256 finishHash;
         std::uint32_t totalLedgers;  // including the start and the finish
-        //to be filled
+        // to be filled
         std::uint32_t finishSeq = 0;
-        std::vector<uint256> skipList = {};// including the start and the finish
+        std::vector<uint256> skipList =
+            {};  // including the start and the finish
         uint256 startHash = {};
         std::uint32_t startSeq = 0;
+        bool full = false;
 
         TaskParameter(
             InboundLedger::Reason r,
@@ -88,8 +86,6 @@ public:
         return "LedgerReplayTask";
     }
 
-    using pointer = std::shared_ptr<LedgerReplayTask>;
-
     LedgerReplayTask(
         Application& app,
         LedgerReplayer& replayer,
@@ -105,16 +101,16 @@ public:
     updateSkipList(
         uint256 const& hash,
         std::uint32_t seq,
-        std::vector<ripple::uint256> const& data);
+        std::vector<ripple::uint256> const& sList);
 
     void
-    pushBackDeltaAcquire(std::shared_ptr<LedgerDeltaAcquire> delta);
+    addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta);
 
     void
-    tryAdvance(std::optional<std::shared_ptr<Ledger const> const> ledger);
+    tryAdvance();
 
-    TaskParameter&
-    getTaskTaskParameter()
+    TaskParameter const&
+    getTaskParameter() const
     {
         return parameter_;
     }

@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_LEDGERFORWARDREPLAYER_H_INCLUDED
-#define RIPPLE_APP_LEDGER_LEDGERFORWARDREPLAYER_H_INCLUDED
+#ifndef RIPPLE_APP_LEDGER_LEDGERREPLAYER_H_INCLUDED
+#define RIPPLE_APP_LEDGER_LEDGERREPLAYER_H_INCLUDED
 
 #include <ripple/app/ledger/LedgerMaster.h>
 #include <ripple/app/ledger/LedgerReplayTask.h>
@@ -40,6 +40,12 @@ class LedgerForwardReplay_test;
 class LedgerReplayer : public Stoppable
 {
 public:
+    static auto constexpr TASK_TIMEOUT = 500ms;
+    static auto constexpr SUB_TASK_TIMEOUT = 250ms;
+    static int constexpr TASK_MAX_TIMEOUTS_MULTIPLIER = 2;
+    static int constexpr SUB_TASK_MAX_TIMEOUTS = 10;
+    static int constexpr MAX_TASKS = 10;
+    static int constexpr MAX_QUEUED_TASKS = 100;
 
     LedgerReplayer(
         Application& app,

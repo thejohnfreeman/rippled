@@ -47,13 +47,10 @@ public:
         return "SkipListAcquire";
     }
 
-    using pointer = std::shared_ptr<SkipListAcquire>;
-
     SkipListAcquire(
         Application& app,
         LedgerReplayer& replayer,
         uint256 const& ledgerHash,
-        std::uint32_t ledgerSeq,
         std::unique_ptr<PeerSet>&& peerSet);
 
     ~SkipListAcquire() override;
@@ -83,7 +80,7 @@ private:
     addPeers(std::size_t limit);
 
     LedgerReplayer& replayer_;
-    std::uint32_t ledgerSeq_;
+    std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;

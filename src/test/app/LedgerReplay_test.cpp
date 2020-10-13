@@ -413,9 +413,12 @@ logAll(
 void
 shortenTimeouts()
 {
-    *const_cast<std::chrono::milliseconds *>(&LedgerReplayTask::TASK_TIMEOUT) = 5ms;
-    *const_cast<std::chrono::milliseconds *>(&LedgerReplayTask::SUB_TASK_TIMEOUT) = 2ms;
-    *const_cast<int *>(&LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS) = 3;
+    *const_cast<std::chrono::milliseconds*>(&LedgerReplayer::TASK_TIMEOUT) =
+        5ms;
+    *const_cast<std::chrono::milliseconds*>(&LedgerReplayer::SUB_TASK_TIMEOUT) =
+        2ms;
+    *const_cast<int*>(&LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER) = 1;
+    *const_cast<int*>(&LedgerReplayer::SUB_TASK_MAX_TIMEOUTS) = 3;
 };
 
 struct LedgerForwardReplay_test : public beast::unit_test::suite
@@ -425,30 +428,28 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     {
         testcase("simple test");
         int totalReplay = 5;
-        LedgerServer server(*this, {totalReplay+1});
+        LedgerServer server(*this, {totalReplay + 1});
         incPorts();
         ReplayClient client(*this, server);
         auto l = server.ledgerMaster.getClosedLedger();
         auto finalHash = l->info().hash;
-        for(int i = 0; i < totalReplay - 1; ++i)
+        for (int i = 0; i < totalReplay - 1; ++i)
         {
             l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
         }
         client.ledgerMaster.storeLedger(l);
         logAll(server, client);
         client.replayer.replay(
-            InboundLedger::Reason::GENERIC,
-            finalHash,
-            totalReplay);
+            InboundLedger::Reason::GENERIC, finalHash, totalReplay);
         l = client.ledgerMaster.getLedgerByHash(finalHash);
         BEAST_EXPECT(l);
-        if(l)
+        if (l)
         {
-            for(int i = 0; i < totalReplay - 1; ++i)
+            for (int i = 0; i < totalReplay - 1; ++i)
             {
                 l = client.ledgerMaster.getLedgerByHash(l->info().parentHash);
                 BEAST_EXPECT(l);
-                if(!l)
+                if (!l)
                     break;
             }
         }
@@ -721,13 +722,12 @@ enable=0
     run() override
     {
         testSimple();
-        testMsgDrop(20);
+        //        testMsgDrop(20);
         //        testSkipList();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();
         //        testLedgerDeltaReplayBuild(0);
         //        testConfig();
-
     }
 };
 

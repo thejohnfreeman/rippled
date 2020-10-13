@@ -30,25 +30,22 @@ SkipListAcquire::SkipListAcquire(
     Application& app,
     LedgerReplayer& replayer,
     uint256 const& ledgerHash,
-    std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet>&& peerSet)
     : TimeoutCounter(
           app,
           ledgerHash,
-          LedgerReplayTask::SUB_TASK_TIMEOUT,
-          app.journal("SkipListAcquire"))
+          LedgerReplayer::SUB_TASK_TIMEOUT,
+          app.journal("LedgerReplaySkipList"))
     , replayer_(replayer)
-    , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug())
-        << "Acquire skip list " << mHash << " Seq " << ledgerSeq;
+    JLOG(m_journal.debug()) << "Acquire skip list " << mHash;
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
-    replayer_.removeSkipListAcquire(mHash);
     JLOG(m_journal.trace()) << "SkipList dtor, remove myself " << mHash;
+    replayer_.removeSkipListAcquire(mHash);
 }
 
 void
@@ -68,21 +65,19 @@ SkipListAcquire::init(int numPeers)
                 ledgerSeq_ = l->seq();
                 for (auto& t : tasks_)
                 {
-                    if(auto sptr = t.lock(); sptr)
+                    if (auto sptr = t.lock(); sptr)
                         sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
                 }
                 JLOG(m_journal.trace())
                     << "Acquire skip list from existing ledger " << mHash;
+                return;
             }
         }
     }
 
     ScopedLockType sl(mLock);
-    if (!mComplete)
-    {
-        addPeers(numPeers);
-        setTimer();
-    }
+    addPeers(numPeers);
+    setTimer();
 }
 
 void
@@ -106,30 +101,39 @@ SkipListAcquire::addPeers(std::size_t limit)
 void
 SkipListAcquire::queueJob()
 {
+    if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
+        LedgerReplayer::MAX_QUEUED_TASKS)
+    {
+        JLOG(m_journal.debug())
+            << "Deferring SkipListAcquire timer due to load";
+        setTimer();
+        return;
+    }
+
     std::weak_ptr<SkipListAcquire> wptr = shared_from_this();
-    app_.getJobQueue().addJob(
-        jtREPLAY_TASK, "SkipListAcquire", [wptr](Job&) {
-          if(auto sptr = wptr.lock(); sptr)
-                sptr->invokeOnTimer();
-        });
+    app_.getJobQueue().addJob(jtREPLAY_TASK, "SkipListAcquire", [wptr](Job&) {
+        if (auto sptr = wptr.lock(); sptr)
+            sptr->invokeOnTimer();
+    });
 }
 
 void
 SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LedgerReplayTask::SUB_TASK_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         for (auto& t : tasks_)
         {
-            if(auto sptr = t.lock(); sptr)
+            if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
-        return;
     }
-
-    addPeers(1);
+    else
+    {
+        addPeers(1);
+    }
 }
 
 std::weak_ptr<TimeoutCounter>
@@ -143,24 +147,25 @@ SkipListAcquire::processData(
     std::uint32_t ledgerSeq,
     std::shared_ptr<SHAMapItem const> const& item)
 {
+    ScopedLockType sl(mLock);
     JLOG(m_journal.trace()) << "got data for " << mHash;
+    if (isDone())
+        return;
 
     if (auto sle = std::make_shared<SLE>(
             SerialIter{item->data(), item->size()}, item->key());
         sle)
     {
-        ScopedLockType sl(mLock);
-        if (mComplete)
-            return;
         mComplete = true;
         skipList_ = sle->getFieldV256(sfHashes).value();
         ledgerSeq_ = ledgerSeq;
         JLOG(m_journal.debug()) << "Skip list received " << mHash;
         for (auto& t : tasks_)
         {
-            if(auto sptr = t.lock(); sptr)
+            if (auto sptr = t.lock(); sptr)
                 sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
+        // TODO opportunity to merge tasks, probably no need
     }
 }
 
