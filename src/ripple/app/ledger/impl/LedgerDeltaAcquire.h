@@ -26,6 +26,8 @@
 #include <ripple/overlay/PeerSet.h>
 #include <ripple/shamap/SHAMap.h>
 
+#include <list>
+
 namespace ripple {
 
 class LedgerReplayTask;
@@ -84,6 +86,9 @@ private:
 
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
+
+    void
+    stopReceive();
 
     LedgerReplayer& replayer_;
     std::uint32_t const ledgerSeq_;

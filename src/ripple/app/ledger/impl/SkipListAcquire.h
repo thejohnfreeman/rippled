@@ -79,6 +79,9 @@ private:
     void
     addPeers(std::size_t limit);
 
+    void
+    stopReceive();
+
     LedgerReplayer& replayer_;
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;

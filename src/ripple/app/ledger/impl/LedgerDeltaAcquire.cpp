@@ -53,8 +53,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
-    JLOG(m_journal.trace()) << "Delta dtor, remove myself " << mHash;
-    replayer_.removeLedgerDeltaAcquire(mHash);
+    JLOG(m_journal.trace()) << "Delta dtor " << mHash;
 }
 
 void
@@ -71,8 +70,9 @@ LedgerDeltaAcquire::init(int numPeers)
         for (auto& t : tasks_)
         {
             if (auto sptr = t.lock(); sptr)
-                sptr->tryAdvance();
+                sptr->deltaReady();
         }
+        stopReceive();
     }
     else
     {
@@ -129,6 +129,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
             if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
+        stopReceive();
     }
     else
     {
@@ -165,8 +166,9 @@ LedgerDeltaAcquire::processData(
         for (auto& t : tasks_)
         {
             if (auto sptr = t.lock(); sptr)
-                sptr->tryAdvance();
+                sptr->deltaReady();
         }
+        stopReceive();
     }
 }
 
@@ -186,7 +188,7 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     if (mFailed)
         task->cancel();
     else if (mComplete)
-        task->tryAdvance();
+        task->deltaReady();
 }
 
 std::shared_ptr<Ledger const>
@@ -269,6 +271,12 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
         app_.getLedgerMaster().tryAdvance();
         JLOG(m_journal.info()) << "stored " << mHash;
     }
+}
+
+void
+LedgerDeltaAcquire::stopReceive()
+{
+    replayer_.removeLedgerDeltaAcquire(mHash);
 }
 
 }  // namespace ripple

@@ -106,9 +106,6 @@ public:
     void
     addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta);
 
-    void
-    tryAdvance();
-
     TaskParameter const&
     getTaskParameter() const
     {
@@ -116,7 +113,13 @@ public:
     }
 
     void
+    deltaReady();
+
+    void
     cancel();
+
+    bool
+    finished();
 
 private:
     void
@@ -129,16 +132,16 @@ private:
     pmDowncast() override;
 
     void
-    done();
+    trigger(ScopedLockType& peerSetLock);
 
     void
-    trigger();
+    tryAdvance(ScopedLockType& peerSetLock);
 
     LedgerReplayer& replayer_;
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
-    std::shared_ptr<Ledger const> parent = {};
-    int deltaToBuild = -1;  // should not build until have parent
+    std::shared_ptr<Ledger const> parent_ = {};
+    int deltaToBuild = 0;  // should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
 
     friend class test::LedgerForwardReplay_test;

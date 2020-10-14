@@ -33,7 +33,14 @@ LedgerReplayer::LedgerReplayer(
     , peerSetBuilder_(std::move(peerSetBuilder))
     , j_(app.journal("LedgerReplayer"))
 {
-    JLOG(j_.trace()) << "LedgerReplayer constructed";
+    JLOG(j_.trace()) << "LedgerReplayer ctor";
+}
+
+LedgerReplayer::~LedgerReplayer()
+{
+    JLOG(j_.trace()) << "LedgerReplayer dtor";
+    std::lock_guard<std::mutex> lock(lock_);
+    tasks_.clear();
 }
 
 void
@@ -98,7 +105,7 @@ LedgerReplayer::replay(
 
         task = std::make_shared<LedgerReplayTask>(
             app_, *this, skipList, std::move(parameter));
-        tasks_.insert(task);
+        tasks_.push_back(task);
     }
 
     if (skipList->addTask(task))
@@ -151,7 +158,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                     delta = i->second.lock();
                     if (!delta)
                     {
-                        assert(false);  // TODO remove
+                        assert(false);  // TODO remove before PR
                         deltas_.erase(i);
                     }
                 }
@@ -183,7 +190,7 @@ LedgerReplayer::gotSkipList(
     LedgerInfo const& info,
     std::shared_ptr<SHAMapItem const> const& item)
 {
-    std::shared_ptr<SkipListAcquire> skipList;
+    std::shared_ptr<SkipListAcquire> skipList = {};
     {
         std::lock_guard<std::mutex> lock(lock_);
         auto i = skipLists_.find(info.hash);
@@ -197,7 +204,9 @@ LedgerReplayer::gotSkipList(
             return;
         }
     }
-    skipList->processData(info.seq, item);
+
+    if (skipList)
+        skipList->processData(info.seq, item);
 }
 
 void
@@ -205,7 +214,7 @@ LedgerReplayer::gotReplayDelta(
     LedgerInfo const& info,
     std::map<std::uint32_t, std::shared_ptr<STTx const>>&& txns)
 {
-    std::shared_ptr<LedgerDeltaAcquire> delta;
+    std::shared_ptr<LedgerDeltaAcquire> delta = {};
     {
         std::lock_guard<std::mutex> lock(lock_);
         auto i = deltas_.find(info.hash);
@@ -219,17 +228,40 @@ LedgerReplayer::gotReplayDelta(
             return;
         }
     }
-    delta->processData(info, std::move(txns));
+
+    if (delta)
+        delta->processData(info, std::move(txns));
+}
+
+void
+LedgerReplayer::sweep()
+{
+    std::lock_guard<std::mutex> lock(lock_);
+    for (auto it = tasks_.begin(); it != tasks_.end();)
+    {
+        if ((*it)->finished())
+        {
+            JLOG(j_.trace())
+                << "Remove task " << (*it)->getTaskParameter().finishHash;
+            it = tasks_.erase(it);
+        }
+        else
+            ++it;
+    }
 }
 
 void
 LedgerReplayer::onStop()
 {
-    std::lock_guard<std::mutex> lock(lock_);
-    for (auto& t : tasks_)
     {
-        t->cancel();
+        std::lock_guard<std::mutex> lock(lock_);
+        for (auto& t : tasks_)
+        {
+            t->cancel();
+        }
+        tasks_.clear();
     }
+
     stopped();
 }
 

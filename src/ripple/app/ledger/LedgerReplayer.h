@@ -26,6 +26,7 @@
 #include <ripple/beast/utility/Journal.h>
 #include <ripple/core/Stoppable.h>
 
+#include <list>
 #include <memory>
 #include <mutex>
 
@@ -51,7 +52,7 @@ public:
         Application& app,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder,
         Stoppable& parent);
-    ~LedgerReplayer() = default;
+    ~LedgerReplayer();
 
     void
     replay(
@@ -87,18 +88,14 @@ public:
     }
 
     void
-    removeTask(std::shared_ptr<LedgerReplayTask> const& task)
-    {
-        std::lock_guard<std::mutex> lock(lock_);
-        tasks_.erase(task);
-    }
+    sweep();
 
     void
     onStop() override;
 
 private:
     mutable std::mutex lock_;
-    hash_set<std::shared_ptr<LedgerReplayTask>> tasks_;
+    std::list<std::shared_ptr<LedgerReplayTask>> tasks_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
     Application& app_;

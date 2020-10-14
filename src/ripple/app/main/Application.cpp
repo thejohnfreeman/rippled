@@ -1232,7 +1232,7 @@ public:
         if (shardStore_)
             shardStore_->sweep();
         getLedgerMaster().sweep();
-        // TODO getLedgerReplayer().sweep();
+        getLedgerReplayer().sweep();
         getTempNodeCache().sweep();
         getValidations().expire();
         getInboundLedgers().sweep();

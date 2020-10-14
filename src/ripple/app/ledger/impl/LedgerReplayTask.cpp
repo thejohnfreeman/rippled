@@ -96,56 +96,73 @@ LedgerReplayTask::init()
 {
     JLOG(m_journal.debug()) << "Task start " << mHash;
     ScopedLockType sl(mLock);
-    trigger();
-    if(!isDone())
+    trigger(sl);
+    if (!isDone())
         setTimer();
 }
 
 void
-LedgerReplayTask::trigger()
+LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
 {
+    JLOG(m_journal.trace()) << "trigger " << mHash;
     if (isDone() || !parameter_.full)
         return;
 
-    if (!parent)
+    if (!parent_)
     {
-        parent = app_.getLedgerMaster().getLedgerByHash(parameter_.startHash);
-        if (!parent)
+        parent_ = app_.getLedgerMaster().getLedgerByHash(parameter_.startHash);
+        if (!parent_)
         {
-            parent = app_.getInboundLedgers().acquire(
+            parent_ = app_.getInboundLedgers().acquire(
                 parameter_.startHash,
                 parameter_.startSeq,
                 InboundLedger::Reason::GENERIC);
         }
-        if (parent)
+        if (parent_)
         {
             JLOG(m_journal.trace()) << "Got start ledger "
                                     << parameter_.startHash << " for " << mHash;
-            deltaToBuild = 0;
-            tryAdvance();
         }
     }
-    else
+
+    if (parent_ && parameter_.full &&
+        parameter_.totalLedgers - 1 == deltas_.size())
     {
-        tryAdvance();
+        tryAdvance(peerSetLock);
     }
 }
 
 void
-LedgerReplayTask::tryAdvance()
+LedgerReplayTask::deltaReady()
 {
-    JLOG(m_journal.trace()) << "tryAdvance " << mHash;
-
+    JLOG(m_journal.trace()) << "A delta ready for task " << mHash;
     ScopedLockType sl(mLock);
+    tryAdvance(sl);
+}
+
+void
+LedgerReplayTask::tryAdvance(ScopedLockType& peerSetLock)
+{
+    JLOG(m_journal.trace())
+        << "tryAdvance task " << mHash << " deltaIndex=" << deltaToBuild
+        << " totalDeltas=" << deltas_.size();
+    if (isDone() || !parent_ || !parameter_.full ||
+        parameter_.totalLedgers - 1 != deltas_.size())
+        return;
+
     if (deltaToBuild >= 0 && deltas_.size() > 0)
     {
         assert(
-            parent && parent->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
+            parent_ && parent_->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
         while (deltaToBuild < deltas_.size())
         {
-            if (auto l = deltas_[deltaToBuild]->tryBuild(parent); l)
+            if (auto l = deltas_[deltaToBuild]->tryBuild(parent_); l)
             {
-                parent = l;
+                JLOG(m_journal.debug())
+                    << "Task " << mHash << " got ledger " << l->info().hash
+                    << " deltaIndex=" << deltaToBuild
+                    << " totalDeltas=" << deltas_.size();
+                parent_ = l;
                 ++deltaToBuild;
             }
             else
@@ -156,7 +173,7 @@ LedgerReplayTask::tryAdvance()
     if (deltaToBuild >= deltas_.size())
     {
         mComplete = true;
-        done();
+        JLOG(m_journal.info()) << "Completed " << mHash;
     }
 }
 
@@ -206,11 +223,12 @@ LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
         parameter_.totalLedgers * LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER)
     {
         mFailed = true;
-        done();
+        JLOG(m_journal.warn())
+            << "LedgerReplayTask Failed, too many timeouts " << mHash;
     }
     else
     {
-        trigger();
+        trigger(psl);
     }
 }
 
@@ -221,23 +239,12 @@ LedgerReplayTask::pmDowncast()
 }
 
 void
-LedgerReplayTask::done()
-{
-    if (mFailed)
-    {
-        JLOG(m_journal.warn()) << "LedgerReplayTask Failed " << mHash;
-    }
-    if (mComplete)
-    {
-        JLOG(m_journal.info()) << "LedgerReplayTask Completed " << mHash;
-    }
-
-    replayer_.removeTask(shared_from_this());
-}
-
-void
 LedgerReplayTask::addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta)
 {
+    JLOG(m_journal.trace())
+        << "addDelta task " << mHash << " deltaIndex=" << deltaToBuild
+        << " totalDeltas=" << deltas_.size();
+    ScopedLockType sl(mLock);
     assert(
         deltas_.empty() || deltas_.back()->ledgerSeq_ + 1 == delta->ledgerSeq_);
     deltas_.push_back(delta);
@@ -246,10 +253,16 @@ LedgerReplayTask::addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta)
 void
 LedgerReplayTask::cancel()
 {
-    JLOG(m_journal.warn()) << "Cancel Task " << mHash;
     ScopedLockType sl(mLock);
     mFailed = true;
-    done();
+    JLOG(m_journal.info()) << "Cancel Task " << mHash;
+}
+
+bool
+LedgerReplayTask::finished()
+{
+    ScopedLockType sl(mLock);
+    return isDone();
 }
 
 }  // namespace ripple
