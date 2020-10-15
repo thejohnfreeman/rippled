@@ -266,7 +266,7 @@ struct LedgerServer
     struct Parameter
     {
         int initLedgers;
-        int initAccounts = 2;
+        int initAccounts = 10;
         int initAmount = 1'000'000;
         int numTxPerLedger = 10;
         int txAmount = 10;
@@ -475,9 +475,12 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         logAll(server, client);
         client.replayer.replay(
             InboundLedger::Reason::GENERIC, finalHash, totalReplay);
-        while (!client.replayer.skipLists_.empty())
+        int totalWait = 10;
+        while (!client.replayer.tasks_.empty() && totalWait-- > 0)
+        {
+            client.replayer.sweep();
             usleep(1000000);
-
+        }
         BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
     }
 
@@ -724,7 +727,7 @@ enable=0
     run() override
     {
         testSimple();
-        //        testMsgDrop(20);
+        testMsgDrop(20);
         //        testSkipList();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();
