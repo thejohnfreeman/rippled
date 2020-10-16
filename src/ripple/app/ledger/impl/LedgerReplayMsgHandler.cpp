@@ -26,10 +26,8 @@
 
 namespace ripple {
 LedgerReplayMsgHandler::LedgerReplayMsgHandler(
-    Application& app,
-    LedgerReplayer& replayer)
+    Application& app)
     : app_(app)
-    , replayer_(replayer)
     , journal_(app.journal("LedgerReplayMsgHandler"))
 {
 }
@@ -170,7 +168,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
         return;
     }
 
-    replayer_.gotSkipList(info, item);
+    app_.getLedgerReplayer().gotSkipList(info, item);
 }
 
 protocol::TMReplayDeltaResponse
@@ -285,7 +283,7 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
         return;
     }
 
-    replayer_.gotReplayDelta(info, std::move(orderedTxns));
+    app_.getLedgerReplayer().gotReplayDelta(info, std::move(orderedTxns));
 }
 
 }  // namespace ripple

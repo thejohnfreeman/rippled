@@ -94,7 +94,7 @@ PeerImp::PeerImp(
     , compressionEnabled_(
           headers_["X-Offer-Compression"] == "lz4" ? Compressed::On
                                                    : Compressed::Off)
-    , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
+    , ledgerReplayMsgHandler_(app)
 {
 }
 

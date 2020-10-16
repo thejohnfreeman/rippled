@@ -276,13 +276,13 @@ struct LedgerServer
         : env(suite)
         , app(env.app())
         , ledgerMaster(env.app().getLedgerMaster())
-        , msgHandler(env.app(), env.app().getLedgerReplayer())
+        , msgHandler(env.app())
         , param(p)
     {
         assert(param.initLedgers > 0);
         createAccounts(param.initAccounts);
         createLedgerHistory();
-        app.logs().threshold(beast::severities::Severity::kAll);
+        app.logs().threshold(beast::severities::Severity::kWarning);
     }
 
     /**
@@ -365,25 +365,23 @@ struct LedgerServer
 extern void
 incPorts();
 
-struct ReplayClient
+struct LedgerReplayClient
 {
-    ReplayClient(
+    LedgerReplayClient(
         beast::unit_test::suite& suite,
         LedgerServer& server,
         int drop = 0)
         : env(suite)
         , app(env.app())
         , ledgerMaster(env.app().getLedgerMaster())
-        , serverMsgHandler(server.app, server.app.getLedgerReplayer())
-        , clientMsgHandler(env.app(), replayer)
-        , replayer(
-              env.app(),
-              std::make_unique<ReplayPeerSetBuilder>(
+        , replayer(env.app().getLedgerReplayer())
+        , serverMsgHandler(server.app)
+        , clientMsgHandler(env.app())
+    {
+        replayer.peerSetBuilder_ = std::make_unique<ReplayPeerSetBuilder>(
                   clientMsgHandler,
                   serverMsgHandler,
-                  drop),
-              env.app().getJobQueue())
-    {
+                  drop);
     }
 
     void
@@ -395,28 +393,28 @@ struct ReplayClient
     jtx::Env env;
     Application& app;
     LedgerMaster& ledgerMaster;
+    LedgerReplayer& replayer;
     LedgerReplayMsgHandler serverMsgHandler;
     LedgerReplayMsgHandler clientMsgHandler;
-    LedgerReplayer replayer;
 };
 
+using namespace beast::severities;
 void
 logAll(
     LedgerServer& server,
-    ReplayClient& client,
-    beast::severities::Severity level = beast::severities::Severity::kAll)
+    LedgerReplayClient& client,
+    beast::severities::Severity level = Severity::kWarning)
 {
     server.app.logs().threshold(level);
     client.app.logs().threshold(level);
 }
 
+using namespace std::chrono;
 void
 shortenTimeouts()
 {
-    *const_cast<std::chrono::milliseconds*>(&LedgerReplayer::TASK_TIMEOUT) =
-        5ms;
-    *const_cast<std::chrono::milliseconds*>(&LedgerReplayer::SUB_TASK_TIMEOUT) =
-        2ms;
+    *const_cast<milliseconds*>(&LedgerReplayer::TASK_TIMEOUT) = 5ms;
+    *const_cast<milliseconds*>(&LedgerReplayer::SUB_TASK_TIMEOUT) = 2ms;
     *const_cast<int*>(&LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER) = 1;
     *const_cast<int*>(&LedgerReplayer::SUB_TASK_MAX_TIMEOUTS) = 3;
 };
@@ -430,7 +428,8 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         int totalReplay = 3;
         LedgerServer server(*this, {totalReplay + 1});
         incPorts();
-        ReplayClient client(*this, server);
+        LedgerReplayClient client(*this, server);
+        logAll(server, client);
         auto l = server.ledgerMaster.getClosedLedger();
         auto finalHash = l->info().hash;
         for (int i = 0; i < totalReplay - 1; ++i)
@@ -438,10 +437,15 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
             l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
         }
         client.ledgerMaster.storeLedger(l);
-        logAll(server, client);
+
         client.replayer.replay(
             InboundLedger::Reason::GENERIC, finalHash, totalReplay);
-
+        int totalWait = 10;
+        while (!client.replayer.tasks_.empty() && totalWait-- > 0)
+        {
+            client.replayer.sweep();
+            usleep(1000000);
+        }
         l = client.ledgerMaster.getLedgerByHash(finalHash);
         BEAST_EXPECT(l);
         if (l)
@@ -464,7 +468,8 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         int totalReplay = 5;
         LedgerServer server(*this, {totalReplay + 1});
         incPorts();
-        ReplayClient client(*this, server, dropRate);
+        LedgerReplayClient client(*this, server, dropRate);
+        logAll(server, client);
         auto l = server.ledgerMaster.getClosedLedger();
         auto finalHash = l->info().hash;
         for (int i = 0; i < totalReplay - 1; ++i)
@@ -472,7 +477,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
             l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
         }
         client.ledgerMaster.storeLedger(l);
-        logAll(server, client);
+        //logAll(server, client);
         client.replayer.replay(
             InboundLedger::Reason::GENERIC, finalHash, totalReplay);
         int totalWait = 10;
@@ -482,6 +487,39 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
             usleep(1000000);
         }
         BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
+    }
+
+    void
+    testOverlap()
+    {
+        testcase("overlap test");
+        int totalReplay = 5;
+        LedgerServer server(*this, {totalReplay + 1});
+        incPorts();
+        LedgerReplayClient client(*this, server);
+        logAll(server, client, Severity::kAll);
+        auto l = server.ledgerMaster.getClosedLedger();
+        auto finalHash = l->info().hash;
+        auto prevHash = l->info().parentHash;
+        for (int i = 0; i < totalReplay - 1; ++i)
+        {
+            l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
+        }
+        client.ledgerMaster.storeLedger(l);
+
+        client.replayer.replay(
+            InboundLedger::Reason::GENERIC, prevHash, totalReplay-1);
+        client.replayer.replay(
+            InboundLedger::Reason::GENERIC, finalHash, totalReplay);
+
+        int totalWait = 10;
+        while (!client.replayer.tasks_.empty() && totalWait-- > 0)
+        {
+            client.replayer.sweep();
+            usleep(1000000);
+        }
+        BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(finalHash));
+        BEAST_EXPECT(client.ledgerMaster.getLedgerByHash(prevHash));
     }
 
 #if 0
@@ -726,9 +764,9 @@ enable=0
     void
     run() override
     {
-        testSimple();
-        testMsgDrop(20);
-        //        testSkipList();
+//        testSimple();
+//        testMsgDrop(20);
+        testOverlap();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();
         //        testLedgerDeltaReplayBuild(0);

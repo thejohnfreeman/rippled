@@ -39,7 +39,7 @@ LedgerReplayer::LedgerReplayer(
 LedgerReplayer::~LedgerReplayer()
 {
     JLOG(j_.trace()) << "LedgerReplayer dtor";
-    std::lock_guard<std::mutex> lock(lock_);
+    std::unique_lock<std::recursive_mutex> lock(lock_);
     tasks_.clear();
 }
 
@@ -63,7 +63,7 @@ LedgerReplayer::replay(
     std::shared_ptr<SkipListAcquire> skipList;
     bool skipListNeedInit = false;
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         if (tasks_.size() >= LedgerReplayer::MAX_TASKS)
         {
             JLOG(j_.info()) << "Too many replay tasks, dropping new task "
@@ -98,13 +98,13 @@ LedgerReplayer::replay(
         if (!skipList)
         {
             skipList = std::make_shared<SkipListAcquire>(
-                app_, *this, parameter.finishHash, peerSetBuilder_->build());
+                app_, parameter.finishHash, peerSetBuilder_->build());
             skipLists_.emplace(parameter.finishHash, skipList);
             skipListNeedInit = true;
         }
 
         task = std::make_shared<LedgerReplayTask>(
-            app_, *this, skipList, std::move(parameter));
+            app_, skipList, std::move(parameter));
         tasks_.push_back(task);
     }
 
@@ -151,7 +151,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             bool newDelta = false;
             std::shared_ptr<LedgerDeltaAcquire> delta;
             {
-                std::lock_guard<std::mutex> lock(lock_);
+                std::unique_lock<std::recursive_mutex> lock(lock_);
                 auto i = deltas_.find(*skipListItem);
                 if (i != deltas_.end())
                 {
@@ -167,7 +167,6 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
                         app_,
-                        *this,
                         *skipListItem,
                         seq,
                         peerSetBuilder_->build());
@@ -192,7 +191,7 @@ LedgerReplayer::gotSkipList(
 {
     std::shared_ptr<SkipListAcquire> skipList = {};
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         auto i = skipLists_.find(info.hash);
         if (i == skipLists_.end())
             return;
@@ -216,7 +215,7 @@ LedgerReplayer::gotReplayDelta(
 {
     std::shared_ptr<LedgerDeltaAcquire> delta = {};
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         auto i = deltas_.find(info.hash);
         if (i == deltas_.end())
             return;
@@ -236,7 +235,7 @@ LedgerReplayer::gotReplayDelta(
 void
 LedgerReplayer::sweep()
 {
-    std::lock_guard<std::mutex> lock(lock_);
+    std::unique_lock<std::recursive_mutex> lock(lock_);
     for (auto it = tasks_.begin(); it != tasks_.end();)
     {
         if ((*it)->finished())
@@ -254,7 +253,7 @@ void
 LedgerReplayer::onStop()
 {
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         for (auto& t : tasks_)
         {
             t->cancel();

@@ -72,7 +72,6 @@ LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
 
 LedgerReplayTask::LedgerReplayTask(
     Application& app,
-    LedgerReplayer& replayer,
     std::shared_ptr<SkipListAcquire>& skipListAcquirer,
     TaskParameter&& parameter)
     : TimeoutCounter(
@@ -80,10 +79,10 @@ LedgerReplayTask::LedgerReplayTask(
           parameter.finishHash,
           LedgerReplayer::TASK_TIMEOUT,
           app.journal("LedgerReplayTask"))
-    , replayer_(replayer)
     , parameter_(parameter)
     , skipListAcquirer_(skipListAcquirer)
 {
+    JLOG(m_journal.trace()) << "Task ctor " << mHash;
 }
 
 LedgerReplayTask::~LedgerReplayTask()
@@ -193,7 +192,7 @@ LedgerReplayTask::updateSkipList(
         }
     }
 
-    replayer_.createDeltas(shared_from_this());
+    app_.getLedgerReplayer().createDeltas(shared_from_this());
 }
 
 void

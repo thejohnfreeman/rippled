@@ -32,6 +32,7 @@
 
 namespace ripple {
 namespace test {
+class LedgerReplayClient;
 class LedgerForwardReplay_test;
 }  // namespace test
 
@@ -76,14 +77,14 @@ public:
     void
     removeLedgerDeltaAcquire(uint256 const& hash)
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         deltas_.erase(hash);
     }
 
     void
     removeSkipListAcquire(uint256 const& hash)
     {
-        std::lock_guard<std::mutex> lock(lock_);
+        std::unique_lock<std::recursive_mutex> lock(lock_);
         skipLists_.erase(hash);
     }
 
@@ -94,7 +95,7 @@ public:
     onStop() override;
 
 private:
-    mutable std::mutex lock_;
+    mutable std::recursive_mutex lock_;
     std::list<std::shared_ptr<LedgerReplayTask>> tasks_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
@@ -102,6 +103,7 @@ private:
     std::unique_ptr<PeerSetBuilder> peerSetBuilder_;
     beast::Journal j_;
 
+    friend class test::LedgerReplayClient;
     friend class test::LedgerForwardReplay_test;
 };
 

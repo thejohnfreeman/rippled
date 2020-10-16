@@ -29,7 +29,7 @@ class Application;
 class LedgerReplayMsgHandler final
 {
 public:
-    LedgerReplayMsgHandler(Application& app, LedgerReplayer& replayer);
+    LedgerReplayMsgHandler(Application& app);
     ~LedgerReplayMsgHandler() = default;
 
     protocol::TMProofPathResponse
@@ -50,7 +50,6 @@ public:
 
 private:
     Application& app_;
-    LedgerReplayer& replayer_;
     beast::Journal journal_;
 };
 

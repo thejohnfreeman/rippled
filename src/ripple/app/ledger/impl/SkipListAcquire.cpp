@@ -28,7 +28,6 @@ namespace ripple {
 
 SkipListAcquire::SkipListAcquire(
     Application& app,
-    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
     std::unique_ptr<PeerSet>&& peerSet)
     : TimeoutCounter(
@@ -36,15 +35,15 @@ SkipListAcquire::SkipListAcquire(
           ledgerHash,
           LedgerReplayer::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplaySkipList"))
-    , replayer_(replayer)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug()) << "Acquire skip list " << mHash;
+    JLOG(m_journal.debug()) << "SkipList ctor " << mHash;
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
     JLOG(m_journal.trace()) << "SkipList dtor " << mHash;
+    app_.getLedgerReplayer().removeSkipListAcquire(mHash);
 }
 
 void
@@ -69,7 +68,7 @@ SkipListAcquire::init(int numPeers)
                 }
                 JLOG(m_journal.trace())
                     << "Acquire skip list from existing ledger " << mHash;
-                stopReceive();
+                //stopReceive();
                 return;
             }
         }
@@ -129,7 +128,7 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
             if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
-        stopReceive();
+        //stopReceive();
     }
     else
     {
@@ -167,7 +166,7 @@ SkipListAcquire::processData(
                 sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
         // TODO opportunity to merge tasks, probably no need
-        stopReceive();
+        //stopReceive();
     }
 }
 
@@ -191,10 +190,10 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     }
 }
 
-void
-SkipListAcquire::stopReceive()
-{
-    replayer_.removeSkipListAcquire(mHash);
-}
+//void
+//SkipListAcquire::stopReceive()
+//{
+//    app_.getLedgerReplayer().removeSkipListAcquire(mHash);
+//}
 
 }  // namespace ripple

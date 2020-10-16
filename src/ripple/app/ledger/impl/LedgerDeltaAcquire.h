@@ -50,7 +50,6 @@ public:
 
     LedgerDeltaAcquire(
         Application& app,
-        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq,
         std::unique_ptr<PeerSet> peerSet);
@@ -87,10 +86,9 @@ private:
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
-    void
-    stopReceive();
-
-    LedgerReplayer& replayer_;
+//    void
+//    stopReceive();
+//
     std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replay_;

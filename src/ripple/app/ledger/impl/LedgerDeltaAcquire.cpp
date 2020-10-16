@@ -34,7 +34,6 @@ namespace ripple {
 
 LedgerDeltaAcquire::LedgerDeltaAcquire(
     Application& app,
-    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
     std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet> peerSet)
@@ -43,17 +42,17 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
           ledgerHash,
           LedgerReplayer::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplayDelta"))
-    , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
     JLOG(m_journal.debug())
-        << "Acquire ledger " << mHash << " Seq " << ledgerSeq;
+        << "Delta ctor " << mHash << " Seq " << ledgerSeq;
 }
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
     JLOG(m_journal.trace()) << "Delta dtor " << mHash;
+    app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
 }
 
 void
@@ -72,7 +71,7 @@ LedgerDeltaAcquire::init(int numPeers)
             if (auto sptr = t.lock(); sptr)
                 sptr->deltaReady();
         }
-        stopReceive();
+        //stopReceive();
     }
     else
     {
@@ -129,7 +128,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
             if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
-        stopReceive();
+        //stopReceive();
     }
     else
     {
@@ -168,7 +167,7 @@ LedgerDeltaAcquire::processData(
             if (auto sptr = t.lock(); sptr)
                 sptr->deltaReady();
         }
-        stopReceive();
+        //stopReceive();
     }
 }
 
@@ -273,10 +272,10 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
     }
 }
 
-void
-LedgerDeltaAcquire::stopReceive()
-{
-    replayer_.removeLedgerDeltaAcquire(mHash);
-}
+//void
+//LedgerDeltaAcquire::stopReceive()
+//{
+//    app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
+//}
 
 }  // namespace ripple

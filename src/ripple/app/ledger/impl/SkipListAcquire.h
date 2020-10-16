@@ -49,7 +49,6 @@ public:
 
     SkipListAcquire(
         Application& app,
-        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
         std::unique_ptr<PeerSet>&& peerSet);
 
@@ -79,10 +78,9 @@ private:
     void
     addPeers(std::size_t limit);
 
-    void
-    stopReceive();
-
-    LedgerReplayer& replayer_;
+//    void
+//    stopReceive();
+//
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
