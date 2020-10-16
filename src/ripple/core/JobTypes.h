@@ -61,7 +61,7 @@ private:
         add(jtPROPOSAL_ut, "untrustedProposal", maxLimit, false, 500ms, 1250ms);
         add(jtLEDGER_DATA, "ledgerData", 2, false, 0ms, 0ms);
         add(jtREPLAY_TASK, "ledgerReplayTask", maxLimit, false, 0ms, 0ms);
-        add(jtREPLAY_REQ, "ledgerReplayRequest", 10, false, 0ms, 0ms);
+        add(jtREPLAY_REQ, "ledgerReplayRequest", 10, false, 250ms, 1000ms);
         add(jtCLIENT, "clientCommand", maxLimit, false, 2000ms, 5000ms);
         add(jtRPC, "RPC", maxLimit, false, 0ms, 0ms);
         add(jtUPDATE_PF, "updatePaths", maxLimit, false, 0ms, 0ms);
