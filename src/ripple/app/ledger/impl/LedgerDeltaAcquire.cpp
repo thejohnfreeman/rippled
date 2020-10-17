@@ -45,8 +45,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug())
-        << "Delta ctor " << mHash << " Seq " << ledgerSeq;
+    JLOG(m_journal.debug()) << "Delta ctor " << mHash << " Seq " << ledgerSeq;
 }
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
@@ -66,12 +65,7 @@ LedgerDeltaAcquire::init(int numPeers)
         replay_ = l;
         ledgerBuilt_ = true;
         JLOG(m_journal.trace()) << "Acquire existing ledger " << mHash;
-        for (auto& t : tasks_)
-        {
-            if (auto sptr = t.lock(); sptr)
-                sptr->deltaReady();
-        }
-        //stopReceive();
+        notifyTasks(DataStatus::dataReady, sl);
     }
     else
     {
@@ -123,12 +117,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
-        for (auto& t : tasks_)
-        {
-            if (auto sptr = t.lock(); sptr)
-                sptr->cancel();
-        }
-        //stopReceive();
+        notifyTasks(DataStatus::failed, psl);
     }
     else
     {
@@ -151,7 +140,6 @@ LedgerDeltaAcquire::processData(
     JLOG(m_journal.trace()) << "got data for " << mHash;
     if (isDone())
         return;
-    assert(info.seq == ledgerSeq_);
 
     // create a temp ledger for building a LedgerReplay object later
     if (auto rp =
@@ -162,12 +150,12 @@ LedgerDeltaAcquire::processData(
         replay_ = rp;
         orderedTxns_ = std::move(orderedTxns);
         JLOG(m_journal.debug()) << "ready to replay " << mHash;
-        for (auto& t : tasks_)
-        {
-            if (auto sptr = t.lock(); sptr)
-                sptr->deltaReady();
-        }
-        //stopReceive();
+        notifyTasks(DataStatus::dataReady, sl);
+    }
+    else
+    {
+        mFailed = true;
+        notifyTasks(DataStatus::failed, sl);
     }
 }
 
@@ -201,19 +189,19 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     if (mFailed || !mComplete || !replay_)
         return {};
 
+    assert(parent->seq() + 1 == replay_->seq() &&
+           parent->info().hash == replay_->info().parentHash);
     // build ledger
-    assert(parent->seq() + 1 == replay_->seq());
-    assert(parent->info().hash == replay_->info().parentHash);
     LedgerReplay replayData(parent, replay_, std::move(orderedTxns_));
     auto const l = buildLedger(replayData, tapNONE, app_, m_journal);
-    if (!l)
+    if (!l || l->info().hash != mHash)
     {
         JLOG(m_journal.error())
             << "tryBuild failed " << mHash << " parent " << parent->info().hash;
-        orderedTxns_ = replayData.orderedTxns();
+        mFailed = true;
+        notifyTasks(DataStatus::failed, sl);
         return {};
     }
-    assert(mHash == l->info().hash);
 
     replay_ = l;
     ledgerBuilt_ = true;
@@ -272,10 +260,19 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
     }
 }
 
-//void
-//LedgerDeltaAcquire::stopReceive()
-//{
-//    app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
-//}
+void
+LedgerDeltaAcquire::notifyTasks(DataStatus status, ScopedLockType& psl)
+{
+    for (auto& t : tasks_)
+    {
+        if (auto sptr = t.lock(); sptr)
+        {
+            if(status == DataStatus::dataReady)
+                sptr->deltaReady();
+            else if(status == DataStatus::failed)
+                sptr->cancel();
+        }
+    }
+}
 
 }  // namespace ripple

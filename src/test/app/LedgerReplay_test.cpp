@@ -379,9 +379,7 @@ struct LedgerReplayClient
         , clientMsgHandler(env.app())
     {
         replayer.peerSetBuilder_ = std::make_unique<ReplayPeerSetBuilder>(
-                  clientMsgHandler,
-                  serverMsgHandler,
-                  drop);
+            clientMsgHandler, serverMsgHandler, drop);
     }
 
     void
@@ -477,7 +475,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
             l = server.ledgerMaster.getLedgerByHash(l->info().parentHash);
         }
         client.ledgerMaster.storeLedger(l);
-        //logAll(server, client);
+        // logAll(server, client);
         client.replayer.replay(
             InboundLedger::Reason::GENERIC, finalHash, totalReplay);
         int totalWait = 10;
@@ -497,7 +495,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         LedgerServer server(*this, {totalReplay + 1});
         incPorts();
         LedgerReplayClient client(*this, server);
-        logAll(server, client, Severity::kAll);
+        logAll(server, client);
         auto l = server.ledgerMaster.getClosedLedger();
         auto finalHash = l->info().hash;
         auto prevHash = l->info().parentHash;
@@ -508,7 +506,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         client.ledgerMaster.storeLedger(l);
 
         client.replayer.replay(
-            InboundLedger::Reason::GENERIC, prevHash, totalReplay-1);
+            InboundLedger::Reason::GENERIC, prevHash, totalReplay - 1);
         client.replayer.replay(
             InboundLedger::Reason::GENERIC, finalHash, totalReplay);
 
@@ -764,8 +762,8 @@ enable=0
     void
     run() override
     {
-//        testSimple();
-//        testMsgDrop(20);
+        testSimple();
+        testMsgDrop(20);
         testOverlap();
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();

@@ -86,9 +86,14 @@ private:
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
-//    void
-//    stopReceive();
-//
+    enum class DataStatus
+    {
+        dataReady,
+        failed
+    };
+    void
+    notifyTasks(DataStatus status, ScopedLockType& psl);
+
     std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replay_;
@@ -97,7 +102,7 @@ private:
     std::set<InboundLedger::Reason> reasons_;
     bool ledgerBuilt_ = false;
 
-    friend class LedgerReplayTask;
+    friend class LedgerReplayTask; // for assert only
     friend class test::LedgerForwardReplay_test;
 };
 

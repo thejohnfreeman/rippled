@@ -68,7 +68,6 @@ SkipListAcquire::init(int numPeers)
                 }
                 JLOG(m_journal.trace())
                     << "Acquire skip list from existing ledger " << mHash;
-                //stopReceive();
                 return;
             }
         }
@@ -128,7 +127,6 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
             if (auto sptr = t.lock(); sptr)
                 sptr->cancel();
         }
-        //stopReceive();
     }
     else
     {
@@ -165,8 +163,6 @@ SkipListAcquire::processData(
             if (auto sptr = t.lock(); sptr)
                 sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
-        // TODO opportunity to merge tasks, probably no need
-        //stopReceive();
     }
 }
 
@@ -189,11 +185,5 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
         return true;
     }
 }
-
-//void
-//SkipListAcquire::stopReceive()
-//{
-//    app_.getLedgerReplayer().removeSkipListAcquire(mHash);
-//}
 
 }  // namespace ripple

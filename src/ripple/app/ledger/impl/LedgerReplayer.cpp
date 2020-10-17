@@ -166,10 +166,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 if (!delta)
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
-                        app_,
-                        *skipListItem,
-                        seq,
-                        peerSetBuilder_->build());
+                        app_, *skipListItem, seq, peerSetBuilder_->build());
                     deltas_.emplace(*skipListItem, delta);
                     newDelta = true;
                 }

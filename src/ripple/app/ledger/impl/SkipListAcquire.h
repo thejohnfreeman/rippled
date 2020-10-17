@@ -78,9 +78,6 @@ private:
     void
     addPeers(std::size_t limit);
 
-//    void
-//    stopReceive();
-//
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;

@@ -25,10 +25,8 @@
 #include <memory>
 
 namespace ripple {
-LedgerReplayMsgHandler::LedgerReplayMsgHandler(
-    Application& app)
-    : app_(app)
-    , journal_(app.journal("LedgerReplayMsgHandler"))
+LedgerReplayMsgHandler::LedgerReplayMsgHandler(Application& app)
+    : app_(app), journal_(app.journal("LedgerReplayMsgHandler"))
 {
 }
 
@@ -85,7 +83,7 @@ LedgerReplayMsgHandler::processProofPathRequest(
         return reply;
     }
 
-    // pack header, code copied from getLedger()
+    // pack header
     Serializer nData(128);
     addRaw(ledger->info(), nData);
     reply.set_ledgerheader(nData.getDataPtr(), nData.getLength());
@@ -134,9 +132,10 @@ LedgerReplayMsgHandler::processProofPathResponse(
     uint256 key(reply.key());
     if (key != keylet::skip().key)
     {
-        JLOG(journal_.trace()) << "Bad message: we only support the short "
-                                  "skip list for now. Key in reply "
-                               << key;
+        JLOG(journal_.trace())
+            << "Bad message: we only support the short skip list for now. "
+               "Key in reply "
+            << key;
         return;
     }
 
