@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
+    Copyright (c) 2012, 2020 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -38,7 +38,7 @@ class LedgerForwardReplay_test;
 class SkipListAcquire final
     : public TimeoutCounter,
       public std::enable_shared_from_this<SkipListAcquire>,
-      public CountedObject<SkipListAcquire>
+      public CountedObject<SkipListAcquire> //TODO
 {
 public:
     static char const*
@@ -77,6 +77,9 @@ private:
 
     void
     addPeers(std::size_t limit);
+
+    void
+    notifyTasks(ScopedLockType& psl);
 
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;

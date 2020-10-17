@@ -49,6 +49,7 @@ SkipListAcquire::~SkipListAcquire()
 void
 SkipListAcquire::init(int numPeers)
 {
+    ScopedLockType sl(mLock);
     if (auto const l = app_.getLedgerMaster().getLedgerByHash(mHash); l)
     {
         auto const hashIndex = l->read(keylet::skip());
@@ -57,23 +58,17 @@ SkipListAcquire::init(int numPeers)
             auto const& slist = hashIndex->getFieldV256(sfHashes).value();
             if (!slist.empty())
             {
-                ScopedLockType sl(mLock);
                 mComplete = true;
                 skipList_ = slist;
                 ledgerSeq_ = l->seq();
-                for (auto& t : tasks_)
-                {
-                    if (auto sptr = t.lock(); sptr)
-                        sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
-                }
                 JLOG(m_journal.trace())
                     << "Acquire skip list from existing ledger " << mHash;
+                notifyTasks(sl);
                 return;
             }
         }
     }
 
-    ScopedLockType sl(mLock);
     addPeers(numPeers);
     setTimer();
 }
@@ -122,11 +117,7 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
     if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
-        for (auto& t : tasks_)
-        {
-            if (auto sptr = t.lock(); sptr)
-                sptr->cancel();
-        }
+        notifyTasks(psl);
     }
     else
     {
@@ -158,11 +149,7 @@ SkipListAcquire::processData(
         skipList_ = sle->getFieldV256(sfHashes).value();
         ledgerSeq_ = ledgerSeq;
         JLOG(m_journal.debug()) << "Skip list received " << mHash;
-        for (auto& t : tasks_)
-        {
-            if (auto sptr = t.lock(); sptr)
-                sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
-        }
+        notifyTasks(sl);
     }
 }
 
@@ -183,6 +170,21 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
             task->updateSkipList(mHash, ledgerSeq_, skipList_);
         }
         return true;
+    }
+}
+
+void
+SkipListAcquire::notifyTasks(ScopedLockType& psl)
+{
+    for (auto& t : tasks_)
+    {
+        if (auto sptr = t.lock(); sptr)
+        {
+            if(mFailed)
+                sptr->cancel();
+            else
+                sptr->updateSkipList(mHash, ledgerSeq_, skipList_);
+        }
     }
 }
 

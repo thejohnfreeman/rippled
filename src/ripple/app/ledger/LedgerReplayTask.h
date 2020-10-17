@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
+    Copyright (c) 2012, 2020 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -52,8 +52,7 @@ public:
         std::uint32_t totalLedgers;  // including the start and the finish
         // to be filled
         std::uint32_t finishSeq = 0;
-        std::vector<uint256> skipList =
-            {};  // including the start and the finish
+        std::vector<uint256> skipList = {};  // including the finishHash
         uint256 startHash = {};
         std::uint32_t startSeq = 0;
         bool full = false;
@@ -139,7 +138,7 @@ private:
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
     std::shared_ptr<Ledger const> parent_ = {};
-    int deltaToBuild = 0;  // should not build until have parent
+    uint32_t deltaToBuild = 0;  // should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
 
     friend class test::LedgerForwardReplay_test;

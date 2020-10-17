@@ -49,18 +49,14 @@ LedgerReplayer::replay(
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
 {
-    if (finishLedgerHash.isZero() || totalNumLedgers > 256)
-    {
-        JLOG(j_.warn()) << "Invalid replay task " << finishLedgerHash
-                        << ", totalNumLedgers=" << totalNumLedgers;
-        return;
-    }
+    assert(finishLedgerHash.isNonZero() &&
+           totalNumLedgers > 0 && totalNumLedgers <= 256);
 
     LedgerReplayTask::TaskParameter parameter(
         r, finishLedgerHash, totalNumLedgers);
 
-    std::shared_ptr<LedgerReplayTask> task;
-    std::shared_ptr<SkipListAcquire> skipList;
+    std::shared_ptr<LedgerReplayTask> task = {};
+    std::shared_ptr<SkipListAcquire> skipList = {};
     bool skipListNeedInit = false;
     {
         std::unique_lock<std::recursive_mutex> lock(lock_);
@@ -75,7 +71,7 @@ LedgerReplayer::replay(
         {
             if (parameter.canMergeInto(t->getTaskParameter()))
             {
-                JLOG(j_.info()) << "Replay task " << parameter.finishHash
+                JLOG(j_.info()) << "Task " << parameter.finishHash
                                 << " with " << totalNumLedgers
                                 << " ledgers merged into an existing task.";
                 return;
@@ -91,6 +87,7 @@ LedgerReplayer::replay(
             skipList = i->second.lock();
             if (!skipList)
             {
+                assert(false);  // TODO remove before PR
                 skipLists_.erase(i);
             }
         }
@@ -108,18 +105,18 @@ LedgerReplayer::replay(
         tasks_.push_back(task);
     }
 
-    if (skipList->addTask(task))
-        task->init();
-
     if (skipListNeedInit)
         skipList->init(1);
+
+    if (skipList->addTask(task))
+        task->init();
 }
 
 void
 LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
 {
     {
-        // TODO for use cases like Consensus (totalLedgers = 1 or small):
+        // TODO for use cases like Consensus (i.e. totalLedgers = 1 or small):
         // check if the last closed or validated ledger l the local node has
         // is in the skip list and is an ancestor of parameter.startLedger
         // that has to be downloaded, if so expand the task to start with l.
@@ -149,7 +146,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
              ++seq, ++skipListItem)
         {
             bool newDelta = false;
-            std::shared_ptr<LedgerDeltaAcquire> delta;
+            std::shared_ptr<LedgerDeltaAcquire> delta = {};
             {
                 std::unique_lock<std::recursive_mutex> lock(lock_);
                 auto i = deltas_.find(*skipListItem);
@@ -172,7 +169,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 }
             }
 
-            if (newDelta)  // TODO rate limit ?? by only init a subset
+            if (newDelta)
                 delta->init(1);
 
             task->addDelta(delta);
@@ -238,7 +235,7 @@ LedgerReplayer::sweep()
         if ((*it)->finished())
         {
             JLOG(j_.trace())
-                << "Remove task " << (*it)->getTaskParameter().finishHash;
+                << "Sweep task " << (*it)->getTaskParameter().finishHash;
             it = tasks_.erase(it);
         }
         else

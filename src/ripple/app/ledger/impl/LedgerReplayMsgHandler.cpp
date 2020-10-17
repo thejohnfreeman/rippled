@@ -53,7 +53,7 @@ LedgerReplayMsgHandler::processProofPathRequest(
     uint256 const key{packet.key()};
     uint256 const ledgerHash{packet.ledgerhash()};
     auto ledger = app_.getLedgerMaster().getLedgerByHash(ledgerHash);
-    if (!ledger || !ledger->isImmutable())
+    if (!ledger)
     {
         JLOG(journal_.debug())
             << "getProofPath: Don't have ledger " << ledgerHash;
@@ -101,19 +101,18 @@ void
 LedgerReplayMsgHandler::processProofPathResponse(
     std::shared_ptr<protocol::TMProofPathResponse> const& msg)
 {
-    JLOG(journal_.trace()) << "onMessage, TMProofPathResponse";
     protocol::TMProofPathResponse& reply = *msg;
     if (reply.has_error() || !reply.has_key() || !reply.has_ledgerhash() ||
         !reply.has_type() || !reply.has_ledgerheader() ||
         reply.path_size() == 0)
     {
-        JLOG(journal_.trace()) << "Bad message: Error reply";
+        JLOG(journal_.debug()) << "Bad message: Error reply";
         return;
     }
 
     if (reply.type() != protocol::lmAS_NODE)
     {
-        JLOG(journal_.trace())
+        JLOG(journal_.debug())
             << "Bad message: we only support the state ShaMap for now";
         return;
     }
@@ -124,7 +123,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
     uint256 replyHash(reply.ledgerhash());
     if (calculateLedgerHash(info) != replyHash)
     {
-        JLOG(journal_.trace()) << "Bad message: Hash mismatch";
+        JLOG(journal_.debug()) << "Bad message: Hash mismatch";
         return;
     }
     info.hash = replyHash;
@@ -132,7 +131,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
     uint256 key(reply.key());
     if (key != keylet::skip().key)
     {
-        JLOG(journal_.trace())
+        JLOG(journal_.debug())
             << "Bad message: we only support the short skip list for now. "
                "Key in reply "
             << key;
@@ -149,7 +148,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
 
     if (!SHAMap::verifyProofPath(info.accountHash, key, path))
     {
-        JLOG(journal_.trace()) << "Bad message: Proof path verify failed";
+        JLOG(journal_.debug()) << "Bad message: Proof path verify failed";
         return;
     }
 
@@ -157,13 +156,13 @@ LedgerReplayMsgHandler::processProofPathResponse(
     auto node = SHAMapAbstractNode::makeFromWire(makeSlice(path.front()));
     if (!node || !node->isLeaf())
     {
-        JLOG(journal_.trace()) << "Bad message: Cannot deserialize";
+        JLOG(journal_.debug()) << "Bad message: Cannot deserialize";
         return;
     }
     auto item = static_cast<SHAMapTreeNode*>(node.get())->peekItem();
     if (!item)
     {
-        JLOG(journal_.trace()) << "Bad message: Cannot get ShaMapItem";
+        JLOG(journal_.debug()) << "Bad message: Cannot get ShaMapItem";
         return;
     }
 
@@ -215,11 +214,10 @@ void
 LedgerReplayMsgHandler::processReplayDeltaResponse(
     std::shared_ptr<protocol::TMReplayDeltaResponse> const& msg)
 {
-    JLOG(journal_.trace()) << "onMessage, TMReplayDeltaResponse";
     protocol::TMReplayDeltaResponse& reply = *msg;
     if (reply.has_error() || !reply.has_ledgerheader())
     {
-        JLOG(journal_.trace()) << "Bad message: Error reply";
+        JLOG(journal_.debug()) << "Bad message: Error reply";
         return;
     }
 
@@ -228,7 +226,7 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
     uint256 replyHash(reply.ledgerhash());
     if (calculateLedgerHash(info) != replyHash)
     {
-        JLOG(journal_.trace()) << "Bad message: Hash mismatch";
+        JLOG(journal_.debug()) << "Bad message: Hash mismatch";
         return;
     }
     info.hash = replyHash;
@@ -254,7 +252,7 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
             auto tx = std::make_shared<STTx const>(txSit);
             if (!tx)
             {
-                JLOG(journal_.trace()) << "Bad message: Cannot deserialize";
+                JLOG(journal_.debug()) << "Bad message: Cannot deserialize";
                 return;
             }
             auto tid = tx->getTransactionID();
@@ -265,20 +263,20 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
                 tid, std::move(shaMapItemData));
             if (!item || !txMap.addGiveItem(std::move(item), true, true))
             {
-                JLOG(journal_.trace()) << "Bad message: Cannot deserialize";
+                JLOG(journal_.debug()) << "Bad message: Cannot deserialize";
                 return;
             }
         }
     }
     catch (std::exception const&)
     {
-        JLOG(journal_.trace()) << "Bad message: Cannot deserialize";
+        JLOG(journal_.debug()) << "Bad message: Cannot deserialize";
         return;
     }
 
     if (txMap.getHash().as_uint256() != info.txHash)
     {
-        JLOG(journal_.trace()) << "Bad message: Transactions verify failed";
+        JLOG(journal_.debug()) << "Bad message: Transactions verify failed";
         return;
     }
 

@@ -30,7 +30,9 @@ LedgerReplayTask::TaskParameter::TaskParameter(
     InboundLedger::Reason r,
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
-    : reason(r), finishHash(finishLedgerHash), totalLedgers(totalNumLedgers)
+    : reason(r)
+    , finishHash(finishLedgerHash)
+    , totalLedgers(totalNumLedgers)
 {
 }
 
@@ -119,16 +121,13 @@ LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
         }
         if (parent_)
         {
-            JLOG(m_journal.trace()) << "Got start ledger "
-                                    << parameter_.startHash << " for " << mHash;
+            JLOG(m_journal.trace())
+                << "Got start ledger " << parameter_.startHash
+                << " for task " << mHash;
         }
     }
 
-    if (parent_ && parameter_.full &&
-        parameter_.totalLedgers - 1 == deltas_.size())
-    {
-        tryAdvance(peerSetLock);
-    }
+    tryAdvance(peerSetLock);
 }
 
 void
@@ -145,28 +144,26 @@ LedgerReplayTask::tryAdvance(ScopedLockType& peerSetLock)
     JLOG(m_journal.trace())
         << "tryAdvance task " << mHash << " deltaIndex=" << deltaToBuild
         << " totalDeltas=" << deltas_.size();
-    if (isDone() || !parent_ || !parameter_.full ||
-        parameter_.totalLedgers - 1 != deltas_.size())
+
+    bool shouldTry = !isDone() && parent_ && parameter_.full &&
+                     parameter_.totalLedgers - 1 == deltas_.size();
+    if (!shouldTry)
         return;
 
-    if (deltaToBuild >= 0 && deltas_.size() > 0)
+    while (deltaToBuild < deltas_.size())
     {
-        assert(
-            parent_ && parent_->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
-        while (deltaToBuild < deltas_.size())
+        assert(parent_->seq() + 1 == deltas_[deltaToBuild]->ledgerSeq_);
+        if (auto l = deltas_[deltaToBuild]->tryBuild(parent_); l)
         {
-            if (auto l = deltas_[deltaToBuild]->tryBuild(parent_); l)
-            {
-                JLOG(m_journal.debug())
-                    << "Task " << mHash << " got ledger " << l->info().hash
-                    << " deltaIndex=" << deltaToBuild
-                    << " totalDeltas=" << deltas_.size();
-                parent_ = l;
-                ++deltaToBuild;
-            }
-            else
-                break;
+            JLOG(m_journal.debug())
+                << "Task " << mHash << " got ledger " << l->info().hash
+                << " deltaIndex=" << deltaToBuild
+                << " totalDeltas=" << deltas_.size();
+            parent_ = l;
+            ++deltaToBuild;
         }
+        else
+            break;
     }
 
     if (deltaToBuild >= deltas_.size())
@@ -187,7 +184,7 @@ LedgerReplayTask::updateSkipList(
         if (!parameter_.update(hash, seq, sList))
         {
             JLOG(m_journal.error()) << "Parameter update failed " << mHash;
-            cancel();
+            mFailed = true;
             return;
         }
     }

@@ -86,21 +86,16 @@ private:
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
 
-    enum class DataStatus
-    {
-        dataReady,
-        failed
-    };
     void
-    notifyTasks(DataStatus status, ScopedLockType& psl);
+    notifyTasks(ScopedLockType& psl);
 
     std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
-    std::shared_ptr<Ledger const> replay_;
+    std::shared_ptr<Ledger const> replayTemp_ = {};
+    std::shared_ptr<Ledger const> fullLedger_ = {};
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
-    bool ledgerBuilt_ = false;
 
     friend class LedgerReplayTask; // for assert only
     friend class test::LedgerForwardReplay_test;

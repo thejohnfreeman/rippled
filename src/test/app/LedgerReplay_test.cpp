@@ -411,11 +411,11 @@ using namespace std::chrono;
 void
 shortenTimeouts()
 {
-    *const_cast<milliseconds*>(&LedgerReplayer::TASK_TIMEOUT) = 5ms;
-    *const_cast<milliseconds*>(&LedgerReplayer::SUB_TASK_TIMEOUT) = 2ms;
-    *const_cast<int*>(&LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER) = 1;
-    *const_cast<int*>(&LedgerReplayer::SUB_TASK_MAX_TIMEOUTS) = 3;
-};
+    const_cast<milliseconds&>(LedgerReplayer::TASK_TIMEOUT) = 5ms;
+    const_cast<milliseconds&>(LedgerReplayer::SUB_TASK_TIMEOUT) = 2ms;
+    const_cast<int&>(LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER) = 1;
+    const_cast<int&>(LedgerReplayer::SUB_TASK_MAX_TIMEOUTS) = 3;
+};//TODO UB?
 
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {
@@ -462,7 +462,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
     void
     testMsgDrop(int dropRate)
     {
-        testcase("drop all msg test");
+        testcase("drop msg test");
         int totalReplay = 5;
         LedgerServer server(*this, {totalReplay + 1});
         incPorts();
