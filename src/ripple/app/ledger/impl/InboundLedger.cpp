@@ -635,16 +635,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                         p->send(packet);
                     }
                 });
-
-                //                for (auto id : mPeers)
-                //                {
-                //                    if (auto p =
-                //                    app_.overlay().findPeerByShortID(id))
-                //                    {
-                //                        mByHash = false;
-                //                        p->send(packet);
-                //                    }
-                //                }
             }
             else
             {
@@ -667,8 +657,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
             tmGL.set_ledgerseq(mSeq);
         JLOG(m_journal.trace()) << "Sending header request to "
                                 << (peer ? "selected peer" : "all peers");
-        // auto packet = std::make_shared<Message>(tmGL,
-        // protocol::mtGET_LEDGER);
         mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
         return;
     }
@@ -706,10 +694,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
             *tmGL.add_nodeids() = SHAMapNodeID().getRawString();
             JLOG(m_journal.trace()) << "Sending AS root request to "
                                     << (peer ? "selected peer" : "all peers");
-            //            auto packet =
-            //                std::make_shared<Message>(tmGL,
-            //                protocol::mtGET_LEDGER);
-            //            sendRequest(packet, peer);
             mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
             return;
         }
@@ -755,11 +739,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                             << "Sending AS node request (" << nodes.size()
                             << ") to "
                             << (peer ? "selected peer" : "all peers");
-                        //                        auto packet =
-                        //                        std::make_shared<Message>(
-                        //                            tmGL,
-                        //                            protocol::mtGET_LEDGER);
-                        //                        sendRequest(packet, peer);
                         mPeerSet->sendRequest(
                             tmGL, protocol::mtGET_LEDGER, peer);
                         return;
@@ -788,10 +767,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
             *(tmGL.add_nodeids()) = SHAMapNodeID().getRawString();
             JLOG(m_journal.trace()) << "Sending TX root request to "
                                     << (peer ? "selected peer" : "all peers");
-            //            auto packet =
-            //                std::make_shared<Message>(tmGL,
-            //                protocol::mtGET_LEDGER);
-            //            sendRequest(packet, peer);
             mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
             return;
         }
@@ -829,10 +804,6 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                     JLOG(m_journal.trace())
                         << "Sending TX node request (" << nodes.size()
                         << ") to " << (peer ? "selected peer" : "all peers");
-                    //                    auto packet =
-                    //                        std::make_shared<Message>(tmGL,
-                    //                        protocol::mtGET_LEDGER);
-                    //                    sendRequest(packet, peer);
                     mPeerSet->sendRequest(tmGL, protocol::mtGET_LEDGER, peer);
                     return;
                 }

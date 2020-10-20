@@ -1557,19 +1557,38 @@ void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
 {
     JLOG(p_journal_.trace()) << "onMessage, TMProofPathRequest";
-    fee_ = Resource::feeMediumBurdenPeer;  // TODO understand
+    fee_ = Resource::feeMediumBurdenPeer;
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
         jtREPLAY_REQ, "recvProofPathRequest", [weak, m](Job&) {
             if (auto peer = weak.lock())
-                peer->getProofPath(m);
+            {
+                auto reply =
+                    peer->ledgerReplayMsgHandler_.processProofPathRequest(m);
+                if (reply.has_error())
+                {
+                    if (reply.error() == protocol::TMReplyError::reBAD_REQUEST)
+                        peer->charge(Resource::feeInvalidRequest);
+                    else
+                        peer->charge(Resource::feeRequestNoReply);
+                }
+                else
+                {
+                    auto oPacket = std::make_shared<Message>(
+                        reply, protocol::mtProofPathResponse);
+                    peer->send(oPacket);
+                }
+            }
         });
 }
 
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
 {
-    ledgerReplayMsgHandler_.processProofPathResponse(m);
+    if (!ledgerReplayMsgHandler_.processProofPathResponse(m))
+    {
+        charge(Resource::feeBadData);
+    }
 }
 
 void
@@ -1581,14 +1600,33 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
     app_.getJobQueue().addJob(
         jtREPLAY_REQ, "recvReplayDeltaRequest", [weak, m](Job&) {
             if (auto peer = weak.lock())
-                peer->getReplayDelta(m);
+            {
+                auto reply =
+                    peer->ledgerReplayMsgHandler_.processReplayDeltaRequest(m);
+                if (reply.has_error())
+                {
+                    if (reply.error() == protocol::TMReplyError::reBAD_REQUEST)
+                        peer->charge(Resource::feeInvalidRequest);
+                    else
+                        peer->charge(Resource::feeRequestNoReply);
+                }
+                else
+                {
+                    auto oPacket = std::make_shared<Message>(
+                        reply, protocol::mtReplayDeltaResponse);
+                    peer->send(oPacket);
+                }
+            }
         });
 }
 
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 {
-    ledgerReplayMsgHandler_.processReplayDeltaResponse(m);
+    if (!ledgerReplayMsgHandler_.processReplayDeltaResponse(m))
+    {
+        charge(Resource::feeBadData);
+    }
 }
 
 void
@@ -3021,32 +3059,6 @@ PeerImp::Metrics::total_bytes() const
 {
     std::shared_lock lock{mutex_};
     return totalBytes_;
-}
-
-void
-PeerImp::getProofPath(
-    std::shared_ptr<protocol::TMProofPathRequest> const& request)
-{
-    auto reply = ledgerReplayMsgHandler_.processProofPathRequest(request);
-    if (reply.has_error() &&
-        reply.error() == protocol::TMReplyError::reBAD_REQUEST)
-        charge(Resource::feeInvalidRequest);
-    auto oPacket =
-        std::make_shared<Message>(reply, protocol::mtProofPathResponse);
-    send(oPacket);
-}
-
-void
-PeerImp::getReplayDelta(
-    std::shared_ptr<protocol::TMReplayDeltaRequest> const& request)
-{
-    auto reply = ledgerReplayMsgHandler_.processReplayDeltaRequest(request);
-    if (reply.has_error() &&
-        reply.error() == protocol::TMReplyError::reBAD_REQUEST)
-        charge(Resource::feeInvalidRequest);
-    auto oPacket =
-        std::make_shared<Message>(reply, protocol::mtReplayDeltaResponse);
-    send(oPacket);
 }
 
 }  // namespace ripple

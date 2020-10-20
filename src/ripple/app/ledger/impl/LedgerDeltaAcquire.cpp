@@ -186,12 +186,13 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     if (mFailed || !mComplete || !replayTemp_)
         return {};
 
-    assert(parent->seq() + 1 == replayTemp_->seq() &&
-           parent->info().hash == replayTemp_->info().parentHash);
+    assert(
+        parent->seq() + 1 == replayTemp_->seq() &&
+        parent->info().hash == replayTemp_->info().parentHash);
     // build ledger
     LedgerReplay replayData(parent, replayTemp_, std::move(orderedTxns_));
     fullLedger_ = buildLedger(replayData, tapNONE, app_, m_journal);
-    if(fullLedger_ && fullLedger_->info().hash == mHash)
+    if (fullLedger_ && fullLedger_->info().hash == mHash)
     {
         JLOG(m_journal.info()) << "Built " << mHash;
         onLedgerBuilt();
@@ -199,7 +200,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     }
     else
     {
-        mFailed = true; // mComplete == true now
+        mFailed = true;  // mComplete == true now
         JLOG(m_journal.error())
             << "tryBuild failed " << mHash << " parent " << parent->info().hash;
         notifyTasks(sl);
@@ -264,7 +265,7 @@ LedgerDeltaAcquire::notifyTasks(ScopedLockType& psl)
     {
         if (auto sptr = t.lock(); sptr)
         {
-            if(mFailed)
+            if (mFailed)
                 sptr->cancel();
             else
                 sptr->deltaReady();

@@ -36,7 +36,7 @@ public:
     processProofPathRequest(
         std::shared_ptr<protocol::TMProofPathRequest> const& msg);
 
-    void
+    bool
     processProofPathResponse(
         std::shared_ptr<protocol::TMProofPathResponse> const& msg);
 
@@ -44,7 +44,7 @@ public:
     processReplayDeltaRequest(
         std::shared_ptr<protocol::TMReplayDeltaRequest> const& msg);
 
-    void
+    bool
     processReplayDeltaResponse(
         std::shared_ptr<protocol::TMReplayDeltaResponse> const& msg);
 

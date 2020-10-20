@@ -29,7 +29,7 @@ namespace ripple {
 SkipListAcquire::SkipListAcquire(
     Application& app,
     uint256 const& ledgerHash,
-    std::unique_ptr<PeerSet>&& peerSet)
+    std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
           app,
           ledgerHash,
@@ -180,7 +180,7 @@ SkipListAcquire::notifyTasks(ScopedLockType& psl)
     {
         if (auto sptr = t.lock(); sptr)
         {
-            if(mFailed)
+            if (mFailed)
                 sptr->cancel();
             else
                 sptr->updateSkipList(mHash, ledgerSeq_, skipList_);

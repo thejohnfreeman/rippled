@@ -97,7 +97,7 @@ private:
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
 
-    friend class LedgerReplayTask; // for assert only
+    friend class LedgerReplayTask;  // for assert only
     friend class test::LedgerForwardReplay_test;
 };
 

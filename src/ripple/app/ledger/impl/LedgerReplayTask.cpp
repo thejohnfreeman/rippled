@@ -30,9 +30,7 @@ LedgerReplayTask::TaskParameter::TaskParameter(
     InboundLedger::Reason r,
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
-    : reason(r)
-    , finishHash(finishLedgerHash)
-    , totalLedgers(totalNumLedgers)
+    : reason(r), finishHash(finishLedgerHash), totalLedgers(totalNumLedgers)
 {
 }
 
@@ -122,8 +120,8 @@ LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
         if (parent_)
         {
             JLOG(m_journal.trace())
-                << "Got start ledger " << parameter_.startHash
-                << " for task " << mHash;
+                << "Got start ledger " << parameter_.startHash << " for task "
+                << mHash;
         }
     }
 
@@ -146,7 +144,7 @@ LedgerReplayTask::tryAdvance(ScopedLockType& peerSetLock)
         << " totalDeltas=" << deltas_.size();
 
     bool shouldTry = !isDone() && parent_ && parameter_.full &&
-                     parameter_.totalLedgers - 1 == deltas_.size();
+        parameter_.totalLedgers - 1 == deltas_.size();
     if (!shouldTry)
         return;
 

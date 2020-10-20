@@ -415,7 +415,7 @@ shortenTimeouts()
     const_cast<milliseconds&>(LedgerReplayer::SUB_TASK_TIMEOUT) = 2ms;
     const_cast<int&>(LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER) = 1;
     const_cast<int&>(LedgerReplayer::SUB_TASK_MAX_TIMEOUTS) = 3;
-};//TODO UB?
+};  // TODO UB?
 
 struct LedgerForwardReplay_test : public beast::unit_test::suite
 {

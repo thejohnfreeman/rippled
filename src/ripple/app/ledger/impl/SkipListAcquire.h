@@ -38,7 +38,7 @@ class LedgerForwardReplay_test;
 class SkipListAcquire final
     : public TimeoutCounter,
       public std::enable_shared_from_this<SkipListAcquire>,
-      public CountedObject<SkipListAcquire> //TODO
+      public CountedObject<SkipListAcquire>
 {
 public:
     static char const*
@@ -50,7 +50,7 @@ public:
     SkipListAcquire(
         Application& app,
         uint256 const& ledgerHash,
-        std::unique_ptr<PeerSet>&& peerSet);
+        std::unique_ptr<PeerSet> peerSet);
 
     ~SkipListAcquire() override;
 

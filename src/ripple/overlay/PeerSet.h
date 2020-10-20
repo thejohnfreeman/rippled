@@ -68,14 +68,24 @@ public:
 class PeerSetBuilder
 {
 public:
+    virtual ~PeerSetBuilder() = default;
+
     virtual std::unique_ptr<PeerSet>
     build() = 0;
-
-    virtual ~PeerSetBuilder() = default;
 };
 
 std::unique_ptr<PeerSetBuilder>
 make_PeerSetBuilder(Application& app);
+
+/**
+ * Make a dummy PeerSet that does not do anything.
+ * @note For the use case of InboundLedger in ApplicationImp::loadOldLedger(),
+ *       where a real PeerSet is not needed.
+ * @param app
+ * @return
+ */
+std::unique_ptr<PeerSet>
+make_DummyPeerSet(Application& app);
 
 }  // namespace ripple
 

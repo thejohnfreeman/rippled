@@ -610,22 +610,8 @@ private:
         uint256 const& hash,
         std::shared_ptr<protocol::TMLedgerData> const& pPacket,
         beast::Journal journal);
-
-    /**
-     *
-     * @param request
-     */
-    void
-    getProofPath(std::shared_ptr<protocol::TMProofPathRequest> const& request);
-
-    /**
-     *
-     * @param request
-     */
-    void
-    getReplayDelta(
-        std::shared_ptr<protocol::TMReplayDeltaRequest> const& request);
 };
+
 //------------------------------------------------------------------------------
 
 template <class Buffers>

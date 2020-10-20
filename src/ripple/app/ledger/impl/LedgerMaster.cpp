@@ -140,7 +140,7 @@ public:
 }  // namespace
 
 // Don't catch up more than 100 ledgers (cannot exceed 256)
-static constexpr int MAX_LEDGER_GAP{200};
+static constexpr int MAX_LEDGER_GAP{100};
 
 // Don't acquire history if ledger is too old
 static constexpr std::chrono::minutes MAX_LEDGER_AGE_ACQUIRE{1};
@@ -1376,10 +1376,12 @@ LedgerMaster::findNewLedgersToPublish(
             }
 
             if (!app_.config().LEDGER_REPLAY_ENABLE)
+            {
                 // Can we try to acquire the ledger we need?
                 if (!ledger && (++acqCount < ledger_fetch_size_))
                     ledger = app_.getInboundLedgers().acquire(
                         *hash, seq, InboundLedger::Reason::GENERIC);
+            }
 
             // Did we acquire the next ledger we need to publish?
             if (ledger && (ledger->info().seq == pubSeq))
@@ -1401,6 +1403,12 @@ LedgerMaster::findNewLedgersToPublish(
 
     if (app_.config().LEDGER_REPLAY_ENABLE)
     {
+        /* Narrow down the gap of ledgers, and try to replay them.
+         * When replaying a ledger gap, if the local node has
+         * the start ledger, it saves an expensive InboundLedger
+         * acquire. If the local node has the finish ledger, it
+         * saves a skip list acquire.
+         */
         auto const& startLedger = ret.empty() ? mPubLedger : ret.back();
         auto finishLedger = valLedger;
         while (startLedger->seq() + 1 < finishLedger->seq())
@@ -1412,11 +1420,10 @@ LedgerMaster::findNewLedgersToPublish(
             else
             {
                 JLOG(m_journal.debug())
-                    << "Ask ledger replay from " << startLedger->info().seq
-                    << " " << startLedger->info().hash << " to "
-                    << finishLedger->info().seq << " "
+                    << "Ask ledger replay from seq=" << startLedger->info().seq
+                    << ", " << startLedger->info().hash
+                    << " to seq=" << finishLedger->info().seq << ", "
                     << finishLedger->info().hash;
-
                 app_.getLedgerReplayer().replay(
                     InboundLedger::Reason::GENERIC,
                     finishLedger->info().hash,
@@ -2246,4 +2253,5 @@ LedgerMaster::minSqlSeq()
     *db << "SELECT MIN(LedgerSeq) FROM Ledgers", soci::into(seq);
     return seq;
 }
+
 }  // namespace ripple

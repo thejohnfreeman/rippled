@@ -49,8 +49,9 @@ LedgerReplayer::replay(
     uint256 const& finishLedgerHash,
     std::uint32_t totalNumLedgers)
 {
-    assert(finishLedgerHash.isNonZero() &&
-           totalNumLedgers > 0 && totalNumLedgers <= 256);
+    assert(
+        finishLedgerHash.isNonZero() && totalNumLedgers > 0 &&
+        totalNumLedgers <= 256);
 
     LedgerReplayTask::TaskParameter parameter(
         r, finishLedgerHash, totalNumLedgers);
@@ -71,8 +72,8 @@ LedgerReplayer::replay(
         {
             if (parameter.canMergeInto(t->getTaskParameter()))
             {
-                JLOG(j_.info()) << "Task " << parameter.finishHash
-                                << " with " << totalNumLedgers
+                JLOG(j_.info()) << "Task " << parameter.finishHash << " with "
+                                << totalNumLedgers
                                 << " ledgers merged into an existing task.";
                 return;
             }

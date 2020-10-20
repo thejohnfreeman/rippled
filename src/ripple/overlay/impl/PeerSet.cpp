@@ -31,8 +31,6 @@ public:
 
     PeerSetImpl(Application& app);
 
-    //    ~PeerSetImpl() override = default;
-    //
     void
     addPeers(
         std::size_t limit,
@@ -165,6 +163,54 @@ std::unique_ptr<PeerSetBuilder>
 make_PeerSetBuilder(Application& app)
 {
     return std::make_unique<PeerSetBuilderImpl>(app);
+}
+
+class DummyPeerSet : public PeerSet
+{
+public:
+    DummyPeerSet(Application& app) : j_(app.journal("DummyPeerSet"))
+    {
+    }
+
+    void
+    addPeers(
+        std::size_t limit,
+        std::function<bool(std::shared_ptr<Peer> const&)> hasItem,
+        std::function<void(std::shared_ptr<Peer> const&)> onPeerAdded) override
+    {
+        JLOG(j_.warn()) << "DummyPeerSet addPeers should not be called";
+    }
+
+    void
+    sendRequest(
+        ::google::protobuf::Message const& message,
+        protocol::MessageType type,
+        std::shared_ptr<Peer> const& peer) override
+    {
+        JLOG(j_.warn()) << "DummyPeerSet sendRequest should not be called";
+    }
+
+    void
+    visitAddedPeers(std::function<void(Peer::id_t)> onPeer) override
+    {
+        JLOG(j_.warn()) << "DummyPeerSet visitAddedPeers should not be called";
+    }
+
+    std::size_t
+    countAddedPeers() override
+    {
+        JLOG(j_.warn()) << "DummyPeerSet countAddedPeers should not be called";
+        return 0;
+    }
+
+private:
+    beast::Journal j_;
+};
+
+std::unique_ptr<PeerSet>
+make_DummyPeerSet(Application& app)
+{
+    return std::make_unique<DummyPeerSet>(app);
 }
 
 }  // namespace ripple

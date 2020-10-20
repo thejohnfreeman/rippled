@@ -1971,7 +1971,7 @@ ApplicationImp::loadOldLedger(
                         0,
                         InboundLedger::Reason::GENERIC,
                         stopwatch(),
-                        nullptr);  // TODO local only, don't need a peerSet
+                        make_DummyPeerSet(*this));
                     if (il->checkLocal())
                         loadLedger = il->getLedger();
                 }
@@ -2015,7 +2015,7 @@ ApplicationImp::loadOldLedger(
                     0,
                     InboundLedger::Reason::GENERIC,
                     stopwatch(),
-                    nullptr);  // TODO local only, don't need a peerSet
+                    make_DummyPeerSet(*this));
 
                 if (il->checkLocal())
                     loadLedger = il->getLedger();
