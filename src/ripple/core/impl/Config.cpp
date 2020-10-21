@@ -484,7 +484,7 @@ Config::loadFromString(std::string const& fileContents)
     if (exists(SECTION_LEDGER_REPLAY))
     {
         auto sec = section(SECTION_LEDGER_REPLAY);
-        LEDGER_REPLAY_ENABLE = sec.value_or("enable", false);
+        LEDGER_REPLAY = sec.value_or("enable", false);
     }
 
     if (getSingleSection(

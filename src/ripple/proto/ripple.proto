@@ -23,10 +23,10 @@ enum MessageType
     mtGET_PEER_SHARD_INFO   = 52;
     mtPEER_SHARD_INFO       = 53;
     mtVALIDATORLIST         = 54;
-    mtProofPathRequest      = 55;
-    mtProofPathResponse     = 56;
-    mtReplayDeltaRequest    = 57;
-    mtReplayDeltaResponse   = 58;
+    mtPROOF_PATH_REQ        = 55;
+    mtPROOF_PATH_RESPONSE   = 56;
+    mtREPLAY_DELTA_REQ      = 57;
+    mtREPLAY_DELTA_RESPONSE = 58;
 }
 
 // token, iterations, target, challenge = issue demand for proof of work

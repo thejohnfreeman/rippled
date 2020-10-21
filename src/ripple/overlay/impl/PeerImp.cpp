@@ -94,6 +94,10 @@ PeerImp::PeerImp(
     , compressionEnabled_(
           headers_["X-Offer-Compression"] == "lz4" ? Compressed::On
                                                    : Compressed::Off)
+    , ledgerReplayEnabled_(
+          headers_["X-Offer-LedgerReplay"] == "1" && app_.config().LEDGER_REPLAY
+              ? true
+              : false)
     , ledgerReplayMsgHandler_(app)
 {
 }
@@ -430,6 +434,8 @@ PeerImp::supportsFeature(ProtocolFeature f) const
     {
         case ProtocolFeature::ValidatorListPropagation:
             return protocol_ >= make_protocol(2, 1);
+        case ProtocolFeature::LedgerReplay:
+            return ledgerReplayEnabled_;
     }
     return false;
 }
@@ -777,6 +783,8 @@ PeerImp::makeResponse(
     resp.insert("Crawl", crawl ? "public" : "private");
     if (req["X-Offer-Compression"] == "lz4" && app_.config().COMPRESSION)
         resp.insert("X-Offer-Compression", "lz4");
+    if (req["X-Offer-LedgerReplay"] == "1" && app_.config().LEDGER_REPLAY)
+        resp.insert("X-Offer-LedgerReplay", "1");
 
     buildHandshake(
         resp,
@@ -1557,6 +1565,12 @@ void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
 {
     JLOG(p_journal_.trace()) << "onMessage, TMProofPathRequest";
+    if (!ledgerReplayEnabled_)
+    {
+        charge(Resource::feeInvalidRequest);
+        return;
+    }
+
     fee_ = Resource::feeMediumBurdenPeer;
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
@@ -1575,7 +1589,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
                 else
                 {
                     auto oPacket = std::make_shared<Message>(
-                        reply, protocol::mtProofPathResponse);
+                        reply, protocol::mtPROOF_PATH_RESPONSE);
                     peer->send(oPacket);
                 }
             }
@@ -1585,6 +1599,12 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathResponse> const& m)
 {
+    if (!ledgerReplayEnabled_)
+    {
+        charge(Resource::feeInvalidRequest);
+        return;
+    }
+
     if (!ledgerReplayMsgHandler_.processProofPathResponse(m))
     {
         charge(Resource::feeBadData);
@@ -1595,6 +1615,12 @@ void
 PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
 {
     JLOG(p_journal_.trace()) << "onMessage, TMReplayDeltaRequest";
+    if (!ledgerReplayEnabled_)
+    {
+        charge(Resource::feeInvalidRequest);
+        return;
+    }
+
     fee_ = Resource::feeMediumBurdenPeer;
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
@@ -1613,7 +1639,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
                 else
                 {
                     auto oPacket = std::make_shared<Message>(
-                        reply, protocol::mtReplayDeltaResponse);
+                        reply, protocol::mtREPLAY_DELTA_RESPONSE);
                     peer->send(oPacket);
                 }
             }
@@ -1623,6 +1649,12 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
 void
 PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaResponse> const& m)
 {
+    if (!ledgerReplayEnabled_)
+    {
+        charge(Resource::feeInvalidRequest);
+        return;
+    }
+
     if (!ledgerReplayMsgHandler_.processReplayDeltaResponse(m))
     {
         charge(Resource::feeBadData);

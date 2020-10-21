@@ -34,6 +34,7 @@ namespace ripple {
 
 LedgerDeltaAcquire::LedgerDeltaAcquire(
     Application& app,
+    InboundLedgers& inboundLedgers,
     uint256 const& ledgerHash,
     std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet> peerSet)
@@ -42,6 +43,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
           ledgerHash,
           LedgerReplayer::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplayDelta"))
+    , inboundLedgers_(inboundLedgers)
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
@@ -67,24 +69,56 @@ LedgerDeltaAcquire::init(int numPeers)
     }
     else
     {
-        addPeers(numPeers);
+        trigger(numPeers, sl);
         setTimer();
     }
 }
 
 void
-LedgerDeltaAcquire::addPeers(std::size_t limit)
+LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
 {
+    if (isDone())
+        return;
+
+    fullLedger_ = app_.getLedgerMaster().getLedgerByHash(mHash);
+    if (!fullLedger_ && fallBack_)
+    {
+        fullLedger_ = inboundLedgers_.acquire(
+            mHash,
+            ledgerSeq_,
+            InboundLedger::Reason::GENERIC);  // TODO reason[0]?
+    }
+    if (fullLedger_)
+    {
+        mComplete = true;
+        notifyTasks(psl);
+        return;
+    }
+
+    if (fallBack_)
+        return;
+
     peerSet_->addPeers(
         limit,
-        [this](auto peer) { return peer->hasLedger(mHash, ledgerSeq_); },
         [this](auto peer) {
-            JLOG(m_journal.trace())
-                << "Add a peer " << peer->id() << " for " << mHash;
-            protocol::TMReplayDeltaRequest request;
-            request.set_ledgerhash(mHash.data(), mHash.size());
-            peerSet_->sendRequest(
-                request, protocol::mtReplayDeltaRequest, peer);
+            return peer->supportsFeature(ProtocolFeature::LedgerReplay) &&
+                peer->hasLedger(mHash, ledgerSeq_);
+        },
+        [this](auto peer) {
+            if (peer->supportsFeature(ProtocolFeature::LedgerReplay))
+            {
+                JLOG(m_journal.trace())
+                    << "Add a peer " << peer->id() << " for " << mHash;
+                protocol::TMReplayDeltaRequest request;
+                request.set_ledgerhash(mHash.data(), mHash.size());
+                peerSet_->sendRequest(
+                    request, protocol::mtREPLAY_DELTA_REQ, peer);
+            }
+            else
+            {
+                JLOG(m_journal.trace()) << "Fall back for " << mHash;
+                fallBack_ = true;
+            }
         });
 }
 
@@ -119,7 +153,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     }
     else
     {
-        addPeers(1);
+        trigger(1, psl);
     }
 }
 

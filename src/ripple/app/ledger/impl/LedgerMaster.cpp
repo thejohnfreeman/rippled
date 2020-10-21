@@ -1293,7 +1293,7 @@ LedgerMaster::findNewLedgersToPublish(
 
     {
         // TODO remove, force a replay for test
-        //        if (app_.config().LEDGER_REPLAY_ENABLE)
+        //        if (app_.config().LEDGER_REPLAY)
         //        {
         //            static bool called_once = false;
         //            if (!called_once)
@@ -1375,7 +1375,7 @@ LedgerMaster::findNewLedgersToPublish(
                 ledger = mLedgerHistory.getLedgerByHash(*hash);
             }
 
-            if (!app_.config().LEDGER_REPLAY_ENABLE)
+            if (!app_.config().LEDGER_REPLAY)
             {
                 // Can we try to acquire the ledger we need?
                 if (!ledger && (++acqCount < ledger_fetch_size_))
@@ -1401,7 +1401,7 @@ LedgerMaster::findNewLedgersToPublish(
             << "Exception while trying to find ledgers to publish.";
     }
 
-    if (app_.config().LEDGER_REPLAY_ENABLE)
+    if (app_.config().LEDGER_REPLAY)
     {
         /* Narrow down the gap of ledgers, and try to replay them.
          * When replaying a ledger gap, if the local node has

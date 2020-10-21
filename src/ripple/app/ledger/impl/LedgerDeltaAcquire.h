@@ -50,6 +50,7 @@ public:
 
     LedgerDeltaAcquire(
         Application& app,
+        InboundLedgers& inboundLedgers,
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq,
         std::unique_ptr<PeerSet> peerSet);
@@ -81,7 +82,7 @@ private:
     pmDowncast() override;
 
     void
-    addPeers(std::size_t limit);
+    trigger(std::size_t limit, ScopedLockType& psl);
 
     void
     onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
@@ -89,6 +90,7 @@ private:
     void
     notifyTasks(ScopedLockType& psl);
 
+    InboundLedgers& inboundLedgers_;
     std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replayTemp_ = {};
@@ -96,6 +98,7 @@ private:
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
+    bool fallBack_ = false;
 
     friend class LedgerReplayTask;  // for assert only
     friend class test::LedgerForwardReplay_test;

@@ -87,6 +87,7 @@ public:
 
     LedgerReplayTask(
         Application& app,
+        InboundLedgers& inboundLedgers,
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,
         TaskParameter&& parameter);
 
@@ -135,6 +136,7 @@ private:
     void
     tryAdvance(ScopedLockType& peerSetLock);
 
+    InboundLedgers& inboundLedgers_;
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
     std::shared_ptr<Ledger const> parent_ = {};

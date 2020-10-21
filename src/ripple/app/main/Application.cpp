@@ -186,9 +186,9 @@ public:
     OrderBookDB m_orderBookDB;
     std::unique_ptr<PathRequests> m_pathRequests;
     std::unique_ptr<LedgerMaster> m_ledgerMaster;
-    std::unique_ptr<LedgerReplayer> m_ledgerReplayer;
     std::unique_ptr<InboundLedgers> m_inboundLedgers;
     std::unique_ptr<InboundTransactions> m_inboundTransactions;
+    std::unique_ptr<LedgerReplayer> m_ledgerReplayer;
     TaggedCache<uint256, AcceptedLedger> m_acceptedLedgerCache;
     std::unique_ptr<NetworkOPs> m_networkOPs;
     std::unique_ptr<Cluster> cluster_;
@@ -336,11 +336,6 @@ public:
               m_collectorManager->collector(),
               logs_->journal("LedgerMaster")))
 
-        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
-              *this,
-              make_PeerSetBuilder(*this),
-              *m_jobQueue))
-
         // VFALCO NOTE must come before NetworkOPs to prevent a crash due
         //             to dependencies in the destructor.
         //
@@ -357,6 +352,12 @@ public:
               [this](std::shared_ptr<SHAMap> const& set, bool fromAcquire) {
                   gotTXSet(set, fromAcquire);
               }))
+
+        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
+              *this,
+              *m_inboundLedgers,
+              make_PeerSetBuilder(*this),
+              *m_jobQueue))
 
         , m_acceptedLedgerCache(
               "AcceptedLedger",

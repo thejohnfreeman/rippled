@@ -77,13 +77,13 @@ protocolMessageName(int type)
             return "validation";
         case protocol::mtGET_OBJECTS:
             return "get_objects";
-        case protocol::mtProofPathRequest:
+        case protocol::mtPROOF_PATH_REQ:
             return "proof_path_request";
-        case protocol::mtProofPathResponse:
+        case protocol::mtPROOF_PATH_RESPONSE:
             return "proof_path_response";
-        case protocol::mtReplayDeltaRequest:
+        case protocol::mtREPLAY_DELTA_REQ:
             return "replay_delta_request";
-        case protocol::mtReplayDeltaResponse:
+        case protocol::mtREPLAY_DELTA_RESPONSE:
             return "replay_delta_response";
         default:
             break;
@@ -383,19 +383,19 @@ invokeProtocolMessage(Buffers const& buffers, Handler& handler)
             success = detail::invoke<protocol::TMGetObjectByHash>(
                 *header, buffers, handler);
             break;
-        case protocol::mtProofPathRequest:
+        case protocol::mtPROOF_PATH_REQ:
             success = detail::invoke<protocol::TMProofPathRequest>(
                 *header, buffers, handler);
             break;
-        case protocol::mtProofPathResponse:
+        case protocol::mtPROOF_PATH_RESPONSE:
             success = detail::invoke<protocol::TMProofPathResponse>(
                 *header, buffers, handler);
             break;
-        case protocol::mtReplayDeltaRequest:
+        case protocol::mtREPLAY_DELTA_REQ:
             success = detail::invoke<protocol::TMReplayDeltaRequest>(
                 *header, buffers, handler);
             break;
-        case protocol::mtReplayDeltaResponse:
+        case protocol::mtREPLAY_DELTA_RESPONSE:
             success = detail::invoke<protocol::TMReplayDeltaResponse>(
                 *header, buffers, handler);
             break;

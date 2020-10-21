@@ -49,6 +49,7 @@ public:
 
     SkipListAcquire(
         Application& app,
+        InboundLedgers& inboundLedgers,
         uint256 const& ledgerHash,
         std::unique_ptr<PeerSet> peerSet);
 
@@ -76,15 +77,28 @@ private:
     pmDowncast() override;
 
     void
-    addPeers(std::size_t limit);
+    trigger(std::size_t limit, ScopedLockType& psl);
+
+    bool
+    retrieveSkipList(
+        std::shared_ptr<Ledger const> const& ledger,
+        ScopedLockType& psl);
+
+    void
+    onSkipListAcquired(
+        std::vector<uint256> const& skipList,
+        std::uint32_t ledgerSeq,
+        ScopedLockType& psl);
 
     void
     notifyTasks(ScopedLockType& psl);
 
+    InboundLedgers& inboundLedgers_;
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
+    bool fallBack_ = false;
 
     friend class test::LedgerForwardReplay_test;
 };

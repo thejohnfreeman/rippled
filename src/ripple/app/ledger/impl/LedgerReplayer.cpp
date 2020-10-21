@@ -26,10 +26,12 @@ namespace ripple {
 
 LedgerReplayer::LedgerReplayer(
     Application& app,
+    InboundLedgers& inboundLedgers,
     std::unique_ptr<PeerSetBuilder> peerSetBuilder,
     Stoppable& parent)
     : Stoppable("LedgerReplayer", parent)
     , app_(app)
+    , inboundLedgers_(inboundLedgers)
     , peerSetBuilder_(std::move(peerSetBuilder))
     , j_(app.journal("LedgerReplayer"))
 {
@@ -96,13 +98,16 @@ LedgerReplayer::replay(
         if (!skipList)
         {
             skipList = std::make_shared<SkipListAcquire>(
-                app_, parameter.finishHash, peerSetBuilder_->build());
+                app_,
+                inboundLedgers_,
+                parameter.finishHash,
+                peerSetBuilder_->build());
             skipLists_.emplace(parameter.finishHash, skipList);
             skipListNeedInit = true;
         }
 
         task = std::make_shared<LedgerReplayTask>(
-            app_, skipList, std::move(parameter));
+            app_, inboundLedgers_, skipList, std::move(parameter));
         tasks_.push_back(task);
     }
 
@@ -164,7 +169,11 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 if (!delta)
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
-                        app_, *skipListItem, seq, peerSetBuilder_->build());
+                        app_,
+                        inboundLedgers_,
+                        *skipListItem,
+                        seq,
+                        peerSetBuilder_->build());
                     deltas_.emplace(*skipListItem, delta);
                     newDelta = true;
                 }
@@ -194,7 +203,7 @@ LedgerReplayer::gotSkipList(
         if (!skipList)
         {
             skipLists_.erase(i);
-            assert(false);  // TODO remove
+            assert(false);  // TODO remove before PR
             return;
         }
     }
@@ -218,7 +227,7 @@ LedgerReplayer::gotReplayDelta(
         if (!delta)
         {
             deltas_.erase(i);
-            assert(false);  // TODO remove
+            assert(false);  // TODO remove before PR
             return;
         }
     }

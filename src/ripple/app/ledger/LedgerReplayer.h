@@ -51,6 +51,7 @@ public:
 
     LedgerReplayer(
         Application& app,
+        InboundLedgers& inboundLedgers,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder,
         Stoppable& parent);
     ~LedgerReplayer();
@@ -100,6 +101,7 @@ private:
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
     Application& app_;
+    InboundLedgers& inboundLedgers_;
     std::unique_ptr<PeerSetBuilder> peerSetBuilder_;
     beast::Journal j_;
 

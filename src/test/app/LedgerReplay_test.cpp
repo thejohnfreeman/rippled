@@ -63,6 +63,11 @@ struct LedgerReplay_test : public beast::unit_test::suite
 class ReplayTestPeer : public Peer
 {
 public:
+    ReplayTestPeer(bool enableLedgerReplay = true)
+        : ledgerReplayEnabled_(enableLedgerReplay)
+    {
+    }
+
     void
     send(std::shared_ptr<Message> const& m) override
     {
@@ -110,6 +115,8 @@ public:
     bool
     supportsFeature(ProtocolFeature f) const override
     {
+        if (f == ProtocolFeature::LedgerReplay && ledgerReplayEnabled_)
+            return true;
         return false;
     }
     boost::optional<std::size_t>
@@ -160,6 +167,8 @@ public:
     {
         return false;
     }
+
+    bool ledgerReplayEnabled_;
 };
 
 struct ReplayPeerSet : public PeerSet
@@ -196,7 +205,7 @@ struct ReplayPeerSet : public PeerSet
 
         switch (type)
         {
-            case protocol::mtProofPathRequest: {
+            case protocol::mtPROOF_PATH_REQ: {
                 auto request = std::make_shared<protocol::TMProofPathRequest>(
                     dynamic_cast<protocol::TMProofPathRequest const&>(msg));
                 auto reply = std::make_shared<protocol::TMProofPathResponse>(
@@ -204,7 +213,7 @@ struct ReplayPeerSet : public PeerSet
                 local.processProofPathResponse(reply);
                 break;
             }
-            case protocol::mtReplayDeltaRequest: {
+            case protocol::mtREPLAY_DELTA_REQ: {
                 auto request = std::make_shared<protocol::TMReplayDeltaRequest>(
                     dynamic_cast<protocol::TMReplayDeltaRequest const&>(msg));
                 auto reply = std::make_shared<protocol::TMReplayDeltaResponse>(
@@ -728,14 +737,15 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
         // verify ledger, note that hash is calculated in Ledger::setImmutable()
         BEAST_EXPECT(l_replayed->info().hash == l->info().hash);
     }
+#endif
 
     void
     testConfig()
     {
-        testcase("ledger replay config test");
+        testcase("config test");
         {
             Config c;
-            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == false);
+            BEAST_EXPECT(c.LEDGER_REPLAY == false);
         }
 
         {
@@ -745,7 +755,7 @@ struct LedgerForwardReplay_test : public beast::unit_test::suite
 enable=1
 )rippleConfig");
             c.loadFromString(toLoad);
-            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == true);
+            BEAST_EXPECT(c.LEDGER_REPLAY == true);
         }
 
         {
@@ -755,10 +765,10 @@ enable=1
 enable=0
 )rippleConfig");
             c.loadFromString(toLoad);
-            BEAST_EXPECT(c.LEDGER_REPLAY_ENABLE == false);
+            BEAST_EXPECT(c.LEDGER_REPLAY == false);
         }
     }
-#endif
+
     void
     run() override
     {
@@ -768,7 +778,7 @@ enable=0
         //        testLedgerReplayBuild();
         //        testLedgerDeltaReplayBuild();
         //        testLedgerDeltaReplayBuild(0);
-        //        testConfig();
+        testConfig();
     }
 };
 
