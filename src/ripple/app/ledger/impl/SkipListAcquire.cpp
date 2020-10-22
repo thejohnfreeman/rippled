@@ -54,8 +54,8 @@ SkipListAcquire::init(int numPeers)
     ScopedLockType sl(mLock);
     if (auto const l = app_.getLedgerMaster().getLedgerByHash(mHash); l)
     {
-        if (retrieveSkipList(l, sl))
-            return;
+        retrieveSkipList(l, sl);
+        return;
     }
 
     trigger(numPeers, sl);
@@ -76,8 +76,8 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& psl)
     }
     if (l)
     {
-        if (retrieveSkipList(l, psl))
-            return;
+        retrieveSkipList(l, psl);
+        return;
     }
 
     if (fallBack_)
@@ -136,6 +136,7 @@ SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
     if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
+        JLOG(m_journal.debug()) << "too many timeouts " << mHash;
         notifyTasks(psl);
     }
     else
@@ -166,6 +167,13 @@ SkipListAcquire::processData(
     {
         onSkipListAcquired(sle->getFieldV256(sfHashes).value(), ledgerSeq, sl);
     }
+    else
+    {
+        mFailed = true;
+        JLOG(m_journal.error())
+            << "failed to retrieve Skip list from verified data " << mHash;
+        notifyTasks(sl);
+    }
 }
 
 bool
@@ -175,6 +183,8 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     tasks_.emplace_back(task);
     if (mFailed)
     {
+        JLOG(m_journal.debug())
+            << "task added to a failed SkipListAcquire " << mHash;
         task->cancel();
         return false;
     }
@@ -188,22 +198,26 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     }
 }
 
-bool
+void
 SkipListAcquire::retrieveSkipList(
     std::shared_ptr<Ledger const> const& ledger,
     ScopedLockType& psl)
 {
-    auto const hashIndex = ledger->read(keylet::skip());
-    if (hashIndex && hashIndex->isFieldPresent(sfHashes))
+    if (auto const hashIndex = ledger->read(keylet::skip());
+        hashIndex && hashIndex->isFieldPresent(sfHashes))
     {
         auto const& slist = hashIndex->getFieldV256(sfHashes).value();
         if (!slist.empty())
         {
             onSkipListAcquired(slist, ledger->seq(), psl);
-            return true;
+            return;
         }
     }
-    return false;
+
+    mFailed = true;
+    JLOG(m_journal.error())
+        << "failed to retrieve Skip list from a ledger " << mHash;
+    notifyTasks(psl);
 }
 
 void

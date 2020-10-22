@@ -219,7 +219,7 @@ LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
         parameter_.totalLedgers * LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER)
     {
         mFailed = true;
-        JLOG(m_journal.warn())
+        JLOG(m_journal.debug())
             << "LedgerReplayTask Failed, too many timeouts " << mHash;
     }
     else

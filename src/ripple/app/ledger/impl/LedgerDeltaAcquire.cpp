@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
+    Copyright (c) 2012, 2020 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -64,7 +64,7 @@ LedgerDeltaAcquire::init(int numPeers)
     if (fullLedger_)
     {
         mComplete = true;
-        JLOG(m_journal.trace()) << "Acquire existing ledger " << mHash;
+        JLOG(m_journal.trace()) << "init with an existing ledger " << mHash;
         notifyTasks(sl);
     }
     else
@@ -149,6 +149,7 @@ LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
     if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
+        JLOG(m_journal.debug()) << "too many timeouts " << mHash;
         notifyTasks(psl);
     }
     else
@@ -186,6 +187,9 @@ LedgerDeltaAcquire::processData(
     else
     {
         mFailed = true;
+        JLOG(m_journal.error())
+            << "failed to create a ledger (info only) from verified data "
+            << mHash;
         notifyTasks(sl);
     }
 }
@@ -204,7 +208,11 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
             onLedgerBuilt(reason);
     }
     if (mFailed)
+    {
+        JLOG(m_journal.debug())
+            << "task added to a failed LedgerDeltaAcquire " << mHash;
         task->cancel();
+    }
     else if (mComplete)
         task->deltaReady();
 }
@@ -234,9 +242,9 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     }
     else
     {
-        mFailed = true;  // mComplete == true now
-        JLOG(m_journal.error())
-            << "tryBuild failed " << mHash << " parent " << parent->info().hash;
+        mFailed = true;  // mComplete == true too now
+        JLOG(m_journal.error()) << "tryBuild failed " << mHash
+                                << " with parent " << parent->info().hash;
         notifyTasks(sl);
         return {};
     }
@@ -295,6 +303,7 @@ LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
 void
 LedgerDeltaAcquire::notifyTasks(ScopedLockType& psl)
 {
+    assert(isDone());
     for (auto& t : tasks_)
     {
         if (auto sptr = t.lock(); sptr)

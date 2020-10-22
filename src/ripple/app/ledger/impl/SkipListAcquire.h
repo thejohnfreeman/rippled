@@ -79,7 +79,7 @@ private:
     void
     trigger(std::size_t limit, ScopedLockType& psl);
 
-    bool
+    void
     retrieveSkipList(
         std::shared_ptr<Ledger const> const& ledger,
         ScopedLockType& psl);
