@@ -56,23 +56,15 @@ LedgerReplayTask::TaskParameter::update(
 bool
 LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
 {
-    if (full)
-    {
-        return reason == existingTask.reason &&
-            startSeq >= existingTask.startSeq &&
-            finishSeq <= existingTask.finishSeq;
-    }
-    else
-    {
-        return reason == existingTask.reason &&
-            finishHash == existingTask.finishHash &&
-            totalLedgers == existingTask.totalLedgers;
-    }
+    return reason == existingTask.reason &&
+        finishHash == existingTask.finishHash &&
+        totalLedgers <= existingTask.totalLedgers;
 }
 
 LedgerReplayTask::LedgerReplayTask(
     Application& app,
     InboundLedgers& inboundLedgers,
+    LedgerReplayer& replayer,
     std::shared_ptr<SkipListAcquire>& skipListAcquirer,
     TaskParameter&& parameter)
     : TimeoutCounter(
@@ -81,6 +73,7 @@ LedgerReplayTask::LedgerReplayTask(
           LedgerReplayer::TASK_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , inboundLedgers_(inboundLedgers)
+    , replayer_(replayer)
     , parameter_(parameter)
     , skipListAcquirer_(skipListAcquirer)
 {
@@ -189,7 +182,7 @@ LedgerReplayTask::updateSkipList(
         }
     }
 
-    app_.getLedgerReplayer().createDeltas(shared_from_this());
+    replayer_.createDeltas(shared_from_this());
 }
 
 void

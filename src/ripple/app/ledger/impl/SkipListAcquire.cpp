@@ -29,6 +29,7 @@ namespace ripple {
 SkipListAcquire::SkipListAcquire(
     Application& app,
     InboundLedgers& inboundLedgers,
+    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
@@ -37,6 +38,7 @@ SkipListAcquire::SkipListAcquire(
           LedgerReplayer::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplaySkipList"))
     , inboundLedgers_(inboundLedgers)
+    , replayer_(replayer)
     , peerSet_(std::move(peerSet))
 {
     JLOG(m_journal.debug()) << "SkipList ctor " << mHash;
@@ -45,7 +47,7 @@ SkipListAcquire::SkipListAcquire(
 SkipListAcquire::~SkipListAcquire()
 {
     JLOG(m_journal.trace()) << "SkipList dtor " << mHash;
-    app_.getLedgerReplayer().removeSkipListAcquire(mHash);
+    replayer_.removeSkipListAcquire(mHash);
 }
 
 void
@@ -156,24 +158,32 @@ SkipListAcquire::processData(
     std::uint32_t ledgerSeq,
     std::shared_ptr<SHAMapItem const> const& item)
 {
+    assert(ledgerSeq != 0 && item);
     ScopedLockType sl(mLock);
-    JLOG(m_journal.trace()) << "got data for " << mHash;
     if (isDone())
         return;
 
-    if (auto sle = std::make_shared<SLE>(
-            SerialIter{item->data(), item->size()}, item->key());
-        sle)
+    JLOG(m_journal.trace()) << "got data for " << mHash;
+    try
     {
-        onSkipListAcquired(sle->getFieldV256(sfHashes).value(), ledgerSeq, sl);
+        if (auto sle = std::make_shared<SLE>(
+                SerialIter{item->data(), item->size()}, item->key());
+            sle)
+        {
+            if (auto const& skipList = sle->getFieldV256(sfHashes).value();
+                !skipList.empty())
+                onSkipListAcquired(skipList, ledgerSeq, sl);
+            return;
+        }
     }
-    else
+    catch (...)
     {
-        mFailed = true;
-        JLOG(m_journal.error())
-            << "failed to retrieve Skip list from verified data " << mHash;
-        notifyTasks(sl);
     }
+
+    mFailed = true;
+    JLOG(m_journal.error())
+        << "failed to retrieve Skip list from verified data " << mHash;
+    notifyTasks(sl);
 }
 
 bool

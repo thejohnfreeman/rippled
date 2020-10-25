@@ -25,8 +25,12 @@
 #include <memory>
 
 namespace ripple {
-LedgerReplayMsgHandler::LedgerReplayMsgHandler(Application& app)
-    : app_(app), journal_(app.journal("LedgerReplayMsgHandler"))
+LedgerReplayMsgHandler::LedgerReplayMsgHandler(
+    Application& app,
+    LedgerReplayer& replayer)
+    : app_(app)
+    , replayer_(replayer)
+    , journal_(app.journal("LedgerReplayMsgHandler"))
 {
 }
 
@@ -166,7 +170,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
         return false;
     }
 
-    app_.getLedgerReplayer().gotSkipList(info, item);
+    replayer_.gotSkipList(info, item);
     return true;
 }
 
@@ -281,7 +285,7 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
         return false;
     }
 
-    app_.getLedgerReplayer().gotReplayDelta(info, std::move(orderedTxns));
+    replayer_.gotReplayDelta(info, std::move(orderedTxns));
     return true;
 }
 

@@ -33,7 +33,6 @@
 namespace ripple {
 namespace test {
 class LedgerReplayClient;
-class LedgerForwardReplay_test;
 }  // namespace test
 
 /**
@@ -106,7 +105,6 @@ private:
     beast::Journal j_;
 
     friend class test::LedgerReplayClient;
-    friend class test::LedgerForwardReplay_test;
 };
 
 }  // namespace ripple

@@ -32,7 +32,7 @@ namespace ripple {
 
 class LedgerReplayTask;
 namespace test {
-class LedgerForwardReplay_test;
+class LedgerReplayClient;
 }  // namespace test
 
 class SkipListAcquire final
@@ -50,6 +50,7 @@ public:
     SkipListAcquire(
         Application& app,
         InboundLedgers& inboundLedgers,
+        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
         std::unique_ptr<PeerSet> peerSet);
 
@@ -94,13 +95,14 @@ private:
     notifyTasks(ScopedLockType& psl);
 
     InboundLedgers& inboundLedgers_;
+    LedgerReplayer& replayer_;
     std::uint32_t ledgerSeq_ = 0;
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     bool fallBack_ = false;
 
-    friend class test::LedgerForwardReplay_test;
+    friend class test::LedgerReplayClient;
 };
 
 }  // namespace ripple

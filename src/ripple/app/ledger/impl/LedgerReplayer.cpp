@@ -100,6 +100,7 @@ LedgerReplayer::replay(
             skipList = std::make_shared<SkipListAcquire>(
                 app_,
                 inboundLedgers_,
+                *this,
                 parameter.finishHash,
                 peerSetBuilder_->build());
             skipLists_.emplace(parameter.finishHash, skipList);
@@ -107,14 +108,15 @@ LedgerReplayer::replay(
         }
 
         task = std::make_shared<LedgerReplayTask>(
-            app_, inboundLedgers_, skipList, std::move(parameter));
+            app_, inboundLedgers_, *this, skipList, std::move(parameter));
         tasks_.push_back(task);
     }
 
+    bool taskNeedInit = skipList->addTask(task);
     if (skipListNeedInit)
         skipList->init(1);
-
-    if (skipList->addTask(task))
+    // task init after skipList init, could save a timeout
+    if (taskNeedInit)
         task->init();
 }
 
@@ -171,6 +173,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                     delta = std::make_shared<LedgerDeltaAcquire>(
                         app_,
                         inboundLedgers_,
+                        *this,
                         *skipListItem,
                         seq,
                         peerSetBuilder_->build());
@@ -179,11 +182,10 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 }
             }
 
-            if (newDelta)
-                delta->init(1);
-
             task->addDelta(delta);
             delta->addTask(task);
+            if (newDelta)
+                delta->init(1);
         }
     }
 }

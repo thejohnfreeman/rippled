@@ -35,6 +35,7 @@ namespace ripple {
 LedgerDeltaAcquire::LedgerDeltaAcquire(
     Application& app,
     InboundLedgers& inboundLedgers,
+    LedgerReplayer& replayer,
     uint256 const& ledgerHash,
     std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet> peerSet)
@@ -44,6 +45,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
           LedgerReplayer::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplayDelta"))
     , inboundLedgers_(inboundLedgers)
+    , replayer_(replayer)
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
@@ -53,7 +55,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
     JLOG(m_journal.trace()) << "Delta dtor " << mHash;
-    app_.getLedgerReplayer().removeLedgerDeltaAcquire(mHash);
+    replayer_.removeLedgerDeltaAcquire(mHash);
 }
 
 void
@@ -174,24 +176,25 @@ LedgerDeltaAcquire::processData(
     if (isDone())
         return;
 
-    // create a temp ledger for building a LedgerReplay object later
-    replayTemp_ =
-        std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
-    if (replayTemp_)
+    if (info.seq == ledgerSeq_)
     {
-        mComplete = true;
-        orderedTxns_ = std::move(orderedTxns);
-        JLOG(m_journal.debug()) << "ready to replay " << mHash;
-        notifyTasks(sl);
+        // create a temp ledger for building a LedgerReplay object later
+        replayTemp_ =
+            std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
+        if (replayTemp_)
+        {
+            mComplete = true;
+            orderedTxns_ = std::move(orderedTxns);
+            JLOG(m_journal.debug()) << "ready to replay " << mHash;
+            notifyTasks(sl);
+            return;
+        }
     }
-    else
-    {
-        mFailed = true;
-        JLOG(m_journal.error())
-            << "failed to create a ledger (info only) from verified data "
-            << mHash;
-        notifyTasks(sl);
-    }
+
+    mFailed = true;
+    JLOG(m_journal.error())
+        << "failed to create a (info only) ledger from verified data " << mHash;
+    notifyTasks(sl);
 }
 
 void
@@ -228,9 +231,8 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     if (mFailed || !mComplete || !replayTemp_)
         return {};
 
-    assert(
-        parent->seq() + 1 == replayTemp_->seq() &&
-        parent->info().hash == replayTemp_->info().parentHash);
+    assert(parent->seq() + 1 == replayTemp_->seq());
+    assert(parent->info().hash == replayTemp_->info().parentHash);
     // build ledger
     LedgerReplay replayData(parent, replayTemp_, std::move(orderedTxns_));
     fullLedger_ = buildLedger(replayData, tapNONE, app_, m_journal);

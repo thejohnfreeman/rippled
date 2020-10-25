@@ -98,7 +98,7 @@ PeerImp::PeerImp(
           headers_["X-Offer-LedgerReplay"] == "1" && app_.config().LEDGER_REPLAY
               ? true
               : false)
-    , ledgerReplayMsgHandler_(app)
+    , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
 {
 }
 

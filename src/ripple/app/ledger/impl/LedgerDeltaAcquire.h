@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
+    Copyright (c) 2012, 2020 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -32,7 +32,7 @@ namespace ripple {
 
 class LedgerReplayTask;
 namespace test {
-class LedgerForwardReplay_test;
+class LedgerReplayClient;
 }  // namespace test
 
 // A ledger delta (header and transactions) we are trying to acquire
@@ -51,6 +51,7 @@ public:
     LedgerDeltaAcquire(
         Application& app,
         InboundLedgers& inboundLedgers,
+        LedgerReplayer& replayer,
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq,
         std::unique_ptr<PeerSet> peerSet);
@@ -91,6 +92,7 @@ private:
     notifyTasks(ScopedLockType& psl);
 
     InboundLedgers& inboundLedgers_;
+    LedgerReplayer& replayer_;
     std::uint32_t const ledgerSeq_;
     std::unique_ptr<PeerSet> peerSet_;
     std::shared_ptr<Ledger const> replayTemp_ = {};
@@ -101,7 +103,7 @@ private:
     bool fallBack_ = false;
 
     friend class LedgerReplayTask;  // for assert only
-    friend class test::LedgerForwardReplay_test;
+    friend class test::LedgerReplayClient;
 };
 
 }  // namespace ripple

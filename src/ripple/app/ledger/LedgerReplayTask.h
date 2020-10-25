@@ -35,7 +35,7 @@ using namespace std::chrono_literals;
 class LedgerDeltaAcquire;
 class SkipListAcquire;
 namespace test {
-class LedgerForwardReplay_test;
+class LedgerReplayClient;
 }  // namespace test
 
 class LedgerReplayTask final
@@ -88,6 +88,7 @@ public:
     LedgerReplayTask(
         Application& app,
         InboundLedgers& inboundLedgers,
+        LedgerReplayer& replayer,
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,
         TaskParameter&& parameter);
 
@@ -137,13 +138,14 @@ private:
     tryAdvance(ScopedLockType& peerSetLock);
 
     InboundLedgers& inboundLedgers_;
+    LedgerReplayer& replayer_;
     TaskParameter parameter_;
     std::shared_ptr<SkipListAcquire> skipListAcquirer_;
     std::shared_ptr<Ledger const> parent_ = {};
     uint32_t deltaToBuild = 0;  // should not build until have parent
     std::vector<std::shared_ptr<LedgerDeltaAcquire>> deltas_;
 
-    friend class test::LedgerForwardReplay_test;
+    friend class test::LedgerReplayClient;
 };
 
 }  // namespace ripple
