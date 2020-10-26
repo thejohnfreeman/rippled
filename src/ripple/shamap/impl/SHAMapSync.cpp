@@ -846,14 +846,15 @@ SHAMap::getProofPath(uint256 const& key) const
 
     if (stack.empty())
     {
-        JLOG(journal_.debug()) << "Do not have node with key " << key;
+        JLOG(journal_.debug()) << "no path to " << key;
         return {};
     }
 
-    if (auto const& [node, nodeID] = stack.top(); !node || node->isInner() ||
-        nodeID != SHAMapNodeID::createID(stack.size() - 1, key))
+    if (auto const& node = stack.top().first; !node || node->isInner() ||
+        std::static_pointer_cast<SHAMapTreeNode>(node)->peekItem()->key() !=
+            key)
     {
-        JLOG(journal_.debug()) << "walkTowardsKey error " << key;
+        JLOG(journal_.debug()) << "no path to " << key;
         return {};
     }
 
@@ -883,28 +884,35 @@ SHAMap::verifyProofPath(
 
     SHAMapHash hash{rootHash};
     auto pathLen = path.size();
-    for (int depth = 0; depth < pathLen; ++depth)
+    try
     {
-        int depthToIndex = pathLen - 1 - depth;
-        auto const& blob = path[depthToIndex];
-        auto node = SHAMapAbstractNode::makeFromWire(makeSlice(blob));
-        if (!node)
-            return false;
-        node->updateHash();
-        if (node->getNodeHash() != hash)
-            return false;
+        for (int depth = 0; depth < pathLen; ++depth)
+        {
+            int depthToIndex = pathLen - 1 - depth;
+            auto const& blob = path[depthToIndex];
+            auto node = SHAMapAbstractNode::makeFromWire(makeSlice(blob));
+            if (!node)
+                return false;
+            node->updateHash();
+            if (node->getNodeHash() != hash)
+                return false;
 
-        if (node->isInner())
-        {
-            auto nodeId = SHAMapNodeID::createID(depth, key);
-            hash = static_cast<SHAMapInnerNode*>(node.get())
-                       ->getChildHash(nodeId.selectBranch(key));
+            if (node->isInner())
+            {
+                auto nodeId = SHAMapNodeID::createID(depth, key);
+                hash = static_cast<SHAMapInnerNode*>(node.get())
+                           ->getChildHash(nodeId.selectBranch(key));
+            }
+            else
+            {
+                // should exhaust all the blobs now
+                return depth + 1 == pathLen;
+            }
         }
-        else
-        {
-            // should exhaust all the blobs now
-            return depth + 1 == pathLen;
-        }
+    }
+    catch (std::exception const&)
+    {
+        return false;
     }
     return false;
 }
