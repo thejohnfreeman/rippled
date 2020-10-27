@@ -113,7 +113,7 @@ public:
     }
 
     void
-    deltaReady();
+    deltaReady(uint256 const& deltaHash);
 
     void
     cancel();

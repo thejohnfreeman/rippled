@@ -110,6 +110,10 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& psl)
                 fallBack_ = true;
             }
         });
+
+    if (fallBack_)
+        inboundLedgers_.acquire(
+            mHash, ledgerSeq_, InboundLedger::Reason::GENERIC);
 }
 
 void

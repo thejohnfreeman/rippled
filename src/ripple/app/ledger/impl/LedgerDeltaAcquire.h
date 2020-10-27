@@ -91,6 +91,11 @@ private:
     void
     notifyTasks(ScopedLockType& psl);
 
+    void
+    notifyTask(
+        ScopedLockType& psl,
+        std::shared_ptr<LedgerReplayTask>& task);
+
     InboundLedgers& inboundLedgers_;
     LedgerReplayer& replayer_;
     std::uint32_t const ledgerSeq_;

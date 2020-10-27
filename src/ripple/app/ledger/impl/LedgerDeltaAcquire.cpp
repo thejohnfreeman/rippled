@@ -122,6 +122,12 @@ LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
                 fallBack_ = true;
             }
         });
+
+    if (fallBack_)
+        inboundLedgers_.acquire(
+            mHash,
+            ledgerSeq_,
+            InboundLedger::Reason::GENERIC);
 }
 
 void
@@ -214,10 +220,10 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     {
         JLOG(m_journal.debug())
             << "task added to a failed LedgerDeltaAcquire " << mHash;
-        task->cancel();
+        notifyTask(sl, task);
     }
     else if (mComplete)
-        task->deltaReady();
+        notifyTask(sl, task);
 }
 
 std::shared_ptr<Ledger const>
@@ -306,16 +312,36 @@ void
 LedgerDeltaAcquire::notifyTasks(ScopedLockType& psl)
 {
     assert(isDone());
-    for (auto& t : tasks_)
+    bool failed = mFailed;
+    std::vector<std::weak_ptr<LedgerReplayTask>> tasks(
+        tasks_.begin(), tasks_.end());
+    psl.unlock();
+    for (auto& t : tasks)
     {
         if (auto sptr = t.lock(); sptr)
         {
-            if (mFailed)
+            if (failed)
                 sptr->cancel();
             else
-                sptr->deltaReady();
+                sptr->deltaReady(mHash);  // mHash is const
         }
     }
+    psl.lock();
+}
+
+void
+LedgerDeltaAcquire::notifyTask(
+    ScopedLockType& psl,
+    std::shared_ptr<LedgerReplayTask>& task)
+{
+    assert(isDone());
+    bool failed = mFailed;
+    psl.unlock();
+    if (failed)
+        task->cancel();
+    else
+        task->deltaReady(mHash);  // mHash is const
+    psl.lock();
 }
 
 }  // namespace ripple

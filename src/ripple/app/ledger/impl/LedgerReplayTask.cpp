@@ -124,9 +124,10 @@ LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
 }
 
 void
-LedgerReplayTask::deltaReady()
+LedgerReplayTask::deltaReady(uint256 const& deltaHash)
 {
-    JLOG(m_journal.trace()) << "A delta ready for task " << mHash;
+    JLOG(m_journal.trace()) << "Delta " << deltaHash <<
+        " ready for task " << mHash;
     ScopedLockType sl(mLock);
     tryAdvance(sl);
 }
@@ -135,8 +136,11 @@ void
 LedgerReplayTask::tryAdvance(ScopedLockType& peerSetLock)
 {
     JLOG(m_journal.trace())
-        << "tryAdvance task " << mHash << " deltaIndex=" << deltaToBuild
-        << " totalDeltas=" << deltas_.size();
+        << "tryAdvance task " << mHash
+        << (parameter_.full? ", full parameter" : ", waiting to fill parameter")
+        << ", deltaIndex=" << deltaToBuild
+        << ", totalDeltas=" << deltas_.size()
+        << ", parent " << (parent_ ? parent_->info().hash : uint256());
 
     bool shouldTry = !isDone() && parent_ && parameter_.full &&
         parameter_.totalLedgers - 1 == deltas_.size();
