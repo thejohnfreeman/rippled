@@ -88,7 +88,7 @@ LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
         fullLedger_ = inboundLedgers_.acquire(
             mHash,
             ledgerSeq_,
-            InboundLedger::Reason::GENERIC);  // TODO reason[0]?
+            InboundLedger::Reason::GENERIC);  // TODO first reason?
     }
     if (fullLedger_)
     {
@@ -125,9 +125,7 @@ LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
 
     if (fallBack_)
         inboundLedgers_.acquire(
-            mHash,
-            ledgerSeq_,
-            InboundLedger::Reason::GENERIC);
+            mHash, ledgerSeq_, InboundLedger::Reason::GENERIC);
 }
 
 void
@@ -214,7 +212,7 @@ LedgerDeltaAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
     {
         reasons_.emplace(reason);
         if (fullLedger_)
-            onLedgerBuilt(reason);
+            onLedgerBuilt(sl, reason);
     }
     if (mFailed)
     {
@@ -245,7 +243,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
     if (fullLedger_ && fullLedger_->info().hash == mHash)
     {
         JLOG(m_journal.info()) << "Built " << mHash;
-        onLedgerBuilt();
+        onLedgerBuilt(sl);
         return fullLedger_;
     }
     else
@@ -259,53 +257,42 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
 }
 
 void
-LedgerDeltaAcquire::onLedgerBuilt(std::optional<InboundLedger::Reason> reason)
+LedgerDeltaAcquire::onLedgerBuilt(
+    ScopedLockType& psl,
+    std::optional<InboundLedger::Reason> reason)
 {
     JLOG(m_journal.debug())
-        << "onLedgerBuilt " << mHash << (reason ? " for a reason" : "");
+        << "onLedgerBuilt " << mHash << (reason ? " for a new reason" : "");
 
-    auto store = [&](InboundLedger::Reason reason) {
-        switch (reason)
-        {  // TODO from InboundLedger::done(), ask Mickey to review
-            case InboundLedger::Reason::SHARD:
-                app_.getShardStore()->setStored(fullLedger_);
-                [[fallthrough]];
-            case InboundLedger::Reason::HISTORY:
-                app_.getInboundLedgers().onLedgerFetched();
-                break;
-            default:
-                app_.getLedgerMaster().storeLedger(fullLedger_);
-                break;
-        }
-    };
-
-    if (reason)
+    std::vector<InboundLedger::Reason> reasons(
+        reasons_.begin(), reasons_.end());
+    bool firstTime = true;
+    if (reason)  // small chance
     {
-        if (reason == InboundLedger::Reason::HISTORY &&
-            reasons_.count(InboundLedger::Reason::SHARD))
-            // best effort only,
-            // there could be a case that store() gets called twice for both
-            // HISTORY and SHARD, if a SHARD task is added after the ledger has
-            // been built
-            return;
-
-        store(*reason);
-        JLOG(m_journal.info()) << "stored " << mHash << " for reason";
+        reasons.clear();
+        reasons.push_back(*reason);
+        firstTime = false;
     }
-    else
-    {
-        for (auto reason : reasons_)
-        {
-            if (reason == InboundLedger::Reason::HISTORY &&
-                reasons_.count(InboundLedger::Reason::SHARD))
-                continue;
-            store(reason);
-        }
+    app_.getJobQueue().addJob(
+        jtREPLAY_TASK,
+        "onLedgerBuilt",
+        [=, ledger = this->fullLedger_, &app = this->app_](Job&) {
+            for (auto reason : reasons)
+            {
+                switch (reason)
+                {
+                    case InboundLedger::Reason::GENERIC:
+                        app.getLedgerMaster().storeLedger(ledger);
+                        break;
+                    default:
+                        // TODO for other use cases
+                        break;
+                }
+            }
 
-        app_.getLedgerMaster().checkAccept(fullLedger_);
-        app_.getLedgerMaster().tryAdvance();
-        JLOG(m_journal.info()) << "stored " << mHash;
-    }
+            if (firstTime)
+                app.getLedgerMaster().tryAdvance();
+        });
 }
 
 void

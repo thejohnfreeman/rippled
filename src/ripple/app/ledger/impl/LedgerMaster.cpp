@@ -1413,10 +1413,12 @@ LedgerMaster::findNewLedgersToPublish(
         auto finishLedger = valLedger;
         while (startLedger->seq() + 1 < finishLedger->seq())
         {
-            auto const parent =
-                mLedgerHistory.getLedgerByHash(finishLedger->info().parentHash);
-            if (parent)
+            if (auto const parent = mLedgerHistory.getLedgerByHash(
+                    finishLedger->info().parentHash);
+                parent)
+            {
                 finishLedger = parent;
+            }
             else
             {
                 JLOG(m_journal.debug())

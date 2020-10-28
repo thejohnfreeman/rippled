@@ -233,10 +233,10 @@ protected:
         {"getobject_share"},                     // category::share_hash
         {"getobject_get"},                       // category::get_hash
         {"proof_path_request"},                  // category::proof_path_request
-        {"proof_path_response"},                 // category::proof_path_response
-        {"replay_delta_request"},                // category::replay_delta_request
-        {"replay_delta_response"},               // category::replay_delta_response
-        {"unknown"}                              // category::unknown
+        {"proof_path_response"},    // category::proof_path_response
+        {"replay_delta_request"},   // category::replay_delta_request
+        {"replay_delta_response"},  // category::replay_delta_response
+        {"unknown"}                 // category::unknown
     }};
 };
 

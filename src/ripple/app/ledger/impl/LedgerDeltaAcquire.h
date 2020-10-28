@@ -86,15 +86,15 @@ private:
     trigger(std::size_t limit, ScopedLockType& psl);
 
     void
-    onLedgerBuilt(std::optional<InboundLedger::Reason> reason = {});
+    onLedgerBuilt(
+        ScopedLockType& psl,
+        std::optional<InboundLedger::Reason> reason = {});
 
     void
     notifyTasks(ScopedLockType& psl);
 
     void
-    notifyTask(
-        ScopedLockType& psl,
-        std::shared_ptr<LedgerReplayTask>& task);
+    notifyTask(ScopedLockType& psl, std::shared_ptr<LedgerReplayTask>& task);
 
     InboundLedgers& inboundLedgers_;
     LedgerReplayer& replayer_;
