@@ -22,32 +22,43 @@
 
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/Ledger.h>
-#include <ripple/app/main/Application.h>
-#include <ripple/overlay/PeerSet.h>
-#include <ripple/shamap/SHAMap.h>
+#include <ripple/app/ledger/impl/TimeoutCounter.h>
+#include <ripple/basics/CountedObject.h>
+#include <ripple/basics/base_uint.h>
 
 #include <list>
+#include <map>
+#include <memory>
 
 namespace ripple {
-
+class InboundLedgers;
+class LedgerReplayer;
 class LedgerReplayTask;
+class PeerSet;
 namespace test {
 class LedgerReplayClient;
 }  // namespace test
 
-// A ledger delta (header and transactions) we are trying to acquire
+/**
+ * Manage the retrieval of a ledger delta (header and transactions)
+ * from the network. Before asking peers, always check if the local
+ * node has the ledger.
+ */
 class LedgerDeltaAcquire final
     : public TimeoutCounter,
       public std::enable_shared_from_this<LedgerDeltaAcquire>,
       public CountedObject<LedgerDeltaAcquire>
 {
 public:
-    static char const*
-    getCountedObjectName()
-    {
-        return "LedgerDeltaAcquire";
-    }
-
+    /**
+     * Constructor
+     * @param app  Application reference
+     * @param inboundLedgers  InboundLedgers reference
+     * @param replayer  LedgerReplayer reference
+     * @param ledgerHash  hash of the ledger that we try to acquire
+     * @param ledgerSeq  sequence number of the ledger that we try to acquire
+     * @param peerSet  manage a set of peers that we will ask for the ledger
+     */
     LedgerDeltaAcquire(
         Application& app,
         InboundLedgers& inboundLedgers,
@@ -58,19 +69,46 @@ public:
 
     ~LedgerDeltaAcquire() override;
 
+    /**
+     * Start the LedgerDeltaAcquire task
+     * @param numPeers  number of peers to try initially
+     */
     void
     init(int numPeers);
 
+    /**
+     * Process the data extracted from a peer's reply
+     * @param info  info (header) of the ledger that we try to acquire
+     * @param orderedTxns  set of Txns of the ledger that we try to acquire
+     *
+     * @note info and Txns must have been verified against the ledger hash
+     */
     void
     processData(
         LedgerInfo const& info,
         std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns);
 
+    /**
+     * Try to build the ledger if not already
+     * @param parent  parent ledger
+     * @return  the ledger if built, nullptr otherwise (e.g. waiting for peers'
+     *          replies of the ledger info (header) and Txns.)
+     */
     std::shared_ptr<Ledger const>
     tryBuild(std::shared_ptr<Ledger const> const& parent);
 
+    /**
+     * Add a LedgerReplayTask to this LedgerDeltaAcquire subtask
+     * @param task the LedgerReplayTask
+     */
     void
     addTask(std::shared_ptr<LedgerReplayTask>& task);
+
+    static char const*
+    getCountedObjectName()
+    {
+        return "LedgerDeltaAcquire";
+    }
 
 private:
     void
@@ -82,19 +120,40 @@ private:
     std::weak_ptr<TimeoutCounter>
     pmDowncast() override;
 
+    /**
+     * Trigger another round
+     * @param limit  number of new peers to send the request
+     * @param sl  lock. this function must be called with the lock
+     */
     void
-    trigger(std::size_t limit, ScopedLockType& psl);
+    trigger(std::size_t limit, ScopedLockType& sl);
 
+    /**
+     * Process a newly built ledger, such as store it.
+     * @param sl  lock. this function must be called with the lock
+     * @param reason  specific new reason if any
+     * @note this function should be called (1) when the ledger is built the
+     *       first time, and (2) when a LedgerReplayTask with a new reason
+     *       is added.
+     */
     void
     onLedgerBuilt(
-        ScopedLockType& psl,
+        ScopedLockType& sl,
         std::optional<InboundLedger::Reason> reason = {});
 
+    /**
+     * Notify existing LedgerReplayTasks that this subtask is done
+     * @param sl  lock. this function must be called with the lock
+     */
     void
-    notifyTasks(ScopedLockType& psl);
+    notifyTasks(ScopedLockType& sl);
 
+    /**
+     * Notify a specific LedgerReplayTasks that this subtask is done
+     * @param sl  lock. this function must be called with the lock
+     */
     void
-    notifyTask(ScopedLockType& psl, std::shared_ptr<LedgerReplayTask>& task);
+    notifyTask(ScopedLockType& sl, std::shared_ptr<LedgerReplayTask>& task);
 
     InboundLedgers& inboundLedgers_;
     LedgerReplayer& replayer_;
@@ -107,7 +166,7 @@ private:
     std::set<InboundLedger::Reason> reasons_;
     bool fallBack_ = false;
 
-    friend class LedgerReplayTask;  // for assert only
+    friend class LedgerReplayTask;  // for asserts only
     friend class test::LedgerReplayClient;
 };
 

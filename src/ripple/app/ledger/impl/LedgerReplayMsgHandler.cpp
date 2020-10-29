@@ -68,9 +68,9 @@ LedgerReplayMsgHandler::processProofPathRequest(
     auto const path = [&]() -> std::optional<std::vector<Blob>> {
         switch (packet.type())
         {
-            case protocol::lmAS_NODE:
+            case protocol::lmAS:
                 return ledger->stateMap().getProofPath(key);
-            case protocol::lmTX_NODE:
+            case protocol::lmTX:
                 return ledger->txMap().getProofPath(key);
             default:
                 // should not be here
@@ -114,7 +114,7 @@ LedgerReplayMsgHandler::processProofPathResponse(
         return false;
     }
 
-    if (reply.type() != protocol::lmAS_NODE)
+    if (reply.type() != protocol::lmAS)
     {
         JLOG(journal_.debug())
             << "Bad message: we only support the state ShaMap for now";

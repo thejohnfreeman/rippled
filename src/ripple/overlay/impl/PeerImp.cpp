@@ -21,7 +21,6 @@
 #include <ripple/app/ledger/InboundLedgers.h>
 #include <ripple/app/ledger/InboundTransactions.h>
 #include <ripple/app/ledger/LedgerMaster.h>
-#include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/misc/HashRouter.h>
 #include <ripple/app/misc/LoadFeeTrack.h>
 #include <ripple/app/misc/NetworkOPs.h>
@@ -1588,9 +1587,8 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProofPathRequest> const& m)
                 }
                 else
                 {
-                    auto oPacket = std::make_shared<Message>(
-                        reply, protocol::mtPROOF_PATH_RESPONSE);
-                    peer->send(oPacket);
+                    peer->send(std::make_shared<Message>(
+                        reply, protocol::mtPROOF_PATH_RESPONSE));
                 }
             }
         });
@@ -1638,9 +1636,8 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMReplayDeltaRequest> const& m)
                 }
                 else
                 {
-                    auto oPacket = std::make_shared<Message>(
-                        reply, protocol::mtREPLAY_DELTA_RESPONSE);
-                    peer->send(oPacket);
+                    peer->send(std::make_shared<Message>(
+                        reply, protocol::mtREPLAY_DELTA_RESPONSE));
                 }
             }
         });

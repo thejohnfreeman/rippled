@@ -39,6 +39,9 @@ namespace ripple {
     on whether the peers have useful information.
 
     The data is represented by its hash.
+
+    The original PeerSet is split to two. The logic for counting timeouts
+    is move to the new TimeoutCounter class.  // TODO remove after PR
 */
 
 class PeerSet
@@ -46,12 +49,19 @@ class PeerSet
 public:
     virtual ~PeerSet() = default;
 
+    /**
+     * Try add more peers
+     * @param limit  number of peers to add
+     * @param hasItem  callback that helps to select peers
+     * @param onPeerAdded  callback called when a peer is added
+     */
     virtual void
     addPeers(
         std::size_t limit,
         std::function<bool(std::shared_ptr<Peer> const&)> hasItem,
         std::function<void(std::shared_ptr<Peer> const&)> onPeerAdded) = 0;
 
+    /** send a message */
     virtual void
     sendRequest(
         ::google::protobuf::Message const& message,
@@ -81,8 +91,6 @@ make_PeerSetBuilder(Application& app);
  * Make a dummy PeerSet that does not do anything.
  * @note For the use case of InboundLedger in ApplicationImp::loadOldLedger(),
  *       where a real PeerSet is not needed.
- * @param app
- * @return
  */
 std::unique_ptr<PeerSet>
 make_DummyPeerSet(Application& app);

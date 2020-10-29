@@ -20,9 +20,10 @@
 #include <ripple/app/ledger/InboundLedger.h>
 #include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/ledger/LedgerReplayer.h>
-#include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
 #include <ripple/app/ledger/impl/SkipListAcquire.h>
+#include <ripple/app/main/Application.h>
 #include <ripple/core/JobQueue.h>
+#include <ripple/overlay/PeerSet.h>
 
 namespace ripple {
 
@@ -35,7 +36,7 @@ SkipListAcquire::SkipListAcquire(
     : TimeoutCounter(
           app,
           ledgerHash,
-          LedgerReplayer::SUB_TASK_TIMEOUT,
+          LedgerReplayParameters::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplaySkipList"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
@@ -65,7 +66,7 @@ SkipListAcquire::init(int numPeers)
 }
 
 void
-SkipListAcquire::trigger(std::size_t limit, ScopedLockType& psl)
+SkipListAcquire::trigger(std::size_t limit, ScopedLockType& sl)
 {
     if (isDone())
         return;
@@ -78,7 +79,7 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& psl)
     }
     if (l)
     {
-        retrieveSkipList(l, psl);
+        retrieveSkipList(l, sl);
         return;
     }
 
@@ -100,7 +101,7 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& psl)
                 request.set_ledgerhash(mHash.data(), mHash.size());
                 request.set_key(
                     keylet::skip().key.data(), keylet::skip().key.size());
-                request.set_type(protocol::TMLedgerMapType::lmAS_NODE);
+                request.set_type(protocol::TMLedgerMapType::lmAS);
                 peerSet_->sendRequest(
                     request, protocol::mtPROOF_PATH_REQ, peer);
             }
@@ -120,7 +121,7 @@ void
 SkipListAcquire::queueJob()
 {
     if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
-        LedgerReplayer::MAX_QUEUED_TASKS)
+        LedgerReplayParameters::MAX_QUEUED_TASKS)
     {
         JLOG(m_journal.debug())
             << "Deferring SkipListAcquire timer due to load";
@@ -136,18 +137,18 @@ SkipListAcquire::queueJob()
 }
 
 void
-SkipListAcquire::onTimer(bool progress, ScopedLockType& psl)
+SkipListAcquire::onTimer(bool progress, ScopedLockType& sl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayParameters::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         JLOG(m_journal.debug()) << "too many timeouts " << mHash;
-        notifyTasks(psl);
+        notifyTasks(sl);
     }
     else
     {
-        trigger(1, psl);
+        trigger(1, sl);
     }
 }
 
@@ -215,7 +216,7 @@ SkipListAcquire::addTask(std::shared_ptr<LedgerReplayTask>& task)
 void
 SkipListAcquire::retrieveSkipList(
     std::shared_ptr<Ledger const> const& ledger,
-    ScopedLockType& psl)
+    ScopedLockType& sl)
 {
     if (auto const hashIndex = ledger->read(keylet::skip());
         hashIndex && hashIndex->isFieldPresent(sfHashes))
@@ -223,7 +224,7 @@ SkipListAcquire::retrieveSkipList(
         auto const& slist = hashIndex->getFieldV256(sfHashes).value();
         if (!slist.empty())
         {
-            onSkipListAcquired(slist, ledger->seq(), psl);
+            onSkipListAcquired(slist, ledger->seq(), sl);
             return;
         }
     }
@@ -231,24 +232,24 @@ SkipListAcquire::retrieveSkipList(
     mFailed = true;
     JLOG(m_journal.error())
         << "failed to retrieve Skip list from a ledger " << mHash;
-    notifyTasks(psl);
+    notifyTasks(sl);
 }
 
 void
 SkipListAcquire::onSkipListAcquired(
     std::vector<uint256> const& skipList,
     std::uint32_t ledgerSeq,
-    ScopedLockType& psl)
+    ScopedLockType& sl)
 {
     mComplete = true;
     skipList_ = skipList;
     ledgerSeq_ = ledgerSeq;
     JLOG(m_journal.debug()) << "Skip list acquired " << mHash;
-    notifyTasks(psl);
+    notifyTasks(sl);
 }
 
 void
-SkipListAcquire::notifyTasks(ScopedLockType& psl)
+SkipListAcquire::notifyTasks(ScopedLockType& sl)
 {
     for (auto& t : tasks_)
     {

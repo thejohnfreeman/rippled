@@ -24,11 +24,8 @@
 #include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/impl/LedgerDeltaAcquire.h>
 #include <ripple/app/main/Application.h>
-#include <ripple/app/misc/NetworkOPs.h>
-#include <ripple/nodestore/DatabaseShard.h>
-#include <ripple/overlay/Overlay.h>
-
-#include <memory>
+#include <ripple/core/JobQueue.h>
+#include <ripple/overlay/PeerSet.h>
 
 namespace ripple {
 
@@ -42,7 +39,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     : TimeoutCounter(
           app,
           ledgerHash,
-          LedgerReplayer::SUB_TASK_TIMEOUT,
+          LedgerReplayParameters::SUB_TASK_TIMEOUT,
           app.journal("LedgerReplayDelta"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
@@ -77,7 +74,7 @@ LedgerDeltaAcquire::init(int numPeers)
 }
 
 void
-LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
+LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& sl)
 {
     if (isDone())
         return;
@@ -93,7 +90,7 @@ LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& psl)
     if (fullLedger_)
     {
         mComplete = true;
-        notifyTasks(psl);
+        notifyTasks(sl);
         return;
     }
 
@@ -132,7 +129,7 @@ void
 LedgerDeltaAcquire::queueJob()
 {
     if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
-        LedgerReplayer::MAX_QUEUED_TASKS)
+        LedgerReplayParameters::MAX_QUEUED_TASKS)
     {
         JLOG(m_journal.debug())
             << "Deferring LedgerDeltaAcquire timer due to load";
@@ -149,18 +146,18 @@ LedgerDeltaAcquire::queueJob()
 }
 
 void
-LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& psl)
+LedgerDeltaAcquire::onTimer(bool progress, ScopedLockType& sl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > LedgerReplayer::SUB_TASK_MAX_TIMEOUTS)
+    if (mTimeouts > LedgerReplayParameters::SUB_TASK_MAX_TIMEOUTS)
     {
         mFailed = true;
         JLOG(m_journal.debug()) << "too many timeouts " << mHash;
-        notifyTasks(psl);
+        notifyTasks(sl);
     }
     else
     {
-        trigger(1, psl);
+        trigger(1, sl);
     }
 }
 
@@ -258,7 +255,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
 
 void
 LedgerDeltaAcquire::onLedgerBuilt(
-    ScopedLockType& psl,
+    ScopedLockType& sl,
     std::optional<InboundLedger::Reason> reason)
 {
     JLOG(m_journal.debug())
@@ -296,13 +293,13 @@ LedgerDeltaAcquire::onLedgerBuilt(
 }
 
 void
-LedgerDeltaAcquire::notifyTasks(ScopedLockType& psl)
+LedgerDeltaAcquire::notifyTasks(ScopedLockType& sl)
 {
     assert(isDone());
     bool failed = mFailed;
     std::vector<std::weak_ptr<LedgerReplayTask>> tasks(
         tasks_.begin(), tasks_.end());
-    psl.unlock();
+    sl.unlock();
     for (auto& t : tasks)
     {
         if (auto sptr = t.lock(); sptr)
@@ -313,22 +310,22 @@ LedgerDeltaAcquire::notifyTasks(ScopedLockType& psl)
                 sptr->deltaReady(mHash);  // mHash is const
         }
     }
-    psl.lock();
+    sl.lock();
 }
 
 void
 LedgerDeltaAcquire::notifyTask(
-    ScopedLockType& psl,
+    ScopedLockType& sl,
     std::shared_ptr<LedgerReplayTask>& task)
 {
     assert(isDone());
     bool failed = mFailed;
-    psl.unlock();
+    sl.unlock();
     if (failed)
         task->cancel();
     else
         task->deltaReady(mHash);  // mHash is const
-    psl.lock();
+    sl.lock();
 }
 
 }  // namespace ripple

@@ -824,7 +824,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
             auto request = std::make_shared<protocol::TMProofPathRequest>();
             request->set_ledgerhash(
                 l->info().hash.data(), l->info().hash.size());
-            request->set_type(protocol::TMLedgerMapType::lmAS_NODE);
+            request->set_type(protocol::TMLedgerMapType::lmAS);
             auto reply = std::make_shared<protocol::TMProofPathResponse>(
                 server.msgHandler.processProofPathRequest(request));
             BEAST_EXPECT(reply->has_error());
@@ -833,7 +833,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
         {
             // request, wrong hash
             auto request = std::make_shared<protocol::TMProofPathRequest>();
-            request->set_type(protocol::TMLedgerMapType::lmAS_NODE);
+            request->set_type(protocol::TMLedgerMapType::lmAS);
             request->set_key(
                 keylet::skip().key.data(), keylet::skip().key.size());
             uint256 hash(1234567);
@@ -848,7 +848,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
             auto request = std::make_shared<protocol::TMProofPathRequest>();
             request->set_ledgerhash(
                 l->info().hash.data(), l->info().hash.size());
-            request->set_type(protocol::TMLedgerMapType::lmAS_NODE);
+            request->set_type(protocol::TMLedgerMapType::lmAS);
             request->set_key(
                 keylet::skip().key.data(), keylet::skip().key.size());
             // generate response
@@ -971,7 +971,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
             Config c;
             std::string toLoad(R"rippleConfig(
 [ledger_replay]
-enable=1
+1
 )rippleConfig");
             c.loadFromString(toLoad);
             BEAST_EXPECT(c.LEDGER_REPLAY == true);
@@ -981,7 +981,7 @@ enable=1
             Config c;
             std::string toLoad = (R"rippleConfig(
 [ledger_replay]
-enable=0
+0
 )rippleConfig");
             c.loadFromString(toLoad);
             BEAST_EXPECT(c.LEDGER_REPLAY == false);
@@ -989,10 +989,9 @@ enable=0
     }
 
     void
-    testAllLocal()
+    testAllLocal(int totalReplay)
     {
         testcase("local node has all the ledgers");
-        int totalReplay = 3;
         auto psBhvr = PeerSetBehavior::DropAll;
         auto ilBhvr = InboundLedgersBehavior::DropAll;
         auto peerFeature = PeerFeature::None;
@@ -1032,10 +1031,9 @@ enable=0
     }
 
     void
-    testAllInboundLedgers()
+    testAllInboundLedgers(int totalReplay)
     {
         testcase("all the ledgers from InboundLedgers");
-        int totalReplay = 3;
         NetworkOfTwo net(
             *this,
             {totalReplay + 1},
@@ -1063,7 +1061,7 @@ enable=0
     }
 
     void
-    testPeerSetBehavior(PeerSetBehavior peerSetBehavior)
+    testPeerSetBehavior(PeerSetBehavior peerSetBehavior, int totalReplay = 5)
     {
         switch (peerSetBehavior)
         {
@@ -1080,7 +1078,6 @@ enable=0
                 return;
         }
 
-        int totalReplay = 5;
         NetworkOfTwo net(
             *this,
             {totalReplay + 1},
@@ -1315,8 +1312,11 @@ enable=0
         testReplayDelta();
         testTaskParameter();
         testConfig();
-        testAllLocal();
-        testAllInboundLedgers();
+        testAllLocal(1);
+        testAllLocal(3);
+        testAllInboundLedgers(1);
+        testAllInboundLedgers(4);
+        testPeerSetBehavior(PeerSetBehavior::Good, 1);
         testPeerSetBehavior(PeerSetBehavior::Good);
         testPeerSetBehavior(PeerSetBehavior::Drop50);
         testPeerSetBehavior(PeerSetBehavior::Repeat);

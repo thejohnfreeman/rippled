@@ -23,10 +23,8 @@
 #include <ripple/app/main/Application.h>
 #include <ripple/beast/clock/abstract_clock.h>
 #include <ripple/beast/utility/Journal.h>
-#include <ripple/overlay/Peer.h>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <mutex>
-#include <set>
 
 namespace ripple {
 
@@ -35,6 +33,8 @@ namespace ripple {
     and dispatches work to a job queue. Implementations derive
     from this class and override the abstract hook functions in
     the base.
+
+    This class is split from the PeerSet class.  // TODO remove after PR
 */
 class TimeoutCounter
 {

@@ -70,7 +70,7 @@ LedgerReplayTask::LedgerReplayTask(
     : TimeoutCounter(
           app,
           parameter.finishHash,
-          LedgerReplayer::TASK_TIMEOUT,
+          LedgerReplayParameters::TASK_TIMEOUT,
           app.journal("LedgerReplayTask"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
@@ -96,7 +96,7 @@ LedgerReplayTask::init()
 }
 
 void
-LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
+LedgerReplayTask::trigger(ScopedLockType& sl)
 {
     JLOG(m_journal.trace()) << "trigger " << mHash;
     if (isDone() || !parameter_.full)
@@ -120,7 +120,7 @@ LedgerReplayTask::trigger(ScopedLockType& peerSetLock)
         }
     }
 
-    tryAdvance(peerSetLock);
+    tryAdvance(sl);
 }
 
 void
@@ -133,7 +133,7 @@ LedgerReplayTask::deltaReady(uint256 const& deltaHash)
 }
 
 void
-LedgerReplayTask::tryAdvance(ScopedLockType& peerSetLock)
+LedgerReplayTask::tryAdvance(ScopedLockType& sl)
 {
     JLOG(m_journal.trace())
         << "tryAdvance task " << mHash
@@ -193,7 +193,7 @@ void
 LedgerReplayTask::queueJob()
 {
     if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
-        LedgerReplayer::MAX_QUEUED_TASKS)
+        LedgerReplayParameters::MAX_QUEUED_TASKS)
     {
         JLOG(m_journal.debug())
             << "Deferring LedgerReplayTask timer due to load";
@@ -212,8 +212,8 @@ void
 LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts >
-        parameter_.totalLedgers * LedgerReplayer::TASK_MAX_TIMEOUTS_MULTIPLIER)
+    if (mTimeouts > parameter_.totalLedgers *
+            LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER)
     {
         mFailed = true;
         JLOG(m_journal.debug())
@@ -247,8 +247,11 @@ void
 LedgerReplayTask::cancel()
 {
     ScopedLockType sl(mLock);
-    mFailed = true;
-    JLOG(m_journal.info()) << "Cancel Task " << mHash;
+    if (!isDone())
+    {
+        mFailed = true;
+        JLOG(m_journal.info()) << "Cancel Task " << mHash;
+    }
 }
 
 bool

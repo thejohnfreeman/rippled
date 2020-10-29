@@ -363,8 +363,8 @@ message TMPing
 
 enum TMLedgerMapType
 {
-    lmTX_NODE = 1;        // transaction node
-    lmAS_NODE = 2;        // account state node
+    lmTX = 1;        // transaction map
+    lmAS = 2;        // account state map
 }
 
 message TMProofPathRequest

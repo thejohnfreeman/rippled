@@ -21,18 +21,17 @@
 #define RIPPLE_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
 
 #include <ripple/app/ledger/InboundLedger.h>
-#include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/ledger/impl/TimeoutCounter.h>
 #include <ripple/app/main/Application.h>
-#include <ripple/overlay/PeerSet.h>
-#include <ripple/shamap/SHAMap.h>
-#include <queue>
+
+#include <memory>
+#include <vector>
 
 namespace ripple {
-
-using namespace std::chrono_literals;
-
+class InboundLedgers;
+class Ledger;
 class LedgerDeltaAcquire;
+class LedgerReplayer;
 class SkipListAcquire;
 namespace test {
 class LedgerReplayClient;
@@ -46,11 +45,12 @@ class LedgerReplayTask final
 public:
     struct TaskParameter
     {
-        // input
+        // set on construct
         InboundLedger::Reason reason;
         uint256 finishHash;
         std::uint32_t totalLedgers;  // including the start and the finish
-        // to be filled
+
+        // to be updated
         std::uint32_t finishSeq = 0;
         std::vector<uint256> skipList = {};  // including the finishHash
         uint256 startHash = {};
@@ -63,11 +63,12 @@ public:
             std::uint32_t totalNumLedgers);
 
         /**
-         * @note called with validated data
-         * @param hash
-         * @param seq
-         * @param sList
-         * @return
+         * @note called with validated skip list data
+         * @param hash  hash of the ledger that has the skip list
+         * @param seq  sequence number of the ledger that has the skip list
+         * @param sList  skip list
+         * @return false if error (e.g. hash mismatch)
+         *         true on success
          */
         bool
         update(
@@ -75,16 +76,20 @@ public:
             std::uint32_t seq,
             std::vector<uint256> const& sList);
 
+        /** check if this task can be merged into an existing task */
         bool
         canMergeInto(TaskParameter const& existingTask);
     };
 
-    static char const*
-    getCountedObjectName()
-    {
-        return "LedgerReplayTask";
-    }
-
+    /**
+     * Constructor
+     * @param app  Application reference
+     * @param inboundLedgers  InboundLedgers reference
+     * @param replayer  LedgerReplayer reference
+     * @param skipListAcquirer  shared_ptr of SkipListAcquire subtask,
+     *        to make sure it will not be destroyed.
+     * @param parameter  parameter of the task
+     */
     LedgerReplayTask(
         Application& app,
         InboundLedgers& inboundLedgers,
@@ -94,15 +99,27 @@ public:
 
     ~LedgerReplayTask();
 
+    /** Start the task */
     void
     init();
 
+    /**
+     * Update this task (by a SkipListAcquire subtask) when skip list is ready
+     * @param hash  hash of the ledger that has the skip list
+     * @param seq  sequence number of the ledger that has the skip list
+     * @param sList  skip list
+     */
     void
     updateSkipList(
         uint256 const& hash,
         std::uint32_t seq,
         std::vector<ripple::uint256> const& sList);
 
+    /**
+     * add a new LedgerDeltaAcquire subtask
+     * @param delta  the new LedgerDeltaAcquire subtask
+     * @note the LedgerDeltaAcquire subtasks must be added in order
+     */
     void
     addDelta(std::shared_ptr<LedgerDeltaAcquire> const& delta);
 
@@ -112,30 +129,50 @@ public:
         return parameter_;
     }
 
+    /**
+     * Notify this task (by a LedgerDeltaAcquire subtask) that a delta is ready
+     * @param deltaHash  ledger hash of the delta
+     */
     void
     deltaReady(uint256 const& deltaHash);
 
+    /** Cancel the task */
     void
     cancel();
 
+    /** return if the task is finished */
     bool
     finished();
+
+    static char const*
+    getCountedObjectName()
+    {
+        return "LedgerReplayTask";
+    }
 
 private:
     void
     queueJob() override;
 
     void
-    onTimer(bool progress, ScopedLockType& peerSetLock) override;
+    onTimer(bool progress, ScopedLockType& sl) override;
 
     std::weak_ptr<TimeoutCounter>
     pmDowncast() override;
 
+    /**
+     * Trigger another round
+     * @param sl  lock. this function must be called with the lock
+     */
     void
-    trigger(ScopedLockType& peerSetLock);
+    trigger(ScopedLockType& sl);
 
+    /**
+     * Try to build more ledgers
+     * @param sl  lock. this function must be called with the lock
+     */
     void
-    tryAdvance(ScopedLockType& peerSetLock);
+    tryAdvance(ScopedLockType& sl);
 
     InboundLedgers& inboundLedgers_;
     LedgerReplayer& replayer_;

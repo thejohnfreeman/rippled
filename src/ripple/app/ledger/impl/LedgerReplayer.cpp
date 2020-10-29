@@ -63,7 +63,7 @@ LedgerReplayer::replay(
     bool skipListNeedInit = false;
     {
         std::unique_lock<std::recursive_mutex> lock(lock_);
-        if (tasks_.size() >= LedgerReplayer::MAX_TASKS)
+        if (tasks_.size() >= LedgerReplayParameters::MAX_TASKS)
         {
             JLOG(j_.info()) << "Too many replay tasks, dropping new task "
                             << parameter.finishHash;
@@ -90,7 +90,7 @@ LedgerReplayer::replay(
             skipList = i->second.lock();
             if (!skipList)
             {
-                assert(false);  // TODO remove before PR
+                assert(false);  // TODO remove after tests
                 skipLists_.erase(i);
             }
         }
@@ -163,7 +163,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                     delta = i->second.lock();
                     if (!delta)
                     {
-                        assert(false);  // TODO remove before PR
+                        assert(false);  // TODO remove after tests
                         deltas_.erase(i);
                     }
                 }
@@ -205,7 +205,7 @@ LedgerReplayer::gotSkipList(
         if (!skipList)
         {
             skipLists_.erase(i);
-            assert(false);  // TODO remove before PR
+            assert(false);  // TODO remove after tests
             return;
         }
     }
@@ -229,7 +229,7 @@ LedgerReplayer::gotReplayDelta(
         if (!delta)
         {
             deltas_.erase(i);
-            assert(false);  // TODO remove before PR
+            assert(false);  // TODO remove after tests
             return;
         }
     }

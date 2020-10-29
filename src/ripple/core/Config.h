@@ -173,14 +173,14 @@ public:
     // Compression
     bool COMPRESSION = false;
 
+    // Enable the experimental Ledger Replay functionality
+    bool LEDGER_REPLAY = false;
+
     // Amendment majority time
     std::chrono::seconds AMENDMENT_MAJORITY_TIME = defaultAmendmentMajorityTime;
 
     // Thread pool configuration
     std::size_t WORKERS = 0;
-
-    // Enable the experimental Ledger Replay functionality
-    bool LEDGER_REPLAY = false;
 
     // These override the command line client settings
     boost::optional<beast::IP::Endpoint> rpc_ip;

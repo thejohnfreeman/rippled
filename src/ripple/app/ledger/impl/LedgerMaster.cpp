@@ -20,7 +20,6 @@
 #include <ripple/app/consensus/RCLValidations.h>
 #include <ripple/app/ledger/Ledger.h>
 #include <ripple/app/ledger/LedgerMaster.h>
-#include <ripple/app/ledger/LedgerReplayTask.h>
 #include <ripple/app/ledger/LedgerReplayer.h>
 #include <ripple/app/ledger/OpenLedger.h>
 #include <ripple/app/ledger/OrderBookDB.h>
@@ -1421,18 +1420,18 @@ LedgerMaster::findNewLedgersToPublish(
             }
             else
             {
-                JLOG(m_journal.debug())
-                    << "Ask ledger replay from seq=" << startLedger->info().seq
-                    << ", " << startLedger->info().hash
-                    << " to seq=" << finishLedger->info().seq << ", "
-                    << finishLedger->info().hash;
-                app_.getLedgerReplayer().replay(
-                    InboundLedger::Reason::GENERIC,
-                    finishLedger->info().hash,
-                    finishLedger->seq() - startLedger->seq() + 1);
                 break;
             }
         }
+        JLOG(m_journal.debug())
+            << "Ledger replay (Publish) from seq=" << startLedger->info().seq
+            << ", " << startLedger->info().hash
+            << " to seq=" << finishLedger->info().seq << ", "
+            << finishLedger->info().hash;
+        app_.getLedgerReplayer().replay(
+            InboundLedger::Reason::GENERIC,
+            finishLedger->info().hash,
+            finishLedger->seq() - startLedger->seq() + 1);
     }
 
     return ret;

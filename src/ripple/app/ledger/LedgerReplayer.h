@@ -31,9 +31,26 @@
 #include <mutex>
 
 namespace ripple {
+
 namespace test {
 class LedgerReplayClient;
 }  // namespace test
+
+namespace LedgerReplayParameters {
+using namespace std::chrono_literals;
+// for LedgerReplayTask
+auto constexpr TASK_TIMEOUT = 500ms;
+// for LedgerDeltaAcquire and SkipListAcquire
+auto constexpr SUB_TASK_TIMEOUT = 250ms;
+// for LedgerReplayTask to calculate max allowed timeouts
+int constexpr TASK_MAX_TIMEOUTS_MULTIPLIER = 2;
+// for LedgerDeltaAcquire and SkipListAcquire
+int constexpr SUB_TASK_MAX_TIMEOUTS = 10;
+// for LedgerReplayer to limit the number of LedgerReplayTask
+int constexpr MAX_TASKS = 10;
+// to limit the number of LedgerReplay related jobs in JobQueue
+int constexpr MAX_QUEUED_TASKS = 100;
+}  // namespace LedgerReplayParameters
 
 /**
  * Manages the lifetime of ledger replay tasks.
@@ -41,34 +58,48 @@ class LedgerReplayClient;
 class LedgerReplayer : public Stoppable
 {
 public:
-    static auto constexpr TASK_TIMEOUT = 500ms;
-    static auto constexpr SUB_TASK_TIMEOUT = 250ms;
-    static int constexpr TASK_MAX_TIMEOUTS_MULTIPLIER = 2;
-    static int constexpr SUB_TASK_MAX_TIMEOUTS = 10;
-    static int constexpr MAX_TASKS = 10;
-    static int constexpr MAX_QUEUED_TASKS = 100;
-
     LedgerReplayer(
         Application& app,
         InboundLedgers& inboundLedgers,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder,
         Stoppable& parent);
+
     ~LedgerReplayer();
 
+    /**
+     * Replay a range of ledgers
+     * @param r  reason for the replay request
+     * @param finishLedgerHash  hash of the last ledger
+     * @param totalNumLedgers  total number of ledgers in the range, inclusive
+     * @note totalNumLedgers must > 0 && totalNumLedgers must <= 256
+     */
     void
     replay(
         InboundLedger::Reason r,
         uint256 const& finishLedgerHash,
         std::uint32_t totalNumLedgers);
 
+    /** Create LedgerDeltaAcquire subtasks for the LedgerReplayTask task */
     void
     createDeltas(std::shared_ptr<LedgerReplayTask> task);
 
+    /**
+     * Process a skip list (extracted from a TMProofPathResponse message)
+     * @param info  ledger info
+     * @param data  skip list holder
+     * @note  info and data must have been verified against the ledger hash
+     */
     void
     gotSkipList(
         LedgerInfo const& info,
         std::shared_ptr<SHAMapItem const> const& data);
 
+    /**
+     * Process a ledger delta (extracted from a TMReplayDeltaResponse message)
+     * @param info  ledger info
+     * @param txns  set of Txns of the ledger
+     * @note info and txns must have been verified against the ledger hash
+     */
     void
     gotReplayDelta(
         LedgerInfo const& info,
@@ -88,6 +119,7 @@ public:
         skipLists_.erase(hash);
     }
 
+    /** Remove completed tasks */
     void
     sweep();
 
