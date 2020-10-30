@@ -788,11 +788,12 @@ void
 logAll(
     LedgerServer& server,
     LedgerReplayClient& client,
-    beast::severities::Severity level = Severity::kWarning)
+    beast::severities::Severity level = Severity::kTrace)
 {
     server.app.logs().threshold(level);
     client.app.logs().threshold(level);
 }
+//logAll(net.server, net.client);
 
 struct NetworkOfTwo
 {

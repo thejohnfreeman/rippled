@@ -75,6 +75,10 @@ LedgerReplayTask::LedgerReplayTask(
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
     , parameter_(parameter)
+    , maxTimeouts_(std::max(
+        LedgerReplayParameters::TASK_MAX_TIMEOUTS_MINIMUM,
+        parameter.totalLedgers *
+        LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER))
     , skipListAcquirer_(skipListAcquirer)
 {
     JLOG(m_journal.trace()) << "Task ctor " << mHash;
@@ -212,8 +216,7 @@ void
 LedgerReplayTask::onTimer(bool progress, ScopedLockType& psl)
 {
     JLOG(m_journal.trace()) << "mTimeouts=" << mTimeouts << " for " << mHash;
-    if (mTimeouts > parameter_.totalLedgers *
-            LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER)
+    if (mTimeouts > maxTimeouts_)
     {
         mFailed = true;
         JLOG(m_journal.debug())

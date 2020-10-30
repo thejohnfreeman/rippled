@@ -53,7 +53,7 @@ LedgerReplayer::replay(
 {
     assert(
         finishLedgerHash.isNonZero() && totalNumLedgers > 0 &&
-        totalNumLedgers <= 256);
+        totalNumLedgers <= LedgerReplayParameters::MAX_TASK_SIZE);
 
     LedgerReplayTask::TaskParameter parameter(
         r, finishLedgerHash, totalNumLedgers);

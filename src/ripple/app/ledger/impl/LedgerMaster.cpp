@@ -1290,23 +1290,23 @@ LedgerMaster::findNewLedgersToPublish(
 
     {
         // TODO remove, force a replay for test
-        //        if (app_.config().LEDGER_REPLAY)
-        //        {
-        //            static bool called_once = false;
-        //            if (!called_once)
-        //            {
-        //                called_once = true;
-        //                std::uint32_t totalLedgers = 5;
-        //                JLOG(m_journal.debug())
-        //                    << "LFR end with " <<
-        //                    mValidLedger.get()->info().seq << " "
-        //                    << mValidLedger.get()->info().hash << " back "
-        //                    << totalLedgers << " ledgers";
-        //                app_.getLedgerReplayer().replay(
-        //                    InboundLedger::Reason::GENERIC,
-        //                    mValidLedger.get()->info().hash, totalLedgers);
-        //            }
-        //        }
+        if (app_.config().LEDGER_REPLAY)
+        {
+            static bool called_once = false;
+            if (!called_once)
+            {
+                called_once = true;
+                std::uint32_t totalLedgers = 200;
+                JLOG(m_journal.debug())
+                    << "LFR end with " << mValidLedger.get()->info().seq << " "
+                    << mValidLedger.get()->info().hash << " back "
+                    << totalLedgers << " ledgers";
+                app_.getLedgerReplayer().replay(
+                    InboundLedger::Reason::GENERIC,
+                    mValidLedger.get()->info().hash,
+                    totalLedgers);
+            }
+        }
     }
 
     if (!mPubLedger)
@@ -1418,18 +1418,19 @@ LedgerMaster::findNewLedgersToPublish(
             }
             else
             {
+                JLOG(m_journal.debug())
+                    << "Ledger replay (Publish) from seq="
+                    << startLedger->info().seq << ", "
+                    << startLedger->info().hash
+                    << " to seq=" << finishLedger->info().seq << ", "
+                    << finishLedger->info().hash;
+                app_.getLedgerReplayer().replay(
+                    InboundLedger::Reason::GENERIC,
+                    finishLedger->info().hash,
+                    finishLedger->seq() - startLedger->seq() + 1);
                 break;
             }
         }
-        JLOG(m_journal.debug())
-            << "Ledger replay (Publish) from seq=" << startLedger->info().seq
-            << ", " << startLedger->info().hash
-            << " to seq=" << finishLedger->info().seq << ", "
-            << finishLedger->info().hash;
-        app_.getLedgerReplayer().replay(
-            InboundLedger::Reason::GENERIC,
-            finishLedger->info().hash,
-            finishLedger->seq() - startLedger->seq() + 1);
     }
 
     return ret;

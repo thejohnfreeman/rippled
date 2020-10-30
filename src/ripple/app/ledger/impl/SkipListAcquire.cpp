@@ -107,8 +107,16 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& sl)
             }
             else
             {
-                JLOG(m_journal.trace()) << "Fall back for " << mHash;
-                fallBack_ = true;
+                JLOG(m_journal.trace()) << "Add a no feature peer "
+                                        << peer->id() << " for " << mHash;
+                if (++noFeaturePeerCount >=
+                    LedgerReplayParameters::MAX_NO_FEATURE_PEER_COUNT)
+                {
+                    JLOG(m_journal.debug()) << "Fall back for " << mHash;
+                    mTimerInterval =
+                        LedgerReplayParameters::SUB_TASK_FALLBACK_TIMEOUT;
+                    fallBack_ = true;
+                }
             }
         });
 

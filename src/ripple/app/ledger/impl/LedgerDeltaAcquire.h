@@ -164,6 +164,7 @@ private:
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
     std::set<InboundLedger::Reason> reasons_;
+    std::uint32_t noFeaturePeerCount = 0;
     bool fallBack_ = false;
 
     friend class LedgerReplayTask;  // for asserts only

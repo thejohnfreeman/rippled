@@ -149,6 +149,7 @@ private:
     std::unique_ptr<PeerSet> peerSet_;
     std::vector<ripple::uint256> skipList_;
     std::list<std::weak_ptr<LedgerReplayTask>> tasks_;
+    std::uint32_t noFeaturePeerCount = 0;
     bool fallBack_ = false;
 
     friend class test::LedgerReplayClient;

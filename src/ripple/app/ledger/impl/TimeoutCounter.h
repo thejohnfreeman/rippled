@@ -85,14 +85,14 @@ protected:
     bool mFailed;
     /** Whether forward progress has been made. */
     bool mProgress;
+    /** The minimum time to wait between calls to execute(). */
+    std::chrono::milliseconds mTimerInterval;
 
     /** Calls onTimer() if in the right state. */
     void
     invokeOnTimer();
 
 private:
-    /** The minimum time to wait between calls to execute(). */
-    std::chrono::milliseconds mTimerInterval;
     boost::asio::basic_waitable_timer<std::chrono::steady_clock> mTimer;
 };
 
