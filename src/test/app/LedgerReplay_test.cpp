@@ -793,7 +793,7 @@ logAll(
     server.app.logs().threshold(level);
     client.app.logs().threshold(level);
 }
-//logAll(net.server, net.client);
+// logAll(net.server, net.client);
 
 struct NetworkOfTwo
 {
@@ -934,29 +934,53 @@ struct LedgerReplayer_test : public beast::unit_test::suite
     testTaskParameter()
     {
         testcase("TaskParameter");
-        LedgerReplayTask::TaskParameter tp(
-            InboundLedger::Reason::GENERIC, uint256(123), 10);
-        BEAST_EXPECT(!tp.update(
-            uint256(1234), 5, std::vector<uint256>(10, uint256(1234))));
-        BEAST_EXPECT(!tp.update(
-            uint256(123), 5, std::vector<uint256>(8, uint256(1234))));
-        BEAST_EXPECT(tp.update(
-            uint256(123), 5, std::vector<uint256>(10, uint256(1234))));
 
-        LedgerReplayTask::TaskParameter tpNew(
-            InboundLedger::Reason::GENERIC, uint256(123), 10);
+        auto makeSkipList = [](int count) -> std::vector<uint256> const {
+            std::vector<uint256> sList;
+            for (int i = 0; i < count; ++i)
+                sList.emplace_back(i);
+            return sList;
+        };
 
-        BEAST_EXPECT(tpNew.canMergeInto(tp));
-        ++tpNew.totalLedgers;
-        BEAST_EXPECT(!tpNew.canMergeInto(tp));
-        --tpNew.totalLedgers;
-        BEAST_EXPECT(tpNew.canMergeInto(tp));
-        tpNew.reason = InboundLedger::Reason::CONSENSUS;
-        BEAST_EXPECT(!tpNew.canMergeInto(tp));
-        tpNew.reason = InboundLedger::Reason::GENERIC;
-        BEAST_EXPECT(tpNew.canMergeInto(tp));
-        tpNew.finishHash = uint256(1234);
-        BEAST_EXPECT(!tpNew.canMergeInto(tp));
+        LedgerReplayTask::TaskParameter tp10(
+            InboundLedger::Reason::GENERIC, uint256(10), 10);
+        BEAST_EXPECT(!tp10.update(uint256(777), 5, makeSkipList(10)));
+        BEAST_EXPECT(!tp10.update(uint256(10), 5, makeSkipList(8)));
+        BEAST_EXPECT(tp10.update(uint256(10), 10, makeSkipList(10)));
+
+        // can merge to self
+        BEAST_EXPECT(tp10.canMergeInto(tp10));
+
+        // smaller task
+        LedgerReplayTask::TaskParameter tp9(
+            InboundLedger::Reason::GENERIC, uint256(9), 9);
+
+        BEAST_EXPECT(tp9.canMergeInto(tp10));
+        BEAST_EXPECT(!tp10.canMergeInto(tp9));
+
+        tp9.totalLedgers++;
+        BEAST_EXPECT(!tp9.canMergeInto(tp10));
+        tp9.totalLedgers--;
+        BEAST_EXPECT(tp9.canMergeInto(tp10));
+
+        tp9.reason = InboundLedger::Reason::CONSENSUS;
+        BEAST_EXPECT(!tp9.canMergeInto(tp10));
+        tp9.reason = InboundLedger::Reason::GENERIC;
+        BEAST_EXPECT(tp9.canMergeInto(tp10));
+
+        tp9.finishHash = uint256(1234);
+        BEAST_EXPECT(!tp9.canMergeInto(tp10));
+        tp9.finishHash = uint256(9);
+        BEAST_EXPECT(tp9.canMergeInto(tp10));
+
+        // larger task
+        LedgerReplayTask::TaskParameter tp20(
+            InboundLedger::Reason::GENERIC, uint256(20), 20);
+        BEAST_EXPECT(tp20.update(uint256(20), 20, makeSkipList(20)));
+        BEAST_EXPECT(tp10.canMergeInto(tp20));
+        BEAST_EXPECT(tp9.canMergeInto(tp20));
+        BEAST_EXPECT(!tp20.canMergeInto(tp10));
+        BEAST_EXPECT(!tp20.canMergeInto(tp9));
     }
 
     void

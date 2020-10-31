@@ -56,9 +56,27 @@ LedgerReplayTask::TaskParameter::update(
 bool
 LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
 {
-    return reason == existingTask.reason &&
-        finishHash == existingTask.finishHash &&
-        totalLedgers <= existingTask.totalLedgers;
+    if (reason == existingTask.reason)
+    {
+        if (finishHash == existingTask.finishHash &&
+            totalLedgers <= existingTask.totalLedgers)
+        {
+            return true;
+        }
+
+        if (existingTask.full)
+        {
+            auto const& exList = existingTask.skipList;
+            if (auto i = std::find(exList.begin(), exList.end(), finishHash);
+                i != exList.end())
+            {
+                return existingTask.totalLedgers >=
+                    totalLedgers + (exList.end() - i) - 1;
+            }
+        }
+    }
+
+    return false;
 }
 
 LedgerReplayTask::LedgerReplayTask(
@@ -76,9 +94,9 @@ LedgerReplayTask::LedgerReplayTask(
     , replayer_(replayer)
     , parameter_(parameter)
     , maxTimeouts_(std::max(
-        LedgerReplayParameters::TASK_MAX_TIMEOUTS_MINIMUM,
-        parameter.totalLedgers *
-        LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER))
+          LedgerReplayParameters::TASK_MAX_TIMEOUTS_MINIMUM,
+          parameter.totalLedgers *
+              LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER))
     , skipListAcquirer_(skipListAcquirer)
 {
     JLOG(m_journal.trace()) << "Task ctor " << mHash;
