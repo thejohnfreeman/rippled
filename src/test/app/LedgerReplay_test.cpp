@@ -28,6 +28,7 @@
 #include <ripple/overlay/PeerSet.h>
 #include <ripple/overlay/impl/PeerImp.h>
 #include <test/jtx.h>
+#include <test/jtx/envconfig.h>
 
 namespace ripple {
 namespace test {
@@ -64,14 +65,16 @@ struct LedgerReplay_test : public beast::unit_test::suite
     }
 };
 
-extern void
-incPorts();
-
 enum class InboundLedgersBehavior {
     Good,
     DropAll,
 };
 
+/**
+ * Simulate a network InboundLedgers.
+ * Depending on the configured InboundLedgersBehavior,
+ * it either provides the ledger or not
+ */
 class MagicInboundLedgers : public InboundLedgers
 {
 public:
@@ -176,6 +179,11 @@ enum class PeerFeature {
     None,
 };
 
+/**
+ * Simulate a network peer.
+ * Depending on the configured PeerFeature,
+ * it either supports the ProtocolFeature::LedgerReplay or not
+ */
 class TestPeer : public Peer
 {
 public:
@@ -295,6 +303,12 @@ enum class PeerSetBehavior {
     Repeat,
 };
 
+/**
+ * Simulate a peerSet that supplies peers to ledger replay subtasks.
+ * It connects the ledger replay client side and server side message handlers.
+ * Depending on the configured PeerSetBehavior,
+ * it may drop or repeat some of the messages.
+ */
 struct TestPeerSet : public PeerSet
 {
     TestPeerSet(
@@ -383,6 +397,9 @@ struct TestPeerSet : public PeerSet
     PeerSetBehavior behavior;
 };
 
+/**
+ * Build the TestPeerSet.
+ */
 class TestPeerSetBuilder : public PeerSetBuilder
 {
 public:
@@ -413,7 +430,8 @@ private:
 };
 
 /**
- * Utility class for creating ledger history
+ * Utility class for (1) creating ledgers with txns and
+ * (2) providing the ledgers via the ledgerMaster
  */
 struct LedgerServer
 {
@@ -434,7 +452,6 @@ struct LedgerServer
         , param(p)
     {
         assert(param.initLedgers > 0);
-        incPorts();
         createAccounts(param.initAccounts);
         createLedgerHistory();
         app.logs().threshold(beast::severities::Severity::kWarning);
@@ -523,6 +540,13 @@ enum class TaskStatus {
     NotExist,
 };
 
+/**
+ * Ledger replay client side.
+ * It creates the LedgerReplayer which has the client side logic.
+ * The client side and server side message handlers are connect via
+ * the peerSet to pass the requests and responses.
+ * It also has utility functions for checking task status
+ */
 struct LedgerReplayClient
 {
     LedgerReplayClient(
@@ -531,7 +555,7 @@ struct LedgerReplayClient
         PeerSetBehavior behavior = PeerSetBehavior::Good,
         InboundLedgersBehavior inboundBhvr = InboundLedgersBehavior::Good,
         PeerFeature peerFeature = PeerFeature::LedgerReplayEnabled)
-        : env(suite)
+        : env(suite, jtx::envconfig(jtx::port_increment, 3))
         , app(env.app())
         , ledgerMaster(env.app().getLedgerMaster())
         , inboundLedgers(
@@ -550,7 +574,6 @@ struct LedgerReplayClient
                   peerFeature),
               env.app().getJobQueue())
     {
-        incPorts();
         //        replayer.peerSetBuilder_ =
         //        std::make_unique<TestPeerSetBuilder>(
         //            clientMsgHandler, serverMsgHandler, behavior,
@@ -795,6 +818,9 @@ logAll(
 }
 // logAll(net.server, net.client);
 
+/*
+ * Create a LedgerServer and a LedgerReplayClient
+ */
 struct NetworkOfTwo
 {
     NetworkOfTwo(
@@ -810,6 +836,30 @@ struct NetworkOfTwo
     LedgerServer server;
     LedgerReplayClient client;
 };
+
+/**
+ * Test cases:
+ * LedgerReplayer_test:
+ * -- process TMProofPathRequest and TMProofPathResponse
+ * -- process TMReplayDeltaRequest and TMReplayDeltaResponse
+ * -- update and merge LedgerReplayTask::TaskParameter
+ * -- process [ledger_replay] section in config
+ * -- replay a range of ledgers that the local node already has
+ * -- replay a range of ledgers and fallback to InboundLedgers because
+ *    peers do not support ProtocolFeature::LedgerReplay
+ * -- replay a range of ledgers and the network drops or repeats messages
+ * -- call onStop() and the tasks and subtasks are removed
+ * -- process a bad skip list
+ * -- process a bad ledger delta
+ * -- replay ledger ranges with different overlaps
+ *
+ * LedgerReplayerTimeout_test:
+ * -- timeouts of SkipListAcquire
+ * -- timeouts of LedgerDeltaAcquire
+ *
+ * LedgerReplayerLong_test: (MANUAL)
+ * -- call replayer.replay() 4 times to replay 1000 ledgers
+ */
 
 struct LedgerReplayer_test : public beast::unit_test::suite
 {

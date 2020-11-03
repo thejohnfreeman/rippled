@@ -32,6 +32,7 @@ LedgerReplayTask::TaskParameter::TaskParameter(
     std::uint32_t totalNumLedgers)
     : reason(r), finishHash(finishLedgerHash), totalLedgers(totalNumLedgers)
 {
+    assert(finishLedgerHash.isNonZero() && totalNumLedgers > 0);
 }
 
 bool

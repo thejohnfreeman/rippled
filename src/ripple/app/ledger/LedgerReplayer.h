@@ -56,7 +56,7 @@ auto constexpr MAX_NO_FEATURE_PEER_COUNT = 2;
 
 // for LedgerReplayer to limit the number of LedgerReplayTask
 std::uint32_t constexpr MAX_TASKS = 10;
-// for LedgerReplayer to limit the number of ledgers to replay of a task
+// for LedgerReplayer to limit the number of ledgers to replay in one task
 std::uint32_t constexpr MAX_TASK_SIZE = 256;
 // to limit the number of LedgerReplay related jobs in JobQueue
 std::uint32_t constexpr MAX_QUEUED_TASKS = 100;
