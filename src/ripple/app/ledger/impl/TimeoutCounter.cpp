@@ -30,6 +30,7 @@ TimeoutCounter::TimeoutCounter(
     Application& app,
     uint256 const& hash,
     std::chrono::milliseconds interval,
+    QueueJobParameter&& jobParameter,
     beast::Journal journal)
     : app_(app)
     , m_journal(journal)
@@ -39,6 +40,7 @@ TimeoutCounter::TimeoutCounter(
     , mFailed(false)
     , mProgress(false)
     , mTimerInterval(interval)
+    , mQueueJobParameter(std::move(jobParameter))
     , mTimer(app_.getIOService())
 {
     assert((mTimerInterval > 10ms) && (mTimerInterval < 30s));
@@ -57,6 +59,28 @@ TimeoutCounter::setTimer()
 
             if (auto ptr = wptr.lock())
                 ptr->queueJob();
+        });
+}
+
+void
+TimeoutCounter::queueJob()
+{
+    if (mQueueJobParameter.jobLimit &&
+        app_.getJobQueue().getJobCountTotal(mQueueJobParameter.jobType) >=
+            mQueueJobParameter.jobLimit)
+    {
+        JLOG(m_journal.debug()) << "Deferring " << mQueueJobParameter.jobName
+                                << " timer due to load";
+        setTimer();
+        return;
+    }
+
+    app_.getJobQueue().addJob(
+        mQueueJobParameter.jobType,
+        mQueueJobParameter.jobName,
+        [wptr = pmDowncast()](Job&) {
+            if (auto sptr = wptr.lock(); sptr)
+                sptr->invokeOnTimer();
         });
 }
 

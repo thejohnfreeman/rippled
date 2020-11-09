@@ -37,17 +37,22 @@ SkipListAcquire::SkipListAcquire(
           app,
           ledgerHash,
           LedgerReplayParameters::SUB_TASK_TIMEOUT,
+          {jtREPLAY_TASK,
+           "SkipListAcquire",
+           LedgerReplayParameters::MAX_QUEUED_TASKS},
           app.journal("LedgerReplaySkipList"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug()) << "SkipList ctor " << mHash;  // TODO remove after test
+    JLOG(m_journal.debug())
+        << "SkipList ctor " << mHash;  // TODO remove after test
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
-    JLOG(m_journal.trace()) << "SkipList dtor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace())
+        << "SkipList dtor " << mHash;  // TODO remove after test
     replayer_.removeSkipListAcquire(mHash);
 }
 
@@ -123,25 +128,6 @@ SkipListAcquire::trigger(std::size_t limit, ScopedLockType& sl)
     if (fallBack_)
         inboundLedgers_.acquire(
             mHash, ledgerSeq_, InboundLedger::Reason::GENERIC);
-}
-
-void
-SkipListAcquire::queueJob()
-{
-    if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
-        LedgerReplayParameters::MAX_QUEUED_TASKS)
-    {
-        JLOG(m_journal.debug())
-            << "Deferring SkipListAcquire timer due to load";
-        setTimer();
-        return;
-    }
-
-    std::weak_ptr<SkipListAcquire> wptr = shared_from_this();
-    app_.getJobQueue().addJob(jtREPLAY_TASK, "SkipListAcquire", [wptr](Job&) {
-        if (auto sptr = wptr.lock(); sptr)
-            sptr->invokeOnTimer();
-    });
 }
 
 void

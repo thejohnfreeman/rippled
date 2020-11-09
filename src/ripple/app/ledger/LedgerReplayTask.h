@@ -152,9 +152,6 @@ public:
 
 private:
     void
-    queueJob() override;
-
-    void
     onTimer(bool progress, ScopedLockType& sl) override;
 
     std::weak_ptr<TimeoutCounter>

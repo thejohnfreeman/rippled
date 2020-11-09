@@ -23,6 +23,7 @@
 #include <ripple/app/main/Application.h>
 #include <ripple/beast/clock/abstract_clock.h>
 #include <ripple/beast/utility/Journal.h>
+#include <ripple/core/Job.h>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <mutex>
 
@@ -34,28 +35,72 @@ namespace ripple {
     from this class and override the abstract hook functions in
     the base.
 
-    This class is split from the PeerSet class.  // TODO remove after PR
+    This class implements an asynchronous loop:
+
+    1. The entry point is `setTimer`.
+
+    2. After `mTimerInterval`, `queueJob` is called, which schedules a job to
+       call `invokeOnTimer` (or loops back to setTimer if there are too many
+       concurrent jobs).
+
+    3. The job queue calls `invokeOnTimer` which either breaks the loop if
+       `isDone` or calls `onTimer`.
+
+    4. `onTimer` is the only "real" virtual method in this class. It is the
+       callback for when the timeout expires. Generally, its only responsibility
+       is to set `mFailed = true`. However, if it wants to implement a policy of
+       retries, then it has a chance to just increment a count of expired
+       timeouts.
+
+    5. Once `onTimer` returns, if the object is still not `isDone`, then
+       `invokeOnTimer` sets another timeout by looping back to setTimer.
+
+   This loop executes concurrently with another asynchronous sequence,
+   implemented by the subtype, that is trying to make progress and eventually
+   set `mComplete = true`. While it is making progress but not complete, it
+   should set `mProgress = true`, which is passed to onTimer so it can decide
+   whether to postpone failure and reset the timeout. However, if it can
+   complete all its work in one synchronous step (while it holds the lock), then
+   it can ignore `mProgress`.
+
+   This class is split from the PeerSet class.  // TODO remove after PR
 */
 class TimeoutCounter
 {
 protected:
     using ScopedLockType = std::unique_lock<std::recursive_mutex>;
 
+    struct QueueJobParameter
+    {
+        JobType jobType;
+        std::string jobName;
+        std::optional<std::uint32_t> jobLimit;
+    };
+
     TimeoutCounter(
         Application& app,
-        uint256 const& hash,
-        std::chrono::milliseconds interval,
+        uint256 const& targetHash,
+        std::chrono::milliseconds timeoutInterval,
+        QueueJobParameter&& jobParameter,
         beast::Journal journal);
 
     virtual ~TimeoutCounter() = 0;
 
-    /** Hook called from invokeOnTimer(). */
-    virtual void
-    onTimer(bool progress, ScopedLockType&) = 0;
+    /** Schedule a call to queueJob() after mTimerInterval. */
+    void
+    setTimer();
 
     /** Queue a job to call invokeOnTimer(). */
     virtual void
-    queueJob() = 0;
+    queueJob();
+
+    /** Calls onTimer() if in the right state. */
+    void
+    invokeOnTimer();
+
+    /** Hook called from invokeOnTimer(). */
+    virtual void
+    onTimer(bool progress, ScopedLockType&) = 0;
 
     /** Return a weak pointer to this. */
     virtual std::weak_ptr<TimeoutCounter>
@@ -66,10 +111,6 @@ protected:
     {
         return mComplete || mFailed;
     }
-
-    /** Schedule a call to queueJob() after mTimerInterval. */
-    void
-    setTimer();
 
     // Used in this class for access to boost::asio::io_service and
     // ripple::Overlay. Used in subtypes for the kitchen sink.
@@ -88,9 +129,7 @@ protected:
     /** The minimum time to wait between calls to execute(). */
     std::chrono::milliseconds mTimerInterval;
 
-    /** Calls onTimer() if in the right state. */
-    void
-    invokeOnTimer();
+    QueueJobParameter mQueueJobParameter;
 
 private:
     boost::asio::basic_waitable_timer<std::chrono::steady_clock> mTimer;

@@ -154,9 +154,6 @@ private:
     void
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
-    void
-    queueJob() override;
-
     std::size_t
     getPeerCount() const;
 

@@ -82,6 +82,7 @@ InboundLedger::InboundLedger(
           app,
           hash,
           ledgerAcquireTimeout,
+          {jtLEDGER_DATA, "InboundLedger", 5},
           app.journal("InboundLedger"))
     , m_clock(clock)
     , mHaveHeader(false)
@@ -172,22 +173,6 @@ InboundLedger::getPeerCount() const
             ++count;
     });
     return count;
-}
-
-void
-InboundLedger::queueJob()
-{
-    if (app_.getJobQueue().getJobCountTotal(jtLEDGER_DATA) > 4)
-    {
-        JLOG(m_journal.debug()) << "Deferring InboundLedger timer due to load";
-        setTimer();
-        return;
-    }
-
-    app_.getJobQueue().addJob(
-        jtLEDGER_DATA, "InboundLedger", [ptr = shared_from_this()](Job&) {
-            ptr->invokeOnTimer();
-        });
 }
 
 void

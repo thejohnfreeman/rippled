@@ -90,6 +90,9 @@ LedgerReplayTask::LedgerReplayTask(
           app,
           parameter.finishHash,
           LedgerReplayParameters::TASK_TIMEOUT,
+          {jtREPLAY_TASK,
+           "LedgerReplayTask",
+           LedgerReplayParameters::MAX_QUEUED_TASKS},
           app.journal("LedgerReplayTask"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
@@ -210,25 +213,6 @@ LedgerReplayTask::updateSkipList(
     }
 
     replayer_.createDeltas(shared_from_this());
-}
-
-void
-LedgerReplayTask::queueJob()
-{
-    if (app_.getJobQueue().getJobCountTotal(jtREPLAY_TASK) >
-        LedgerReplayParameters::MAX_QUEUED_TASKS)
-    {
-        JLOG(m_journal.debug())
-            << "Deferring LedgerReplayTask timer due to load";
-        setTimer();
-        return;
-    }
-
-    std::weak_ptr<LedgerReplayTask> wptr = shared_from_this();
-    app_.getJobQueue().addJob(jtREPLAY_TASK, "LedgerReplayTask", [wptr](Job&) {
-        if (auto sptr = wptr.lock(); sptr)
-            sptr->invokeOnTimer();
-    });
 }
 
 void

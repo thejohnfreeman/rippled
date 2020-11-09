@@ -67,9 +67,6 @@ private:
     std::unique_ptr<PeerSet> mPeerSet;
 
     void
-    queueJob() override;
-
-    void
     onTimer(bool progress, ScopedLockType& peerSetLock) override;
 
     void

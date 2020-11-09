@@ -47,6 +47,7 @@ TransactionAcquire::TransactionAcquire(
           app,
           hash,
           TX_ACQUIRE_TIMEOUT,
+          {jtTXN_DATA, "TransactionAcquire", {}},
           app.journal("TransactionAcquire"))
     , mHaveRoot(false)
     , mPeerSet(std::move(peerSet))
@@ -54,15 +55,6 @@ TransactionAcquire::TransactionAcquire(
     mMap = std::make_shared<SHAMap>(
         SHAMapType::TRANSACTION, hash, app_.getNodeFamily());
     mMap->setUnbacked();
-}
-
-void
-TransactionAcquire::queueJob()
-{
-    app_.getJobQueue().addJob(
-        jtTXN_DATA, "TransactionAcquire", [ptr = shared_from_this()](Job&) {
-            ptr->invokeOnTimer();
-        });
 }
 
 void
