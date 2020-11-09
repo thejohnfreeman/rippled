@@ -42,12 +42,12 @@ SkipListAcquire::SkipListAcquire(
     , replayer_(replayer)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug()) << "SkipList ctor " << mHash;
+    JLOG(m_journal.debug()) << "SkipList ctor " << mHash;  // TODO remove after test
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
-    JLOG(m_journal.trace()) << "SkipList dtor " << mHash;
+    JLOG(m_journal.trace()) << "SkipList dtor " << mHash;  // TODO remove after test
     replayer_.removeSkipListAcquire(mHash);
 }
 

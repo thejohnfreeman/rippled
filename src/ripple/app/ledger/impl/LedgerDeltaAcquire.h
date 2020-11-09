@@ -55,8 +55,8 @@ public:
      * @param app  Application reference
      * @param inboundLedgers  InboundLedgers reference
      * @param replayer  LedgerReplayer reference
-     * @param ledgerHash  hash of the ledger that we try to acquire
-     * @param ledgerSeq  sequence number of the ledger that we try to acquire
+     * @param ledgerHash  hash of the ledger
+     * @param ledgerSeq  sequence number of the ledger
      * @param peerSet  manage a set of peers that we will ask for the ledger
      */
     LedgerDeltaAcquire(
@@ -78,8 +78,8 @@ public:
 
     /**
      * Process the data extracted from a peer's reply
-     * @param info  info (header) of the ledger that we try to acquire
-     * @param orderedTxns  set of Txns of the ledger that we try to acquire
+     * @param info  info (header) of the ledger
+     * @param orderedTxns  set of Txns of the ledger
      *
      * @note info and Txns must have been verified against the ledger hash
      */

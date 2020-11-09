@@ -54,8 +54,8 @@ LedgerReplayMsgHandler::processProofPathRequest(
     reply.set_ledgerhash(packet.ledgerhash());
     reply.set_type(packet.type());
 
-    uint256 const key{packet.key()};
-    uint256 const ledgerHash{packet.ledgerhash()};
+    uint256 const key(packet.key());
+    uint256 const ledgerHash(packet.ledgerhash());
     auto ledger = app_.getLedgerMaster().getLedgerByHash(ledgerHash);
     if (!ledger)
     {

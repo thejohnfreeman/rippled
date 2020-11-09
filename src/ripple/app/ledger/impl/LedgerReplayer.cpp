@@ -35,12 +35,12 @@ LedgerReplayer::LedgerReplayer(
     , peerSetBuilder_(std::move(peerSetBuilder))
     , j_(app.journal("LedgerReplayer"))
 {
-    JLOG(j_.trace()) << "LedgerReplayer ctor";
+    JLOG(j_.trace()) << "LedgerReplayer ctor";  // TODO remove after test
 }
 
 LedgerReplayer::~LedgerReplayer()
 {
-    JLOG(j_.trace()) << "LedgerReplayer dtor";
+    JLOG(j_.trace()) << "LedgerReplayer dtor";  // TODO remove after test
     std::unique_lock<std::recursive_mutex> lock(lock_);
     tasks_.clear();
 }
@@ -140,12 +140,12 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             parameter.startHash);
         if (skipListItem == parameter.skipList.end())
         {
-            assert(false);
+            assert(false);  // TODO remove after tests
             return;
         }
         if (++skipListItem == parameter.skipList.end())
         {
-            assert(false);
+            assert(false);  // TODO remove after tests
             return;
         }
         for (std::uint32_t seq = parameter.startSeq + 1;

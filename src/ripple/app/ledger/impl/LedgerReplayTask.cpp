@@ -100,12 +100,12 @@ LedgerReplayTask::LedgerReplayTask(
               LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER))
     , skipListAcquirer_(skipListAcquirer)
 {
-    JLOG(m_journal.trace()) << "Task ctor " << mHash;
+    JLOG(m_journal.trace()) << "Task ctor " << mHash;  // TODO remove after test
 }
 
 LedgerReplayTask::~LedgerReplayTask()
 {
-    JLOG(m_journal.trace()) << "Task dtor " << mHash;
+    JLOG(m_journal.trace()) << "Task dtor " << mHash;  // TODO remove after test
 }
 
 void
