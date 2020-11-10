@@ -37,10 +37,8 @@ class LedgerReplayClient;
 }  // namespace test
 
 namespace LedgerReplayParameters {
-using namespace std::chrono_literals;
-
 // for LedgerReplayTask
-auto constexpr TASK_TIMEOUT = 500ms;
+auto constexpr TASK_TIMEOUT = std::chrono::milliseconds{500};
 // for LedgerReplayTask to calculate max allowed timeouts
 // = max( TASK_MAX_TIMEOUTS_MINIMUM,
 //        (# of ledger to replay) * TASK_MAX_TIMEOUTS_MULTIPLIER)
@@ -48,10 +46,10 @@ std::uint32_t constexpr TASK_MAX_TIMEOUTS_MULTIPLIER = 2;
 std::uint32_t constexpr TASK_MAX_TIMEOUTS_MINIMUM = 10;
 
 // for LedgerDeltaAcquire and SkipListAcquire
-auto constexpr SUB_TASK_TIMEOUT = 250ms;
+auto constexpr SUB_TASK_TIMEOUT = std::chrono::milliseconds{250};
 std::uint32_t constexpr SUB_TASK_MAX_TIMEOUTS = 10;
 // for fallback in case peers do not support the ledger replay feature
-auto constexpr SUB_TASK_FALLBACK_TIMEOUT = 1000ms;
+auto constexpr SUB_TASK_FALLBACK_TIMEOUT = std::chrono::milliseconds{1000};
 auto constexpr MAX_NO_FEATURE_PEER_COUNT = 2;
 
 // for LedgerReplayer to limit the number of LedgerReplayTask
@@ -65,7 +63,7 @@ std::uint32_t constexpr MAX_QUEUED_TASKS = 100;
 /**
  * Manages the lifetime of ledger replay tasks.
  */
-class LedgerReplayer : public Stoppable
+class LedgerReplayer final : public Stoppable
 {
 public:
     LedgerReplayer(
@@ -141,6 +139,7 @@ private:
     std::list<std::shared_ptr<LedgerReplayTask>> tasks_;
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
+
     Application& app_;
     InboundLedgers& inboundLedgers_;
     std::unique_ptr<PeerSetBuilder> peerSetBuilder_;

@@ -152,10 +152,10 @@ SHAMapNodeID::dump(beast::Journal journal) const
 }
 
 SHAMapNodeID
-SHAMapNodeID::createID(int depth, uint256 const& hash)
+SHAMapNodeID::createID(int depth, uint256 const& key)
 {
     assert((depth >= 0) && (depth < 65));
-    return SHAMapNodeID(depth, hash & Masks(depth));
+    return SHAMapNodeID(depth, key & Masks(depth));
 }
 
 }  // namespace ripple

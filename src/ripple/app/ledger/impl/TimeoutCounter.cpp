@@ -46,8 +46,6 @@ TimeoutCounter::TimeoutCounter(
     assert((mTimerInterval > 10ms) && (mTimerInterval < 30s));
 }
 
-TimeoutCounter::~TimeoutCounter() = default;
-
 void
 TimeoutCounter::setTimer()
 {

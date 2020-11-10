@@ -43,7 +43,6 @@ namespace ripple {
     The original PeerSet is split to two. The logic for counting timeouts
     is move to the new TimeoutCounter class.  // TODO remove after PR
 */
-
 class PeerSet
 {
 public:

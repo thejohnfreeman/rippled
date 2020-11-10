@@ -35,12 +35,10 @@ LedgerReplayer::LedgerReplayer(
     , peerSetBuilder_(std::move(peerSetBuilder))
     , j_(app.journal("LedgerReplayer"))
 {
-    JLOG(j_.trace()) << "LedgerReplayer ctor";  // TODO remove after test
 }
 
 LedgerReplayer::~LedgerReplayer()
 {
-    JLOG(j_.trace()) << "LedgerReplayer dtor";  // TODO remove after test
     std::unique_lock<std::recursive_mutex> lock(lock_);
     tasks_.clear();
 }
@@ -90,7 +88,6 @@ LedgerReplayer::replay(
             skipList = i->second.lock();
             if (!skipList)
             {
-                assert(false);  // TODO remove after tests
                 skipLists_.erase(i);
             }
         }
@@ -138,16 +135,14 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             parameter.skipList.begin(),
             parameter.skipList.end(),
             parameter.startHash);
-        if (skipListItem == parameter.skipList.end())
+        if (skipListItem == parameter.skipList.end() ||
+            ++skipListItem == parameter.skipList.end())
         {
-            assert(false);  // TODO remove after tests
+            JLOG(j_.error()) << "Task parameter error when creating deltas "
+                             << parameter.finishHash;
             return;
         }
-        if (++skipListItem == parameter.skipList.end())
-        {
-            assert(false);  // TODO remove after tests
-            return;
-        }
+
         for (std::uint32_t seq = parameter.startSeq + 1;
              seq <= parameter.finishSeq &&
              skipListItem != parameter.skipList.end();
@@ -163,7 +158,6 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                     delta = i->second.lock();
                     if (!delta)
                     {
-                        assert(false);  // TODO remove after tests
                         deltas_.erase(i);
                     }
                 }
@@ -205,7 +199,6 @@ LedgerReplayer::gotSkipList(
         if (!skipList)
         {
             skipLists_.erase(i);
-            assert(false);  // TODO remove after tests
             return;
         }
     }
@@ -229,7 +222,6 @@ LedgerReplayer::gotReplayDelta(
         if (!delta)
         {
             deltas_.erase(i);
-            assert(false);  // TODO remove after tests
             return;
         }
     }
@@ -242,11 +234,14 @@ void
 LedgerReplayer::sweep()
 {
     std::unique_lock<std::recursive_mutex> lock(lock_);
+    JLOG(j_.debug()) << "Sweeping, LedgerReplayer has " << tasks_.size()
+                     << " tasks, " << skipLists_.size() << " skipLists, and "
+                     << deltas_.size() << " deltas.";
     for (auto it = tasks_.begin(); it != tasks_.end();)
     {
         if ((*it)->finished())
         {
-            JLOG(j_.trace())
+            JLOG(j_.info())
                 << "Sweep task " << (*it)->getTaskParameter().finishHash;
             it = tasks_.erase(it);
         }

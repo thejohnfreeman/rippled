@@ -84,7 +84,7 @@ protected:
         QueueJobParameter&& jobParameter,
         beast::Journal journal);
 
-    virtual ~TimeoutCounter() = 0;
+    virtual ~TimeoutCounter() = default;
 
     /** Schedule a call to queueJob() after mTimerInterval. */
     void
@@ -116,7 +116,7 @@ protected:
     // ripple::Overlay. Used in subtypes for the kitchen sink.
     Application& app_;
     beast::Journal m_journal;
-    std::recursive_mutex mLock;
+    mutable std::recursive_mutex mLock;
 
     /** The hash of the object (in practice, always a ledger) we are trying to
      * fetch. */

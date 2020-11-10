@@ -41,7 +41,7 @@ LedgerReplayTask::TaskParameter::update(
     std::uint32_t seq,
     std::vector<uint256> const& sList)
 {
-    if (finishHash != hash || sList.size() + 1 < totalLedgers)
+    if (finishHash != hash || sList.size() + 1 < totalLedgers || full)
         return false;
 
     finishSeq = seq;
@@ -55,7 +55,8 @@ LedgerReplayTask::TaskParameter::update(
 }
 
 bool
-LedgerReplayTask::TaskParameter::canMergeInto(TaskParameter const& existingTask)
+LedgerReplayTask::TaskParameter::canMergeInto(
+    TaskParameter const& existingTask) const
 {
     if (reason == existingTask.reason)
     {
@@ -103,12 +104,12 @@ LedgerReplayTask::LedgerReplayTask(
               LedgerReplayParameters::TASK_MAX_TIMEOUTS_MULTIPLIER))
     , skipListAcquirer_(skipListAcquirer)
 {
-    JLOG(m_journal.trace()) << "Task ctor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace()) << "Task ctor " << mHash;
 }
 
 LedgerReplayTask::~LedgerReplayTask()
 {
-    JLOG(m_journal.trace()) << "Task dtor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace()) << "Task dtor " << mHash;
 }
 
 void
@@ -261,7 +262,7 @@ LedgerReplayTask::cancel()
 }
 
 bool
-LedgerReplayTask::finished()
+LedgerReplayTask::finished() const
 {
     ScopedLockType sl(mLock);
     return isDone();

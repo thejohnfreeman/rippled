@@ -49,14 +49,12 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug()) << "Delta ctor " << mHash << " Seq "
-                            << ledgerSeq;  // TODO remove after test
+    JLOG(m_journal.trace()) << "Delta ctor " << mHash << " Seq " << ledgerSeq;
 }
 
 LedgerDeltaAcquire::~LedgerDeltaAcquire()
 {
-    JLOG(m_journal.trace())
-        << "Delta dtor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace()) << "Delta dtor " << mHash;
     replayer_.removeLedgerDeltaAcquire(mHash);
 }
 
@@ -120,9 +118,6 @@ LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& sl)
             }
             else
             {
-                JLOG(m_journal.trace())
-                    << "Add a no feature peer " << peer->id() << " for "
-                    << mHash;  // TODO remove after test
                 if (++noFeaturePeerCount >=
                     LedgerReplayParameters::MAX_NO_FEATURE_PEER_COUNT)
                 {
@@ -173,7 +168,7 @@ LedgerDeltaAcquire::processData(
 
     if (info.seq == ledgerSeq_)
     {
-        // create a temp ledger for building a LedgerReplay object later
+        // create a temporary ledger for building a LedgerReplay object later
         replayTemp_ =
             std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
         if (replayTemp_)

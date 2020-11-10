@@ -84,8 +84,16 @@ public:
     bool
     has_common_prefix(SHAMapNodeID const& other) const;
 
+    /**
+     * Create a SHAMapNodeID of a node with the depth of the node and
+     * the key of a leaf
+     *
+     * @param depth  the depth of the node
+     * @param key  the key of a leaf
+     * @return SHAMapNodeID of the node
+     */
     static SHAMapNodeID
-    createID(int depth, uint256 const& hash);
+    createID(int depth, uint256 const& key);
 
 private:
     static uint256 const&

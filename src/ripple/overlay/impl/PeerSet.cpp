@@ -55,7 +55,7 @@ private:
     // ripple::Overlay.
     Application& app_;
     beast::Journal m_journal;
-    std::recursive_mutex mLock;
+    mutable std::recursive_mutex mLock;
 
     /** The identifiers of the peers we are tracking. */
     std::set<Peer::id_t> mPeers;

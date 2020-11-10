@@ -1288,37 +1288,6 @@ LedgerMaster::findNewLedgersToPublish(
         return {};
     }
 
-    {
-        // TODO remove, force a replay for test
-        //        if (app_.config().LEDGER_REPLAY)
-        //        {
-        //            static bool called_once = false;
-        //            if (!called_once)
-        //            {
-        //                called_once = true;
-        //                std::uint32_t totalLedgers = 200;
-        //
-        //                JLOG(m_journal.debug())
-        //                    << "LedgerReplayTest with "
-        //                    << mValidLedger.get()->info().seq << " "
-        //                    << mValidLedger.get()->info().hash << " back "
-        //                    << totalLedgers << " ledgers";
-        //                app_.getLedgerReplayer().replay(
-        //                    InboundLedger::Reason::GENERIC,
-        //                    mValidLedger.get()->info().parentHash,
-        //                    totalLedgers);
-        //                app_.getLedgerReplayer().replay(
-        //                    InboundLedger::Reason::GENERIC,
-        //                    mValidLedger.get()->info().hash,
-        //                    totalLedgers);
-        //                app_.getLedgerReplayer().replay(
-        //                    InboundLedger::Reason::GENERIC,
-        //                    mValidLedger.get()->info().parentHash,
-        //                    totalLedgers);
-        //            }
-        //        }
-    }
-
     if (!mPubLedger)
     {
         JLOG(m_journal.info())

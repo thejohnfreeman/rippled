@@ -28,7 +28,6 @@
 
 #include <list>
 #include <map>
-#include <memory>
 
 namespace ripple {
 class InboundLedgers;

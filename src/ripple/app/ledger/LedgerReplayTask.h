@@ -63,7 +63,7 @@ public:
             std::uint32_t totalNumLedgers);
 
         /**
-         * @note called with validated skip list data
+         * @note called with verified skip list data
          * @param hash  hash of the ledger that has the skip list
          * @param seq  sequence number of the ledger that has the skip list
          * @param sList  skip list
@@ -78,7 +78,7 @@ public:
 
         /** check if this task can be merged into an existing task */
         bool
-        canMergeInto(TaskParameter const& existingTask);
+        canMergeInto(TaskParameter const& existingTask) const;
     };
 
     /**
@@ -142,7 +142,7 @@ public:
 
     /** return if the task is finished */
     bool
-    finished();
+    finished() const;
 
     static char const*
     getCountedObjectName()

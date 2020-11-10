@@ -574,10 +574,6 @@ struct LedgerReplayClient
                   peerFeature),
               env.app().getJobQueue())
     {
-        //        replayer.peerSetBuilder_ =
-        //        std::make_unique<TestPeerSetBuilder>(
-        //            clientMsgHandler, serverMsgHandler, behavior,
-        //            enableReplay);
     }
 
     void

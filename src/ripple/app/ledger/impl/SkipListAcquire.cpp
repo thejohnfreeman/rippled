@@ -45,14 +45,12 @@ SkipListAcquire::SkipListAcquire(
     , replayer_(replayer)
     , peerSet_(std::move(peerSet))
 {
-    JLOG(m_journal.debug())
-        << "SkipList ctor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace()) << "SkipList ctor " << mHash;
 }
 
 SkipListAcquire::~SkipListAcquire()
 {
-    JLOG(m_journal.trace())
-        << "SkipList dtor " << mHash;  // TODO remove after test
+    JLOG(m_journal.trace()) << "SkipList dtor " << mHash;
     replayer_.removeSkipListAcquire(mHash);
 }
 
@@ -62,6 +60,7 @@ SkipListAcquire::init(int numPeers)
     ScopedLockType sl(mLock);
     if (auto const l = app_.getLedgerMaster().getLedgerByHash(mHash); l)
     {
+        JLOG(m_journal.trace()) << "init with an existing ledger " << mHash;
         retrieveSkipList(l, sl);
         return;
     }
