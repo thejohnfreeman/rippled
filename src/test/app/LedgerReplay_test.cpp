@@ -547,8 +547,9 @@ enum class TaskStatus {
  * the peerSet to pass the requests and responses.
  * It also has utility functions for checking task status
  */
-struct LedgerReplayClient
+class LedgerReplayClient
 {
+public:
     LedgerReplayClient(
         beast::unit_test::suite& suite,
         LedgerServer& server,
@@ -564,6 +565,7 @@ struct LedgerReplayClient
               inboundBhvr)
         , serverMsgHandler(server.app, server.app.getLedgerReplayer())
         , clientMsgHandler(env.app(), replayer)
+        , stopableParent("replayerStopParent")
         , replayer(
               env.app(),
               inboundLedgers,
@@ -572,7 +574,7 @@ struct LedgerReplayClient
                   serverMsgHandler,
                   behavior,
                   peerFeature),
-              env.app().getJobQueue())
+              stopableParent)
     {
     }
 
@@ -799,6 +801,7 @@ struct LedgerReplayClient
     MagicInboundLedgers inboundLedgers;
     LedgerReplayMsgHandler serverMsgHandler;
     LedgerReplayMsgHandler clientMsgHandler;
+    RootStoppable stopableParent;
     LedgerReplayer replayer;
 };
 
@@ -828,6 +831,7 @@ struct NetworkOfTwo
         : server(suite, param)
         , client(suite, server, behavior, inboundBhvr, peerFeature)
     {
+        // logAll(server, client);
     }
     LedgerServer server;
     LedgerReplayClient client;

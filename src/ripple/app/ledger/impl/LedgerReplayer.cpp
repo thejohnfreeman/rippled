@@ -263,6 +263,7 @@ LedgerReplayer::onStop()
     }
 
     stopped();
+    JLOG(j_.info()) << "Stopped";
 }
 
 }  // namespace ripple
