@@ -30,6 +30,9 @@
 #include <test/jtx.h>
 #include <test/jtx/envconfig.h>
 
+#include <chrono>
+#include <thread>
+
 namespace ripple {
 namespace test {
 
@@ -602,13 +605,13 @@ public:
     bool
     waitForLedgers(uint256 const& finishLedgerHash, int totalReplay)
     {
-        int totalRound = 50;
+        int totalRound = 100;
         for (int i = 0; i < totalRound; ++i)
         {
             if (haveLedgers(finishLedgerHash, totalReplay))
                 return true;
             if (i < totalRound - 1)
-                usleep(100000);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         return false;
     }
@@ -616,7 +619,7 @@ public:
     bool
     waitForDone()
     {
-        int totalRound = 50;
+        int totalRound = 100;
         for (int i = 0; i < totalRound; ++i)
         {
             bool allDone = true;
@@ -634,7 +637,7 @@ public:
             if (allDone)
                 return true;
             if (i < totalRound - 1)
-                usleep(100000);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         return false;
     }
@@ -1136,7 +1139,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
     }
 
     void
-    testPeerSetBehavior(PeerSetBehavior peerSetBehavior, int totalReplay = 5)
+    testPeerSetBehavior(PeerSetBehavior peerSetBehavior, int totalReplay = 4)
     {
         switch (peerSetBehavior)
         {
