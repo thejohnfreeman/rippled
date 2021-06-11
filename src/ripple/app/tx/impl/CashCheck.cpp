@@ -200,22 +200,12 @@ CashCheck::preclaim(PreclaimContext const& ctx)
             auto const sleTrustLine =
                 ctx.view.read(keylet::line(dstId, issuerId, currency));
 
-            if (!sleTrustLine)
+            if (!sleTrustLine &&
+                !ctx.view.rules().enabled(featureCheckCashMakesTrustLine))
             {
-                if (!ctx.view.rules().enabled(featureCheckCashMakesTrustLine))
-                {
-                    JLOG(ctx.j.warn())
-                        << "Cannot cash check for IOU without trustline.";
-                    return tecNO_LINE;
-                }
-                else if (sleIssuer)
-                {
-                    // We can only create a trust line if the issuer does not
-                    // have requireAuth set.
-                    std::uint32_t const issuerFlags = {sleIssuer->at(sfFlags)};
-                    if (issuerFlags & lsfRequireAuth)
-                        return tecNO_AUTH;
-                }
+                JLOG(ctx.j.warn())
+                    << "Cannot cash check for IOU without trustline.";
+                return tecNO_LINE;
             }
 
             // It would be nice to check this earlier, but moving it earlier
@@ -231,15 +221,21 @@ CashCheck::preclaim(PreclaimContext const& ctx)
 
             if (sleIssuer->at(sfFlags) & lsfRequireAuth)
             {
+                if (!sleTrustLine)
+                {
+                    // We can only create a trust line if the issuer does not
+                    // have requireAuth set.
+                    return tecNO_AUTH;
+                }
+
                 // Entries have a canonical representation, determined by a
                 // lexicographical "greater than" comparison employing strict
                 // weak ordering. Determine which entry we need to access.
                 bool const canonical_gt(dstId > issuerId);
 
                 bool const is_authorized(
-                    sleTrustLine &&
-                    (sleTrustLine->at(sfFlags) &
-                     (canonical_gt ? lsfLowAuth : lsfHighAuth)));
+                    sleTrustLine->at(sfFlags) &
+                    (canonical_gt ? lsfLowAuth : lsfHighAuth));
 
                 if (!is_authorized)
                 {
