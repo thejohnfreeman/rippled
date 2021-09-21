@@ -226,6 +226,10 @@ Transactor::payFee()
     // Will only write the account back if the transaction succeeds.
 
     mSourceBalance -= feePaid;
+    if (mSourceBalance < beast::zero)
+    {
+        mSourceBalance = beast::zero;
+    }
     sle->setFieldAmount(sfBalance, mSourceBalance);
 
     // VFALCO Should we call view().rawDestroyXRP() here as well?
