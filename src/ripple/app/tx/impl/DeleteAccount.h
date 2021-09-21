@@ -50,6 +50,9 @@ public:
     calculateBaseFee(ReadView const& view, STTx const& tx);
 
     static TER
+    checkFee(PreclaimContext const& ctx, FeeUnit64 baseFee);
+
+    static TER
     preclaim(PreclaimContext const& ctx);
 
     TER

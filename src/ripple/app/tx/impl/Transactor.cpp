@@ -195,6 +195,8 @@ Transactor::checkFee(PreclaimContext const& ctx, FeeUnit64 baseFee)
 
     auto const balance = (*sle)[sfBalance].xrp();
 
+    // WARNING: DeleteAccount::checkFee depends on this being
+    // the very last failure path in this method.
     if (balance < feePaid)
     {
         JLOG(ctx.j.trace()) << "Insufficient balance:"

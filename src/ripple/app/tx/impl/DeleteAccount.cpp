@@ -28,6 +28,7 @@
 #include <ripple/protocol/Indexes.h>
 #include <ripple/protocol/TxFlags.h>
 #include <ripple/protocol/st.h>
+#include "protocol/TER.h"
 
 namespace ripple {
 
@@ -66,6 +67,18 @@ DeleteAccount::calculateBaseFee(ReadView const& view, STTx const& tx)
     // If mulDiv returns false then overflow happened.  Punt by using the
     // standard calculation.
     return Transactor::calculateBaseFee(view, tx);
+}
+
+TER
+DeleteAccount::checkFee(PreclaimContext const& ctx, FeeUnit64 baseFee)
+{
+    auto const ter = Transactor::checkFee(ctx, baseFee);
+    if ((ter == terINSUF_FEE_B || ter == tecINSUFF_FEE) &&
+        ctx.view.rules().enabled(featureUnfundedAccountDelete))
+    {
+        return tesSUCCESS;
+    }
+    return ter;
 }
 
 namespace {

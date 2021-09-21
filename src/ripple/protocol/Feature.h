@@ -118,6 +118,7 @@ class FeatureCollections
         "fixSTAmountCanonicalize",
         "fixRmSmallIncreasedQOffers",
         "CheckCashMakesTrustLine",
+        "UnfundedAccountDelete",
     };
 
     std::vector<uint256> features;
@@ -379,6 +380,7 @@ extern uint256 const featureFlowSortStrands;
 extern uint256 const fixSTAmountCanonicalize;
 extern uint256 const fixRmSmallIncreasedQOffers;
 extern uint256 const featureCheckCashMakesTrustLine;
+extern uint256 const featureUnfundedAccountDelete;
 
 }  // namespace ripple
 

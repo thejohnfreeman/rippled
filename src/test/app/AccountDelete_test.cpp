@@ -758,7 +758,7 @@ public:
 
         testcase("Balance too small for fee");
 
-        Env env{*this};
+        Env env{*this, supported_amendments() - featureUnfundedAccountDelete};
         Account const alice("alice");
 
         // Note that the fee structure for unit tests does not match the fees
@@ -798,6 +798,47 @@ public:
         {
             std::shared_ptr<ReadView const> closed{env.closed()};
             BEAST_EXPECT(closed->exists(keylet::account(alice.id())));
+            BEAST_EXPECT(env.balance(env.master) == masterBalance);
+        }
+    }
+
+    void
+    testUnfundedAmendment()
+    {
+        // Let an account with a balance less than the
+        // incremental reserve delete itself.
+        using namespace jtx;
+
+        testcase("Unfunded account deletion");
+
+        Env env{*this};
+        Account const alice("alice");
+
+        // Note that the fee structure for unit tests does not match the fees
+        // on the production network (October 2019).  Unit tests have a base
+        // reserve of 200 XRP.
+        env.fund(env.current()->fees().accountReserve(0), noripple(alice));
+        env.close();
+
+        // Burn a chunk of alice's funds so she only has 1 XRP remaining in
+        // her account.
+        env(noop(alice), fee(env.balance(alice) - XRP(1)));
+        env.close();
+
+        auto const acctDelFee{drops(env.current()->fees().increment)};
+        BEAST_EXPECT(acctDelFee > env.balance(alice));
+
+        // alice attempts to delete her account even though she can't pay
+        // the full fee. She specifies a fee that is larger than her balance.
+        //
+        // The balance of env.master should not change,
+        // but alice should be deleted.
+        auto const masterBalance{env.balance(env.master)};
+        env(acctdelete(alice, env.master), fee(acctDelFee));
+        env.close();
+        {
+            std::shared_ptr<ReadView const> const closed{env.closed()};
+            BEAST_EXPECT(!closed->exists(keylet::account(alice.id())));
             BEAST_EXPECT(env.balance(env.master) == masterBalance);
         }
     }
