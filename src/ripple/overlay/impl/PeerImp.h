@@ -71,10 +71,14 @@ private:
 
     Application& app_;
     id_t const id_;
-    beast::WrappedSink sink_;
-    beast::WrappedSink p_sink_;
-    beast::Journal const journal_;
-    beast::Journal const p_journal_;
+    beast::WrappedSink sink_{app_.journal("Peer"), makePrefix(id_)};
+    beast::WrappedSink p_sink_{app_.journal("Protocol"), makePrefix(id_)};
+    beast::WrappedSink proposal_sink_{
+        app_.journal("Proposals"),
+        makePrefix(id_)};
+    beast::Journal const journal_{sink_};
+    beast::Journal const p_journal_{p_sink_};
+    beast::Journal const proposal_journal_{proposal_sink_};
     std::unique_ptr<stream_type> stream_ptr_;
     socket_type& socket_;
     stream_type& stream_;
@@ -660,10 +664,6 @@ PeerImp::PeerImp(
     : Child(overlay)
     , app_(app)
     , id_(id)
-    , sink_(app_.journal("Peer"), makePrefix(id))
-    , p_sink_(app_.journal("Protocol"), makePrefix(id))
-    , journal_(sink_)
-    , p_journal_(p_sink_)
     , stream_ptr_(std::move(stream_ptr))
     , socket_(stream_ptr_->next_layer().socket())
     , stream_(*stream_ptr_)

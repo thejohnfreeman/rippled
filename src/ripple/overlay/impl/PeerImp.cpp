@@ -76,10 +76,6 @@ PeerImp::PeerImp(
     : Child(overlay)
     , app_(app)
     , id_(id)
-    , sink_(app_.journal("Peer"), makePrefix(id))
-    , p_sink_(app_.journal("Protocol"), makePrefix(id))
-    , journal_(sink_)
-    , p_journal_(p_sink_)
     , stream_ptr_(std::move(stream_ptr))
     , socket_(stream_ptr_->next_layer().socket())
     , stream_(*stream_ptr_)
@@ -1958,6 +1954,12 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProposeSet> const& m)
     }
 
     auto const isTrusted = app_.validators().trusted(publicKey);
+
+    if (auto event = proposal_journal_.debug())
+    {
+        event << "proposal " << publicKey.slice() << " " << prevLedger << " "
+              << set.proposeseq() << " " << proposeHash;
+    }
 
     if (!isTrusted)
     {

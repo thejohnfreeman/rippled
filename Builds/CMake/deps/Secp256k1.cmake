@@ -17,6 +17,7 @@ if(secp256k1)
     INTERFACE_INCLUDE_DIRECTORIES
       ${SECP256K1_INCLUDE_DIR})
 
+  target_link_libraries(secp256k1_lib INTERFACE gmp)
   add_library (secp256k1 ALIAS secp256k1_lib)
   add_library (NIH::secp256k1 ALIAS secp256k1_lib)
 

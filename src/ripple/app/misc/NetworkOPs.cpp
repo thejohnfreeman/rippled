@@ -1851,10 +1851,21 @@ NetworkOPsImp::mapComplete(std::shared_ptr<SHAMap> const& map, bool fromAcquire)
 
     // Inform peers we have this set
     protocol::TMHaveTransactionSet msg;
-    msg.set_hash(map->getHash().as_uint256().begin(), 256 / 8);
+    auto const& id = map->getHash().as_uint256();
+    msg.set_hash(id.begin(), 256 / 8);
     msg.set_status(protocol::tsHAVE);
     app_.overlay().foreach(
         send_always(std::make_shared<Message>(msg, protocol::mtHAVE_SET)));
+
+    {
+        for (SHAMapItem const& tx : *map)
+        {
+            SerialIter it{tx.data(), tx.size()};
+            STTx sttx{it};
+            m_journal.error() << "tset " << id << " " << tx.key() << " "
+                              << sttx.getFieldAmount(sfFee).xrp();
+        }
+    }
 
     // We acquired it because consensus asked us to
     if (fromAcquire)
