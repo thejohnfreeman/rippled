@@ -68,7 +68,7 @@ jobs:
           - Release
     runs-on: ${{ matrix.platform }}
     env:
-      - build_dir: .build
+      build_dir: .build
     steps:
       - name: download Boost from cache
         uses: actions/cache@v2
