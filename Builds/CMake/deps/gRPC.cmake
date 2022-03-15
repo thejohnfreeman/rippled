@@ -227,6 +227,7 @@ else ()
         -DProtobuf_PROTOC_EXECUTABLE=$<TARGET_PROPERTY:protobuf::protoc,IMPORTED_LOCATION>
         -DgRPC_ZLIB_PROVIDER=package
         $<$<NOT:$<BOOL:${has_zlib}>>:-DZLIB_ROOT=${zlib_binary_dir}/_installed_>
+        -DCMAKE_POLICY_DEFAULT_CMP0074=NEW
         $<$<BOOL:${MSVC}>:
           "-DCMAKE_CXX_FLAGS=-GR -Gd -fp:precise -FS -EHa -MP"
           "-DCMAKE_C_FLAGS=-GR -Gd -fp:precise -FS -MP"
