@@ -19,7 +19,7 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
           url=https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.boost.version }}/source/${{ matrix.boost.stem }}.tar.gz
-          curl -L $url | tar -zx -C ~
+          curl -L $url | tar -C ~ -zx
 
   build-boost:
     needs: download-boost
