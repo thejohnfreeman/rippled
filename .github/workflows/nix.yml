@@ -47,7 +47,7 @@ jobs:
           pwd
           cd ~/${{ matrix.boost.stem }}
           pwd
-          ./bootstrap --with-toolset=${{ matrix.compiler.name }}
+          ./bootstrap.sh --with-toolset=${{ matrix.compiler.name }}
           ./b2 \
             toolset=${{ matrix.compiler.name }} \
             cxxflags='${{ matrix.compiler.cxxflags }}' \
