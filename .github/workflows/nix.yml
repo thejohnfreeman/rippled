@@ -1,0 +1,90 @@
+name: Test on Linux and MacOS
+on: [push, pull_request]
+
+jobs:
+  download-boost:
+    strategy:
+      matrix:
+        boost:
+          - { version: '1.77.0', stem: 'boost_1_77_0' }
+    runs-on: ubuntu-latest
+    steps:
+      - name: download Boost from cache
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ matrix.boost.stem }}
+          key: download-boost-${{ matrix.boost.version }}
+      - name: download Boost from internet
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: |
+          url=https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.boost.version }}/source/${{ matrix.boost.stem }}.tar.gz
+          curl -L $url | tar -zx
+
+  build-boost:
+    needs: download-boost
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+          - macos-latest
+        boost:
+          - { version: '1.77.0', stem: 'boost_1_77_0' }
+        compiler:
+          - { name: 'gcc', cxxflags: '', linkflags: '' }
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: download Boost from cache
+        id: cache-boost
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ matrix.boost.stem }}
+          key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
+          restore-keys: download-boost-${{ matrix.boost.version }}
+      - name: build Boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        run: |
+          cd ${{ matrix.boost.stem }}
+          ./bootstrap --with-toolset=${{ matrix.compiler.name }}
+          ./b2 \
+            toolset=${{ matrix.compiler.name }} \
+            cxxflags='${{ matrix.compiler.cxxflags }}' \
+            linkflags='${{ matrix.compiler.linkflags }}'
+
+  build-rippled:
+    needs: build-boost
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+          - macos-latest
+        boost:
+          - { version: '1.77.0', stem: 'boost_1_77_0' }
+        compiler:
+          - { name: 'gcc', cxx: 'g++' }
+        generator:
+          - Ninja
+        configuration:
+          - Release
+    runs-on: ${{ matrix.platform }}
+    env:
+      - build_dir: .build
+    steps:
+      - name: download Boost from cache
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ matrix.boost.stem }}
+          key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: configure
+        run: |
+          mkdir ${build_dir}
+          cd ${build_dir}
+          cmake \
+            -G ${{ matrix.generator }} \
+            -DBOOST_ROOT=~/${{ matrix.boost.stem }} \
+            -DCMAKE_C_COMPILER=${{ matrix.compiler.name }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
+            ..
