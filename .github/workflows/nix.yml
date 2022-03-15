@@ -44,7 +44,9 @@ jobs:
       - name: build Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
-          cd ${{ matrix.boost.stem }}
+          pwd
+          cd ~/${{ matrix.boost.stem }}
+          pwd
           ./bootstrap --with-toolset=${{ matrix.compiler.name }}
           ./b2 \
             toolset=${{ matrix.compiler.name }} \
