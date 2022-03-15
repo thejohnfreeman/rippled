@@ -62,8 +62,10 @@ jobs:
     strategy:
       matrix:
         platform:
-          - ubuntu-latest
-          - macos-latest
+          - name: ubuntu-latest
+            openssl:
+          - name: macos-latest
+            openssl: /usr/local/opt/openssl@1.1
         boost:
           - version: 1.77.0
             stem: boost_1_77_0
@@ -73,7 +75,7 @@ jobs:
           - Ninja
         configuration:
           - Release
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform.name }}
     env:
       build_dir: .build
     steps:
@@ -83,11 +85,14 @@ jobs:
           path: ~/${{ matrix.boost.stem }}
           key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
       - name: install Ninja on Linux
-        if: matrix.generator == 'Ninja' && startsWith(matrix.platform, 'ubuntu')
+        if: matrix.generator == 'Ninja' && runner.os == 'Linux'
         run: sudo apt install ninja-build
       - name: install Ninja on OSX
-        if: matrix.generator == 'Ninja' && startsWith(matrix.platform, 'macos')
+        if: matrix.generator == 'Ninja' && runner.os == 'macOS'
         run: brew install ninja
+      - name: install nproc on OSX
+        if: runner.os == 'macOS'
+        run: brew install coreutils
       - name: checkout
         uses: actions/checkout@v3
       - name: configure
@@ -97,7 +102,11 @@ jobs:
           cmake \
             -G ${{ matrix.generator }} \
             -DBOOST_ROOT=~/${{ matrix.boost.stem }} \
+            -DOPENSSL_ROOT_DIR=${{ matrix.platform.openssl }} \
             -DCMAKE_C_COMPILER=${{ matrix.compiler.name }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             ..
+      - name: build
+        run: |
+          cmake --build ${build_dir} --target rippled --parallel $(nproc)
