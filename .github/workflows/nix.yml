@@ -2,63 +2,8 @@ name: Test on Linux and MacOS
 on: [push, pull_request]
 
 jobs:
-  download-boost:
-    strategy:
-      matrix:
-        boost:
-          - version: 1.77.0
-            stem: boost_1_77_0
-            download: 0
-    runs-on: ubuntu-latest
-    steps:
-      - name: download Boost from cache
-        id: cache-boost
-        uses: actions/cache@v2
-        with:
-          path: ~/${{ matrix.boost.stem }}
-          key: download-boost-${{ matrix.boost.version }}-${{ matrix.boost.download }}
-      - name: download Boost from internet
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-          url=https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.boost.version }}/source/${{ matrix.boost.stem }}.tar.gz
-          curl -L $url | tar -C ~ -zx
 
-  build-boost:
-    needs: download-boost
-    strategy:
-      matrix:
-        platform:
-          - ubuntu-latest
-          - macos-latest
-        boost:
-          - version: 1.77.0
-            stem: boost_1_77_0
-            download: 0
-        compiler:
-          - { name: 'gcc', cxxflags: '', linkflags: '' }
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: download Boost from cache
-        id: cache-boost
-        uses: actions/cache@v2
-        with:
-          path: ~/${{ matrix.boost.stem }}
-          key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
-          restore-keys: download-boost-${{ matrix.boost.version }}-${{ matrix.boost.download }}
-      - name: build Boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-          pwd
-          cd ~/${{ matrix.boost.stem }}
-          pwd
-          ./bootstrap.sh --with-toolset=${{ matrix.compiler.name }}
-          ./b2 \
-            toolset=${{ matrix.compiler.name }} \
-            cxxflags='${{ matrix.compiler.cxxflags }}' \
-            linkflags='${{ matrix.compiler.linkflags }}'
-
-  build-rippled:
-    needs: build-boost
+  test-rippled-without-conan:
     strategy:
       matrix:
         platform:
@@ -70,7 +15,10 @@ jobs:
           - version: 1.77.0
             stem: boost_1_77_0
         compiler:
-          - { name: 'gcc', cxx: 'g++' }
+          - name: gcc
+            cxx: g++
+            cxxflags:
+            linkflags:
         generator:
           - Ninja
         configuration:
@@ -79,11 +27,34 @@ jobs:
     env:
       build_dir: .build
     steps:
-      - name: download Boost from cache
+      - name: install Boost from cache
+        id: cache-boost-build
         uses: actions/cache@v2
         with:
           path: ~/${{ matrix.boost.stem }}
           key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
+      - name: download Boost from cache
+        if: steps.cache-boost-build.outputs.cache-hit != 'true'
+        id: cache-boost-download
+        uses: actions/cache@v2
+        with:
+          path: ~/${{ matrix.boost.stem }}.tar.gz
+          key: download-boost-${{ matrix.boost.version }}
+      - name: download Boost from internet
+        if: steps.cache-boost-download.outputs.cache-hit != 'true'
+        run: |
+          curl -LO https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.boost.version }}/source/${{ matrix.boost.stem }}.tar.gz
+      - name: build Boost
+        if: steps.cache-boost-build.outputs.cache-hit != 'true'
+        run: |
+          cd ~
+          tar -zxf ${{ matrix.boost.stem }}.tar.gz
+          cd ${{ matrix.boost.stem }}
+          ./bootstrap.sh --with-toolset=${{ matrix.compiler.name }}
+          ./b2 \
+            toolset=${{ matrix.compiler.name }} \
+            cxxflags='${{ matrix.compiler.cxxflags }}' \
+            linkflags='${{ matrix.compiler.linkflags }}'
       - name: install Ninja on Linux
         if: matrix.generator == 'Ninja' && runner.os == 'Linux'
         run: sudo apt install ninja-build
@@ -108,5 +79,6 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             ..
       - name: build
-        run: |
-          cmake --build ${build_dir} --target rippled --parallel $(nproc)
+        run: cmake --build ${build_dir} --target rippled --parallel $(nproc)
+      - name: test
+        run: ${build_dir}/rippled --unittest --unittest-jobs $(nproc)
