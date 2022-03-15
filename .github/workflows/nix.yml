@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         boost:
-          - { version: '1.77.0', stem: 'boost_1_77_0' }
+          - { version: '1.77.0', stem: 'boost_1_77_0', download: 0 }
     runs-on: ubuntu-latest
     steps:
       - name: download Boost from cache
@@ -14,7 +14,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/${{ matrix.boost.stem }}
-          key: download-boost-${{ matrix.boost.version }}
+          key: download-boost-${{ matrix.boost.version }}-${{ matrix.boost.download }}
       - name: download Boost from internet
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
@@ -29,7 +29,7 @@ jobs:
           - ubuntu-latest
           - macos-latest
         boost:
-          - { version: '1.77.0', stem: 'boost_1_77_0' }
+          - { version: '1.77.0', stem: 'boost_1_77_0', download: 0 }
         compiler:
           - { name: 'gcc', cxxflags: '', linkflags: '' }
     runs-on: ${{ matrix.platform }}
@@ -40,7 +40,7 @@ jobs:
         with:
           path: ~/${{ matrix.boost.stem }}
           key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
-          restore-keys: download-boost-${{ matrix.boost.version }}
+          restore-keys: download-boost-${{ matrix.boost.version }}-${{ matrix.boost.download }}
       - name: build Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
