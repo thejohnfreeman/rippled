@@ -6,7 +6,9 @@ jobs:
     strategy:
       matrix:
         boost:
-          - { version: '1.77.0', stem: 'boost_1_77_0', download: 0 }
+          - version: 1.77.0
+            stem: boost_1_77_0
+            download: 0
     runs-on: ubuntu-latest
     steps:
       - name: download Boost from cache
@@ -29,7 +31,9 @@ jobs:
           - ubuntu-latest
           - macos-latest
         boost:
-          - { version: '1.77.0', stem: 'boost_1_77_0', download: 0 }
+          - version: 1.77.0
+            stem: boost_1_77_0
+            download: 0
         compiler:
           - { name: 'gcc', cxxflags: '', linkflags: '' }
     runs-on: ${{ matrix.platform }}
@@ -61,7 +65,8 @@ jobs:
           - ubuntu-latest
           - macos-latest
         boost:
-          - { version: '1.77.0', stem: 'boost_1_77_0' }
+          - version: 1.77.0
+            stem: boost_1_77_0
         compiler:
           - { name: 'gcc', cxx: 'g++' }
         generator:
@@ -77,6 +82,12 @@ jobs:
         with:
           path: ~/${{ matrix.boost.stem }}
           key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
+      - name: install Ninja on Linux
+        if: matrix.generator == 'Ninja' && startsWith(matrix.platform, 'ubuntu')
+        run: sudo apt install ninja-build
+      - name: install Ninja on OSX
+        if: matrix.generator == 'Ninja' && startsWith(matrix.platform, 'macos')
+        run: brew install ninja
       - name: checkout
         uses: actions/checkout@v3
       - name: configure
