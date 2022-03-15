@@ -27,6 +27,15 @@ jobs:
     env:
       build_dir: .build
     steps:
+      - name: install Ninja on Linux
+        if: matrix.generator == 'Ninja' && runner.os == 'Linux'
+        run: sudo apt install ninja-build
+      - name: install Ninja on OSX
+        if: matrix.generator == 'Ninja' && runner.os == 'macOS'
+        run: brew install ninja
+      - name: install nproc on OSX
+        if: runner.os == 'macOS'
+        run: brew install coreutils
       - name: install Boost from cache
         id: cache-boost-build
         uses: actions/cache@v2
@@ -55,15 +64,6 @@ jobs:
             toolset=${{ matrix.compiler.name }} \
             cxxflags='${{ matrix.compiler.cxxflags }}' \
             linkflags='${{ matrix.compiler.linkflags }}'
-      - name: install Ninja on Linux
-        if: matrix.generator == 'Ninja' && runner.os == 'Linux'
-        run: sudo apt install ninja-build
-      - name: install Ninja on OSX
-        if: matrix.generator == 'Ninja' && runner.os == 'macOS'
-        run: brew install ninja
-      - name: install nproc on OSX
-        if: runner.os == 'macOS'
-        run: brew install coreutils
       - name: checkout
         uses: actions/checkout@v3
       - name: configure
@@ -77,6 +77,10 @@ jobs:
             -DCMAKE_C_COMPILER=${{ matrix.compiler.name }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
+            -Dassert=ON \
+            -Dcoverage=OFF \
+            -Dreporting=OFF \
+            -Dunity=OFF \
             ..
       - name: build
         run: cmake --build ${build_dir} --target rippled --parallel $(nproc)
