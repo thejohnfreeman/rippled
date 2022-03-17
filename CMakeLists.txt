@@ -4,6 +4,14 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif ()
 
+if(EXISTS "${CMAKE_BINARY_DIR}/conan_paths.cmake")
+  include("${CMAKE_BINARY_DIR}/conan_paths.cmake")
+  # We have to use the CMake FindBoost module because it sets variables that
+  # the Soci ExternalProject requires.
+  file(REMOVE "${CMAKE_BINARY_DIR}/FindBoost.cmake")
+  file(REMOVE "${CMAKE_BINARY_DIR}/FindOpenSSL.cmake")
+endif()
+
 project (rippled)
 
 # make GIT_COMMIT_HASH define available to all sources

@@ -2,7 +2,7 @@
    NIH dep: boost
 #]===================================================================]
 
-if((NOT DEFINED BOOST_ROOT) AND(DEFINED ENV{BOOST_ROOT}))
+if((NOT DEFINED BOOST_ROOT) AND (DEFINED ENV{BOOST_ROOT}))
   set(BOOST_ROOT $ENV{BOOST_ROOT})
 endif()
 file(TO_CMAKE_PATH "${BOOST_ROOT}" BOOST_ROOT)
