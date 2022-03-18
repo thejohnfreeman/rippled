@@ -27,6 +27,8 @@ jobs:
     env:
       build_dir: .build
     steps:
+      - name: checkout
+        uses: actions/checkout@v3
       - name: install Ninja on Linux
         if: matrix.generator == 'Ninja' && runner.os == 'Linux'
         run: sudo apt install ninja-build
@@ -36,39 +38,24 @@ jobs:
       - name: install nproc on OSX
         if: runner.os == 'macOS'
         run: brew install coreutils
-      - name: install Boost from cache
-        id: cache-boost-build
+      - name: learn Python cache directory
+        id: pip-cache
+        run: echo "::set-output name=dir::$(pip cache dir)"
+      - name: restore Python cache directory
+        id: cache
         uses: actions/cache@v2
         with:
-          path: ~/${{ matrix.boost.stem }}
-          key: build-boost-${{ matrix.boost.version }}-${{ runner.os }}-${{ matrix.compiler.name }}
-      - name: download Boost from cache
-        if: steps.cache-boost-build.outputs.cache-hit != 'true'
-        id: cache-boost-download
-        uses: actions/cache@v2
-        with:
-          path: ~/${{ matrix.boost.stem }}.tar.gz
-          key: download-boost-${{ matrix.boost.version }}
-      - name: download Boost from internet
-        if: steps.cache-boost-download.outputs.cache-hit != 'true'
-        run: |
-          curl -LO https://boostorg.jfrog.io/artifactory/main/release/${{ matrix.boost.version }}/source/${{ matrix.boost.stem }}.tar.gz
-      - name: build Boost
-        if: steps.cache-boost-build.outputs.cache-hit != 'true'
-        run: |
-          cd ~
-          tar -zxf ${{ matrix.boost.stem }}.tar.gz
-          cd ${{ matrix.boost.stem }}
-          ./bootstrap.sh --with-toolset=${{ matrix.compiler.name }}
-          ./b2 \
-            toolset=${{ matrix.compiler.name }} \
-            cxxflags='${{ matrix.compiler.cxxflags }}' \
-            linkflags='${{ matrix.compiler.linkflags }}'
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: configure
+            path: ${{ steps.pip-cache.outputs.dir }}
+            key: ${{ runner.os }}-${{ hashFiles('.github/workflows/nix.yml') }}
+      - name: install Conan
+        run: pip install wheel conan
+      - name: install dependencies
         run: |
           mkdir ${build_dir}
+          cd ${build_dir}
+          conan install .. --build missing
+      - name: configure
+        run: |
           cd ${build_dir}
           cmake \
             -G ${{ matrix.generator }} \
