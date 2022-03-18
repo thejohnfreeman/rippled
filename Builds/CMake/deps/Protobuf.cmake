@@ -52,7 +52,7 @@ if (local_protobuf OR NOT (Protobuf_FOUND AND Protobuf_PROTOC_EXECUTABLE AND pro
       -Dprotobuf_BUILD_SHARED_LIBS=OFF
       -DCMAKE_DEBUG_POSTFIX=_d
       -Dprotobuf_DEBUG_POSTFIX=_d
-      -Dprotobuf_WITH_ZLIB=$<IF:$<BOOL:${has_zlib}>,ON,OFF>
+      -Dprotobuf_WITH_ZLIB=ON
       $<$<BOOL:${CMAKE_VERBOSE_MAKEFILE}>:-DCMAKE_VERBOSE_MAKEFILE=ON>
       $<$<BOOL:${unity}>:-DCMAKE_UNITY_BUILD=ON}>
       $<$<NOT:$<BOOL:${is_multiconfig}>>:-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}>
