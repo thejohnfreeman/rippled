@@ -42,9 +42,6 @@ jobs:
         id: pip-cache
         run: |
           sudo pip install --upgrade pip
-          hash -r
-          pip --version
-          type pip
           echo "::set-output name=dir::$(pip cache dir)"
       - name: restore Python cache directory
         id: cache
@@ -64,8 +61,7 @@ jobs:
           cd ${build_dir}
           cmake \
             -G ${{ matrix.generator }} \
-            -DBOOST_ROOT=~/${{ matrix.boost.stem }} \
-            -DOPENSSL_ROOT_DIR=${{ matrix.platform.openssl }} \
+            -DCMAKE_MODULE_PATH="$(pwd)" \
             -DCMAKE_C_COMPILER=${{ matrix.compiler.name }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
