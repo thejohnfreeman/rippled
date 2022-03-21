@@ -1,5 +1,6 @@
 [requires]
 boost/1.77.0
+lz4/1.9.3
 grpc/1.44.0
 nudb/2.0.8
 openssl/1.1.1m
@@ -11,6 +12,7 @@ zlib/1.2.11
 [options]
 grpc:shared=False
 grpc:secure=True
+lz4:shared=False
 openssl:shared=False
 protobuf:shared=False
 protobuf:with_zlib=True

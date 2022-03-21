@@ -62,7 +62,12 @@ set_target_properties(OpenSSL::SSL PROPERTIES
 )
 include(deps/Secp256k1)
 include(deps/Ed25519-donna)
-include(deps/Lz4)
+find_package(lz4)
+# Target names with :: are not allowed in a generator expression.
+# We need to pull the include directories and imported location properties
+# from separate targets.
+add_library(lz4_headers ALIAS lz4::lz4)
+add_library(lz4_library ALIAS CONAN_LIB::lz4_lz4)
 include(deps/Libarchive)
 find_package(SOCI REQUIRED)
 find_package(SQLite3 REQUIRED)
@@ -75,6 +80,7 @@ include(deps/gRPC)
 include(deps/cassandra)
 include(deps/Postgres)
 
+target_link_libraries(ripple_libs INTERFACE lz4::lz4)
 target_link_libraries(ripple_libs INTERFACE NuDB::NuDB)
 target_link_libraries(ripple_libs INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 target_link_libraries(ripple_libs INTERFACE Ripple::grpc_pbufs)

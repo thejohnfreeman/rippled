@@ -80,14 +80,14 @@ if (local_libarchive)
       $<$<NOT:$<BOOL:${is_multiconfig}>>:-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}>
       -DENABLE_LZ4=ON
       -ULZ4_*
-      -DLZ4_INCLUDE_DIR=$<JOIN:$<TARGET_PROPERTY:lz4_lib,INTERFACE_INCLUDE_DIRECTORIES>,::>
+      -DLZ4_INCLUDE_DIR=$<JOIN:$<TARGET_PROPERTY:lz4_headers,INTERFACE_INCLUDE_DIRECTORIES>,::>
       # because we are building a static lib, this lz4 library doesn't
       # actually matter since you can't generally link static libs to other static
       # libs. The include files are needed, but the library itself is not (until
       # we link our application, at which point we use the lz4 we built above).
       # nonetheless, we need to provide a library to libarchive else it will
       # NOT include lz4 support when configuring
-      -DLZ4_LIBRARY=$<IF:$<CONFIG:Debug>,$<TARGET_PROPERTY:lz4_lib,IMPORTED_LOCATION_DEBUG>,$<TARGET_PROPERTY:lz4_lib,IMPORTED_LOCATION_RELEASE>>
+      -DLZ4_LIBRARY=$<TARGET_PROPERTY:lz4_library,IMPORTED_LOCATION>
       -DENABLE_WERROR=OFF
       -DENABLE_TAR=OFF
       -DENABLE_TAR_SHARED=OFF
@@ -134,7 +134,6 @@ if (local_libarchive)
         >
     TEST_COMMAND ""
     INSTALL_COMMAND ""
-    DEPENDS lz4_lib
     BUILD_BYPRODUCTS
       <BINARY_DIR>/libarchive/${ep_lib_prefix}archive${lib_post}${ep_lib_suffix}
       <BINARY_DIR>/libarchive/${ep_lib_prefix}archive${lib_post}_d${ep_lib_suffix}
@@ -157,7 +156,7 @@ if (local_libarchive)
 endif()
 
 add_dependencies (archive_lib libarchive)
-target_link_libraries (archive_lib INTERFACE lz4_lib)
+target_link_libraries (archive_lib INTERFACE lz4::lz4)
 target_link_libraries (ripple_libs INTERFACE archive_lib)
 exclude_if_included (libarchive)
 exclude_if_included (archive_lib)

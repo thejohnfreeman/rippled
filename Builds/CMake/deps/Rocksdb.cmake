@@ -91,8 +91,8 @@ if (local_rocksdb)
       -DWITH_BZ2=OFF
       -ULZ4_*
       -Ulz4_*
-      -Dlz4_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:lz4_lib,INTERFACE_INCLUDE_DIRECTORIES>,::>
-      -Dlz4_LIBRARIES=$<IF:$<CONFIG:Debug>,$<TARGET_PROPERTY:lz4_lib,IMPORTED_LOCATION_DEBUG>,$<TARGET_PROPERTY:lz4_lib,IMPORTED_LOCATION_RELEASE>>
+      -Dlz4_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:lz4_headers,INTERFACE_INCLUDE_DIRECTORIES>,::>
+      -Dlz4_LIBRARIES=$<TARGET_PROPERTY:lz4_library,IMPORTED_LOCATION>
       -Dlz4_FOUND=ON
       -USNAPPY_*
       -Usnappy_*
@@ -146,7 +146,7 @@ if (local_rocksdb)
     LIST_SEPARATOR ::
     TEST_COMMAND ""
     INSTALL_COMMAND ""
-    DEPENDS snappy_lib lz4_lib
+    DEPENDS snappy_lib
     BUILD_BYPRODUCTS
       <BINARY_DIR>/${ep_lib_prefix}rocksdb${ep_lib_suffix}
       <BINARY_DIR>/${ep_lib_prefix}rocksdb_d${ep_lib_suffix}
@@ -171,7 +171,7 @@ endif ()
 target_link_libraries (rocksdb_lib
   INTERFACE
     snappy_lib
-    lz4_lib
+    lz4::lz4
     $<$<BOOL:${MSVC}>:rpcrt4>)
 exclude_if_included (rocksdb_lib)
 target_link_libraries (ripple_libs INTERFACE rocksdb_lib)
