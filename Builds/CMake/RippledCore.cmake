@@ -140,7 +140,7 @@ target_link_libraries (xrpl_core
     Ripple::boost
     Ripple::syslibs
     secp256k1::secp256k1
-    NIH::ed25519-donna
+    ed25519::ed25519
     date::date
     Ripple::opts)
 #[=================================[

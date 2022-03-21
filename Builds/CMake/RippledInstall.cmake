@@ -4,7 +4,6 @@
 
 install (
   TARGETS
-    ed25519-donna
     common
     opts
     ripple_syslibs
