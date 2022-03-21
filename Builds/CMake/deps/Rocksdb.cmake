@@ -97,11 +97,12 @@ if (local_rocksdb)
       -USNAPPY_*
       -Usnappy_*
       -USnappy_*
-      -Dsnappy_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:snappy_lib,INTERFACE_INCLUDE_DIRECTORIES>,::>
-      -Dsnappy_LIBRARIES=$<IF:$<CONFIG:Debug>,$<TARGET_PROPERTY:snappy_lib,IMPORTED_LOCATION_DEBUG>,$<TARGET_PROPERTY:snappy_lib,IMPORTED_LOCATION_RELEASE>>
+      # Note: lower- and upper-case "snappy"/"Snappy"
+      -Dsnappy_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:snappy_headers,INTERFACE_INCLUDE_DIRECTORIES>,::>
+      -Dsnappy_LIBRARIES=$<TARGET_PROPERTY:snappy_library,IMPORTED_LOCATION>
       -Dsnappy_FOUND=ON
-      -DSnappy_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:snappy_lib,INTERFACE_INCLUDE_DIRECTORIES>,::>
-      -DSnappy_LIBRARIES=$<IF:$<CONFIG:Debug>,$<TARGET_PROPERTY:snappy_lib,IMPORTED_LOCATION_DEBUG>,$<TARGET_PROPERTY:snappy_lib,IMPORTED_LOCATION_RELEASE>>
+      -DSnappy_INCLUDE_DIRS=$<JOIN:$<TARGET_PROPERTY:snappy_headers,INTERFACE_INCLUDE_DIRECTORIES>,::>
+      -DSnappy_LIBRARIES=$<TARGET_PROPERTY:snappy_library,IMPORTED_LOCATION>
       -DSnappy_FOUND=ON
       -DWITH_MD_LIBRARY=OFF
       -DWITH_RUNTIME_DEBUG=$<IF:$<CONFIG:Debug>,ON,OFF>
@@ -146,7 +147,6 @@ if (local_rocksdb)
     LIST_SEPARATOR ::
     TEST_COMMAND ""
     INSTALL_COMMAND ""
-    DEPENDS snappy_lib
     BUILD_BYPRODUCTS
       <BINARY_DIR>/${ep_lib_prefix}rocksdb${ep_lib_suffix}
       <BINARY_DIR>/${ep_lib_prefix}rocksdb_d${ep_lib_suffix}
@@ -170,7 +170,7 @@ endif ()
 
 target_link_libraries (rocksdb_lib
   INTERFACE
-    snappy_lib
+    Snappy::snappy
     lz4::lz4
     $<$<BOOL:${MSVC}>:rpcrt4>)
 exclude_if_included (rocksdb_lib)
