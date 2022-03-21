@@ -62,24 +62,23 @@ set_target_properties(OpenSSL::SSL PROPERTIES
 )
 add_subdirectory(src/secp256k1)
 add_subdirectory(src/ed25519-donna)
-find_package(lz4)
+find_package(lz4 REQUIRED)
 # Target names with :: are not allowed in a generator expression.
 # We need to pull the include directories and imported location properties
 # from separate targets.
 add_library(lz4_headers ALIAS lz4::lz4)
 add_library(lz4_library ALIAS CONAN_LIB::lz4_lz4)
-find_package(LibArchive)
+find_package(LibArchive REQUIRED)
 find_package(SOCI REQUIRED)
 find_package(SQLite3 REQUIRED)
-find_package(Snappy)
+find_package(Snappy REQUIRED)
 add_library(snappy_headers ALIAS Snappy::snappy)
 add_library(snappy_library ALIAS CONAN_LIB::Snappy_snappy)
 include(deps/Rocksdb)
 find_package(NuDB REQUIRED)
-find_package(date)
+find_package(date REQUIRED)
 include(deps/Protobuf)
 include(deps/gRPC)
-include(deps/cassandra)
 include(deps/Postgres)
 
 target_link_libraries(ripple_libs INTERFACE
@@ -95,6 +94,13 @@ target_link_libraries(ripple_libs INTERFACE
   SOCI::SOCI
   SQLite::SQLite3
 )
+
+if(reporting)
+  find_package(cassandra-cpp-driver REQUIRED)
+  target_link_libraries(ripple_libs INTERFACE
+    cassandra-cpp-driver::cassandra-cpp-driver
+  )
+endif()
 
 ###
 
