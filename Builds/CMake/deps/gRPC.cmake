@@ -55,7 +55,7 @@ target_compile_options(grpc_pbufs
     $<$<NOT:$<BOOL:${MSVC}>>:-Wno-deprecated-declarations>
   PUBLIC
     $<$<BOOL:${MSVC}>:-wd4996>
-    $<$<BOOL:${is_xcode}>:
+    $<$<BOOL:${XCODE}>:
       --system-header-prefix="google/protobuf"
       -Wno-deprecated-dynamic-exception-spec
     >)

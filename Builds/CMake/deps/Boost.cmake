@@ -14,7 +14,7 @@ find_package(Boost 1.70 REQUIRED
 
 add_library(ripple_boost INTERFACE)
 add_library(Ripple::boost ALIAS ripple_boost)
-if(is_xcode)
+if(XCODE)
   target_include_directories(ripple_boost BEFORE INTERFACE ${Boost_INCLUDE_DIRS})
   target_compile_options(ripple_boost INTERFACE --system-header-prefix="boost/")
 else()
