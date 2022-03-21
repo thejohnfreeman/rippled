@@ -1,15 +1,22 @@
 [requires]
 boost/1.77.0
-openssl/1.1.1m
-soci/4.0.3
+grpc/1.44.0
 nudb/2.0.8
+openssl/1.1.1m
+protobuf/3.19.2
+soci/4.0.3
+sqlite3/3.38.0
 zlib/1.2.11
 
 [options]
+grpc:shared=False
+grpc:secure=True
+openssl:shared=False
+protobuf:shared=False
+protobuf:with_zlib=True
 soci:shared=False
 soci:with_sqlite3=True
 soci:with_boost=True
-openssl:shared=False
 
 [generators]
 cmake_find_package

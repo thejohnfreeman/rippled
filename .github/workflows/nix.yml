@@ -7,13 +7,8 @@ jobs:
     strategy:
       matrix:
         platform:
-          - name: ubuntu-latest
-            openssl:
-          - name: macos-latest
-            openssl: /usr/local/opt/openssl@1.1
-        boost:
-          - version: 1.77.0
-            stem: boost_1_77_0
+          - ubuntu-latest
+          - macos-latest
         compiler:
           - name: gcc
             cxx: g++
@@ -23,7 +18,7 @@ jobs:
           - Ninja
         configuration:
           - Release
-    runs-on: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform }}
     env:
       build_dir: .build
     steps:
@@ -48,13 +43,21 @@ jobs:
           sudo pip install --upgrade pip
           echo "::set-output name=dir::$(pip cache dir)"
       - name: restore Python cache directory
-        id: cache
         uses: actions/cache@v2
         with:
             path: ${{ steps.pip-cache.outputs.dir }}
             key: ${{ runner.os }}-${{ hashFiles('.github/workflows/nix.yml') }}
       - name: install Conan
         run: pip install wheel conan
+      - name: learn Conan cache directory
+        id: conan-cache
+        run: |
+          echo "::set-output name=dir::$(conan config get storage.path)"
+      - name: restore Conan cache directory
+        uses: actions/cache@v2
+        with:
+            path: ${{ steps.conan-cache.outputs.dir }}
+            key: ${{ runner.os }}-${{ hashFiles('conanfile.txt') }}
       - name: install dependencies
         run: |
           mkdir ${build_dir}

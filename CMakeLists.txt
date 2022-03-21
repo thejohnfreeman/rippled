@@ -1,10 +1,10 @@
 cmake_minimum_required (VERSION 3.9.0)
 
-if (POLICY CMP0074)
+if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
-endif ()
+endif()
 
-project (rippled)
+project(rippled)
 
 # make GIT_COMMIT_HASH define available to all sources
 find_package(Git)
@@ -53,22 +53,34 @@ include(RippledInterface)
 
 ###
 
+include("${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake")
+
 include(deps/Boost)
-include(deps/OpenSSL)
+find_package(OpenSSL 1.1.1 REQUIRED)
+set_target_properties(OpenSSL::SSL PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS OPENSSL_NO_SSL2
+)
 include(deps/Secp256k1)
 include(deps/Ed25519-donna)
 include(deps/Lz4)
 include(deps/Libarchive)
-include(deps/Sqlite)
-include(deps/Soci)
+find_package(SOCI REQUIRED)
+find_package(SQLite3 REQUIRED)
 include(deps/Snappy)
 include(deps/Rocksdb)
-include(deps/Nudb)
+find_package(NuDB REQUIRED)
 include(deps/date)
 include(deps/Protobuf)
 include(deps/gRPC)
 include(deps/cassandra)
 include(deps/Postgres)
+
+target_link_libraries(ripple_libs INTERFACE NuDB::NuDB)
+target_link_libraries(ripple_libs INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(ripple_libs INTERFACE Ripple::grpc_pbufs)
+target_link_libraries(ripple_libs INTERFACE Ripple::pbufs)
+target_link_libraries(ripple_libs INTERFACE SOCI::SOCI)
+target_link_libraries(ripple_libs INTERFACE SQLite::SQLite3)
 
 ###
 
