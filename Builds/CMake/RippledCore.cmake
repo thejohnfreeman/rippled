@@ -139,7 +139,7 @@ target_link_libraries (xrpl_core
     OpenSSL::Crypto
     Ripple::boost
     Ripple::syslibs
-    NIH::secp256k1
+    secp256k1::secp256k1
     NIH::ed25519-donna
     date::date
     Ripple::opts)

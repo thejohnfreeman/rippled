@@ -60,7 +60,7 @@ find_package(OpenSSL 1.1.1 REQUIRED)
 set_target_properties(OpenSSL::SSL PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS OPENSSL_NO_SSL2
 )
-include(deps/Secp256k1)
+add_subdirectory(src/secp256k1)
 include(deps/Ed25519-donna)
 find_package(lz4)
 # Target names with :: are not allowed in a generator expression.
@@ -82,14 +82,18 @@ include(deps/gRPC)
 include(deps/cassandra)
 include(deps/Postgres)
 
-target_link_libraries(ripple_libs INTERFACE LibArchive::LibArchive)
-target_link_libraries(ripple_libs INTERFACE lz4::lz4)
-target_link_libraries(ripple_libs INTERFACE NuDB::NuDB)
-target_link_libraries(ripple_libs INTERFACE OpenSSL::SSL OpenSSL::Crypto)
-target_link_libraries(ripple_libs INTERFACE Ripple::grpc_pbufs)
-target_link_libraries(ripple_libs INTERFACE Ripple::pbufs)
-target_link_libraries(ripple_libs INTERFACE SOCI::SOCI)
-target_link_libraries(ripple_libs INTERFACE SQLite::SQLite3)
+target_link_libraries(ripple_libs INTERFACE
+  LibArchive::LibArchive
+  lz4::lz4
+  NuDB::NuDB
+  OpenSSL::Crypto
+  OpenSSL::SSL
+  Ripple::grpc_pbufs
+  Ripple::pbufs
+  secp256k1::secp256k1
+  SOCI::SOCI
+  SQLite::SQLite3
+)
 
 ###
 
