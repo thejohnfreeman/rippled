@@ -53,8 +53,6 @@ include(RippledInterface)
 
 ###
 
-include("${CMAKE_CURRENT_BINARY_DIR}/conan_paths.cmake")
-
 include(deps/Boost)
 find_package(OpenSSL 1.1.1 REQUIRED)
 set_target_properties(OpenSSL::SSL PROPERTIES
@@ -79,7 +77,6 @@ find_package(NuDB REQUIRED)
 find_package(date REQUIRED)
 include(deps/Protobuf)
 include(deps/gRPC)
-include(deps/Postgres)
 
 target_link_libraries(ripple_libs INTERFACE
   ed25519::ed25519
@@ -97,8 +94,10 @@ target_link_libraries(ripple_libs INTERFACE
 
 if(reporting)
   find_package(cassandra-cpp-driver REQUIRED)
+  find_package(PostgreSQL REQUIRED)
   target_link_libraries(ripple_libs INTERFACE
     cassandra-cpp-driver::cassandra-cpp-driver
+    PostgreSQL::PostgreSQL
   )
 endif()
 

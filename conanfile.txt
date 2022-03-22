@@ -3,6 +3,7 @@ boost/1.77.0
 cassandra-cpp-driver/2.15.3
 date/3.0.1
 libarchive/3.6.0
+libpq/13.6
 lz4/1.9.3
 grpc/1.44.0
 nudb/2.0.8
@@ -33,6 +34,7 @@ libarchive:with_openssl=False
 libarchive:with_pcreposix=False
 libarchive:with_xattr=False
 libarchive:with_zlib=False
+libpq:shared=False
 lz4:shared=False
 openssl:shared=False
 protobuf:shared=False
@@ -44,4 +46,3 @@ soci:with_boost=True
 
 [generators]
 cmake_find_package
-cmake_paths
