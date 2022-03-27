@@ -8,6 +8,7 @@ lz4/1.9.3
 grpc/1.44.0
 nudb/2.0.8
 openssl/1.1.1m
+rocksdb/6.27.3
 protobuf/3.19.2
 snappy/1.1.9
 soci/4.0.3
@@ -39,6 +40,13 @@ lz4:shared=False
 openssl:shared=False
 protobuf:shared=False
 protobuf:with_zlib=True
+rocksdb:enable_sse=False
+rocksdb:lite=False
+rocksdb:shared=False
+rocksdb:use_rtti=True
+rocksdb:with_jemalloc=False
+rocksdb:with_lz4=True
+rocksdb:with_snappy=True
 snappy:shared=False
 soci:shared=False
 soci:with_sqlite3=True

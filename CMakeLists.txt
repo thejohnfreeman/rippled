@@ -72,7 +72,11 @@ find_package(SQLite3 REQUIRED)
 find_package(Snappy REQUIRED)
 add_library(snappy_headers ALIAS Snappy::snappy)
 add_library(snappy_library ALIAS CONAN_LIB::Snappy_snappy)
-include(deps/Rocksdb)
+find_package(RocksDB REQUIRED)
+set_target_properties(RocksDB::rocksdb PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS RIPPLE_ROCKSDB_AVAILABLE=1
+)
+
 find_package(NuDB REQUIRED)
 find_package(date REQUIRED)
 include(deps/Protobuf)
@@ -87,6 +91,7 @@ target_link_libraries(ripple_libs INTERFACE
   OpenSSL::SSL
   Ripple::grpc_pbufs
   Ripple::pbufs
+  RocksDB::rocksdb
   secp256k1::secp256k1
   SOCI::SOCI
   SQLite::SQLite3
