@@ -1,5 +1,6 @@
 import os
 import shutil
+from conan.tools import microsoft as ms
 from conans import ConanFile, CMake
 
 class RocksDB(ConanFile):
@@ -121,7 +122,10 @@ class RocksDB(ConanFile):
         self._cmake.definitions['WITH_BZ2'] = False
         self._cmake.definitions['WITH_JNI'] = False
         self._cmake.definitions['WITH_LIBRADOS'] = False
-        self._cmake.definitions['WITH_MD_LIBRARY'] = False
+        if ms.is_msvc(self):
+            self._cmake.definitions['WITH_MD_LIBRARY'] = (
+                'MD' in ms.msvc_runtime_flag(self)
+            )
         self._cmake.definitions['WITH_NUMA'] = False
         self._cmake.definitions['WITH_TSAN'] = False
         self._cmake.definitions['WITH_UBSAN'] = False
@@ -135,7 +139,7 @@ class RocksDB(ConanFile):
 
 
     def build(self):
-        if self.settings.compiler == 'Visual Studio':
+        if ms.is_msvc(self):
             file = os.path.join(
                 self.recipe_folder, '..', 'export_source', 'thirdparty.inc'
             )
