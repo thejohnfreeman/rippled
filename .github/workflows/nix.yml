@@ -7,8 +7,8 @@ jobs:
     strategy:
       matrix:
         platform:
-          - ubuntu-latest
-          - macos-latest
+          - ubuntu
+          - macos
         compiler:
           - name: gcc
             cxx: g++
@@ -18,7 +18,7 @@ jobs:
           - Ninja
         configuration:
           - Release
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}-latest
     env:
       build_dir: .build
     steps:
