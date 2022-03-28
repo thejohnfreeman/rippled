@@ -1,9 +1,9 @@
-name: Test on Linux and MacOS
+name: nix
 on: [push, pull_request]
 
 jobs:
 
-  test-rippled-without-conan:
+  test:
     strategy:
       matrix:
         platform:
