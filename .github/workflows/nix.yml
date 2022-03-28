@@ -58,6 +58,9 @@ jobs:
         with:
             path: ${{ steps.conan-cache.outputs.dir }}
             key: ${{ runner.os }}-${{ hashFiles('conanfile.txt') }}
+      - name: export RocksDB
+        working-directory: external
+        run: conan export rocksdb.py
       - name: install dependencies
         run: |
           mkdir ${build_dir}
