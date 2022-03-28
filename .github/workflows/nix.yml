@@ -65,7 +65,7 @@ jobs:
           conan profile update settings.compiler.libcxx=libstdc++11 default
       - name: export RocksDB
         working-directory: external
-        run: conan export rocksdb.py
+        run: conan export external/rocksdb
       - name: install dependencies
         run: |
           mkdir ${build_dir}

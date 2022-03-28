@@ -1,3 +1,5 @@
+import os
+import shutil
 from conans import ConanFile, CMake
 
 class RocksDB(ConanFile):
@@ -55,6 +57,14 @@ class RocksDB(ConanFile):
         if self.options.with_zstd:
             self.requires('zstd/1.5.2')
 
+    def config_options(self):
+        if self.settings.os == 'Windows':
+            del self.options.fPIC
+
+    def configure(self):
+        if self.options.shared:
+            del self.options.fPIC
+
     generators = 'cmake', 'cmake_find_package'
 
     scm = {
@@ -63,18 +73,9 @@ class RocksDB(ConanFile):
         'revision': 'v6.27.3',
     }
 
-    # exports_sources = 'CMakeLists.txt', 'cmake/*', 'include/*', 'src/*', 'tests/*'
+    exports_sources = 'thirdparty.inc'
     # For out-of-source build.
-    # https://docs.conan.io/en/latest/reference/build_helpers/cmake.html#configure
     no_copy_source = True
-
-    def config_options(self):
-        if self.settings.os == 'Windows':
-            del self.options.fPIC
-
-    def configure(self):
-        if self.options.shared:
-            del self.options.fPIC
 
     _cmake = None
 
@@ -134,6 +135,11 @@ class RocksDB(ConanFile):
 
 
     def build(self):
+        if self.settings.compiler == 'Visual Studio':
+            file = os.path.join(
+                self.recipe_folder, '..', 'export_source', 'thirdparty.inc'
+            )
+            shutil.copy(file, self.build_folder)
         self._configure_cmake()
         self._cmake.configure()
         self._cmake.build()
