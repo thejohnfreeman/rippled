@@ -13,11 +13,13 @@ class XrplConan(ConanFile):
     options = {
         'shared': [True, False],
         'fPIC': [True, False],
+        'with_jemalloc': [True, False],
     }
 
     default_options = {
         'shared': False,
         'fPIC': True,
+        'with_jemalloc': False,
 
         'cassandra-cpp-driver:shared': False,
         'date:header_only': True,
@@ -74,5 +76,9 @@ class XrplConan(ConanFile):
         'sqlite3/3.38.0',
         'zlib/1.2.11',
     ]
+
+    def requirements(self):
+        if self.options.with_jemalloc:
+            self.requires('jemalloc/5.2.1')
 
     generators = 'cmake_find_package'
