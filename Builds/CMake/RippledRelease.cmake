@@ -16,7 +16,6 @@ if (is_root_project)
     message (STATUS "using [${container_label}] as build container tag...")
 
     file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/packages)
-    file (MAKE_DIRECTORY ${NIH_CACHE_ROOT}/pkgbuild)
     if (is_linux)
       execute_process (COMMAND id -u
         OUTPUT_VARIABLE DOCKER_USER_ID
@@ -59,8 +58,6 @@ if (is_root_project)
     exclude_from_default (rpm_container)
     add_custom_target (rpm
       docker run
-        -e NIH_CACHE_ROOT=/opt/rippled_bld/pkg/.nih_c
-        -v ${NIH_CACHE_ROOT}/pkgbuild:/opt/rippled_bld/pkg/.nih_c
         -v ${CMAKE_CURRENT_SOURCE_DIR}:/opt/rippled_bld/pkg/rippled
         -v ${CMAKE_CURRENT_BINARY_DIR}/packages:/opt/rippled_bld/pkg/out
         "$<$<BOOL:${map_user}>:--volume=/etc/passwd:/etc/passwd;--volume=/etc/group:/etc/group;--user=${DOCKER_USER_ID}:${DOCKER_GROUP_ID}>"
@@ -122,8 +119,6 @@ if (is_root_project)
     exclude_from_default (dpkg_container)
     add_custom_target (dpkg
       docker run
-        -e NIH_CACHE_ROOT=/opt/rippled_bld/pkg/.nih_c
-        -v ${NIH_CACHE_ROOT}/pkgbuild:/opt/rippled_bld/pkg/.nih_c
         -v ${CMAKE_CURRENT_SOURCE_DIR}:/opt/rippled_bld/pkg/rippled
         -v ${CMAKE_CURRENT_BINARY_DIR}/packages:/opt/rippled_bld/pkg/out
         "$<$<BOOL:${map_user}>:--volume=/etc/passwd:/etc/passwd;--volume=/etc/group:/etc/group;--user=${DOCKER_USER_ID}:${DOCKER_GROUP_ID}>"
