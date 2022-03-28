@@ -61,13 +61,13 @@ working:
 
 1. Search for the package on [Conan Center](https://conan.io/center/).
 1. In [`conanfile.py`](./conanfile.py):
-  1. Add a version of the package to the `requires` property.
-  1. Change any default options for the package by adding them to the
-  `default_options` property (with syntax `'$package:$option': $value`)
+    1. Add a version of the package to the `requires` property.
+    1. Change any default options for the package by adding them to the
+    `default_options` property (with syntax `'$package:$option': $value`)
 1. In [`CMakeLists.txt`](./CMakeLists.txt):
-  1. Add a call to `find_package($package REQUIRED)`.
-  1. Link a library from the package to the target `ripple_libs` (search for
-  the existing call to `target_link_libraries(ripple_libs INTERFACE ...)`).
+    1. Add a call to `find_package($package REQUIRED)`.
+    1. Link a library from the package to the target `ripple_libs` (search for
+    the existing call to `target_link_libraries(ripple_libs INTERFACE ...)`).
 1. Start coding! Don't forget to include whatever headers you need from the
    package.
 
