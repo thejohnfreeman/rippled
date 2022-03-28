@@ -3,6 +3,13 @@ cmake_minimum_required (VERSION 3.9.0)
 if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0077 NEW)
+endif()
+
+# Fix "unrecognized escape" issues when passing CMAKE_MODULE_PATH on Windows.
+file(TO_CMAKE_PATH "${CMAKE_MODULE_PATH}" CMAKE_MODULE_PATH)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Builds/CMake")
 
 project(rippled)
 
@@ -17,9 +24,6 @@ if(Git_FOUND)
         add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
     endif()
 endif() #git
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Builds/CMake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Builds/CMake/deps")
 
 include (CheckCXXCompilerFlag)
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.11)

@@ -9,11 +9,6 @@ jobs:
         platform:
           - ubuntu
           - macos
-        compiler:
-          - name: gcc
-            cxx: g++
-            cxxflags:
-            linkflags:
         generator:
           - Ninja
         configuration:
@@ -75,9 +70,7 @@ jobs:
           cd ${build_dir}
           cmake \
             -G ${{ matrix.generator }} \
-            -DCMAKE_MODULE_PATH="$(pwd)" \
-            -DCMAKE_C_COMPILER=${{ matrix.compiler.name }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
+            -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             -Dassert=ON \
             -Dcoverage=OFF \

@@ -1,7 +1,7 @@
 import os
 import shutil
-from conan.tools import microsoft as ms
 from conans import ConanFile, CMake
+from conan.tools import microsoft as ms
 
 class RocksDB(ConanFile):
     name = 'rocksdb'

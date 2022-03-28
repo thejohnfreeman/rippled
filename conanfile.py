@@ -1,7 +1,6 @@
-from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
+from conans import ConanFile
 
-class XrplConan(ConanFile):
+class Xrpl(ConanFile):
     name = 'xrpl'
     version = '1.8.5'
 
@@ -81,4 +80,4 @@ class XrplConan(ConanFile):
         if self.options.with_jemalloc:
             self.requires('jemalloc/5.2.1')
 
-    generators = 'cmake_find_package'
+    generators = 'CMakeToolchain', 'cmake_find_package'
