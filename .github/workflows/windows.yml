@@ -49,12 +49,6 @@ jobs:
           echo "::set-output name=dir::$(conan config get storage.path)"
       - name: restore Conan cache directory
         uses: actions/cache@v2
-        env:
-          key:
-            - ~/.conan/profiles/default
-            - conanfile.py
-            - external/rocksdb/*
-            - .github/workflows/windows.yml
         with:
             path: ${{ steps.conan-cache.outputs.dir }}
             key: ${{ hashFiles('~/.conan/profiles/default', 'conanfile.py', 'external/rocksdb/*', '.github/workflows/windows.yml') }}
