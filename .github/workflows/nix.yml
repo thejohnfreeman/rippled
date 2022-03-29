@@ -65,12 +65,7 @@ jobs:
         uses: actions/cache@v2
         with:
             path: ${{ steps.conan-cache.outputs.dir }}
-            key: ${{ hashFiles(
-              '~/.conan/profiles/default',
-              'conanfile.py',
-              'external/rocksdb/*',
-              '.github/workflows/nix.yml'
-            ) }}
+            key: ${{ hashFiles('~/.conan/profiles/default', 'conanfile.py', 'external/rocksdb/*', '.github/workflows/nix.yml') }}
       - name: export RocksDB
         run: conan export external/rocksdb
       - name: install dependencies

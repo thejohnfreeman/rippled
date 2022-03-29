@@ -57,12 +57,7 @@ jobs:
             - .github/workflows/windows.yml
         with:
             path: ${{ steps.conan-cache.outputs.dir }}
-            key: ${{ hashFiles(
-              '~/.conan/profiles/default',
-              'conanfile.py',
-              'external/rocksdb/*',
-              '.github/workflows/windows.yml'
-            ) }}
+            key: ${{ hashFiles('~/.conan/profiles/default', 'conanfile.py', 'external/rocksdb/*', '.github/workflows/windows.yml') }}
       - name: export RocksDB
         run: conan export external/rocksdb
       - name: install dependencies
