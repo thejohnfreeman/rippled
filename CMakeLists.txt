@@ -67,19 +67,14 @@ find_package(lz4 REQUIRED)
 # Target names with :: are not allowed in a generator expression.
 # We need to pull the include directories and imported location properties
 # from separate targets.
-add_library(lz4_headers ALIAS lz4::lz4)
-add_library(lz4_library ALIAS CONAN_LIB::lz4_lz4)
 find_package(LibArchive REQUIRED)
 find_package(SOCI REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(Snappy REQUIRED)
-add_library(snappy_headers ALIAS Snappy::snappy)
-add_library(snappy_library ALIAS CONAN_LIB::Snappy_snappy)
 find_package(RocksDB REQUIRED)
 set_target_properties(RocksDB::rocksdb PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS RIPPLE_ROCKSDB_AVAILABLE=1
 )
-
 find_package(NuDB REQUIRED)
 find_package(date REQUIRED)
 include(deps/Protobuf)
