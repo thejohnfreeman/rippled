@@ -63,7 +63,7 @@ jobs:
         run: |
           cd $env:build_dir
           cmake `
-            -G ${{ matrix.generator }} `
+            -G "${{ matrix.generator }}" `
             -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake `
             -Dassert=ON `
             -Dcoverage=OFF `
