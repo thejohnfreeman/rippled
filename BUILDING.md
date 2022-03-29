@@ -1,3 +1,10 @@
+## Platforms
+
+We do not recommend Windows for rippled production use at this time. Currently,
+the Ubuntu platform has received the highest level of quality assurance,
+testing, and support. Additionally, 32-bit Windows versions are not supported.
+
+
 ## Prerequisites
 
 To build this package, you will need to install [Conan][] and [CMake][] (>=
@@ -30,6 +37,29 @@ conan profile update settings.compiler.runtime=MT default
 ```
 
 
+## Branches
+
+For a stable release, choose the `master` branch or one of the tagged releases
+listed on [rippled's GitHub page](https://github.com/ripple/rippled/releases).
+
+```
+git checkout master
+```
+
+To test the latest release candidate, choose the `release` branch.
+
+```
+git checkout release
+```
+
+If you are contributing or want the latest set of untested features,
+then use the `develop` branch instead.
+
+```
+git checkout develop
+```
+
+
 ## How to build
 
 Here is an example building the package in a release configuration.
@@ -47,11 +77,20 @@ cmake --build . --config Release
 ```
 
 In addition to choosing a different configuration, there are a few options you
-can pass to the CMake configure command:
+can pass to the CMake configure command.
+In particular, the `unity` option allows you to select between the unity and
+non-unity builds. Unity builds may be faster to compile (at the cost of much
+more memory) since they combine multiple sources into a single compiliation
+unit - this is the default if you don't specify. Non-unity builds can be
+helpful for detecting `#include` omissions or for finding other build-related
+issues, but aren't generally needed for testing and running.
 
-- `unity:BOOL`: Perform a "unity" build. Source files will be concatenated
-    into fewer, but much larger, translation units. This type of build may
-    be faster, at the expense of requiring much more memory.
+- `-Dunity=ON` to enable/disable unity builds (defaults to ON)
+- `-Dassert=ON` to enable asserts
+- `-Djemalloc=ON` to enable jemalloc support for heap checking
+- `-Dsan=thread` to enable the thread sanitizer with clang
+- `-Dsan=address` to enable the address sanitizer with clang
+- `-Dreporting=ON` to build code necessary for reporting mode (defaults to OFF)
 
 
 ## How to add a dependency
