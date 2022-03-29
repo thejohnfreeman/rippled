@@ -86,6 +86,8 @@ jobs:
             -Dunity=OFF \
             ..
       - name: build
-        run: cmake --build ${build_dir} --target rippled --parallel $(nproc)
+        run: |
+          cmake --build ${build_dir} --target rippled --parallel $(nproc)
       - name: test
-        run: ${build_dir}/rippled --unittest --unittest-jobs $(nproc)
+        run: |
+          ${build_dir}/rippled --unittest --unittest-jobs $(nproc)

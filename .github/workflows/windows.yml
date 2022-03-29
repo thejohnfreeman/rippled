@@ -77,7 +77,8 @@ jobs:
             -Dunity=OFF `
             ..
       - name: build
-        run: cmake --build $env:build_dir --target rippled --config ${{ matrix.configuration }} --parallel $env:NUMBER_OF_PROCESSORS
+        run: |
+          cmake --build $env:build_dir --target rippled --config ${{ matrix.configuration }} --parallel $env:NUMBER_OF_PROCESSORS
       - name: test
-        run: & "$env:build_dir\${{ matrix.configuration }}\rippled.exe" --unittest --unittest-jobs $env:NUMBER_OF_PROCESSORS
-
+        run: |
+          & "$env:build_dir\${{ matrix.configuration }}\rippled.exe" --unittest --unittest-jobs $env:NUMBER_OF_PROCESSORS
