@@ -70,7 +70,7 @@ including Bash and PowerShell.
 conan export external/rocksdb
 mkdir .build
 cd .build
-conan install .. --build missing
+conan install .. --build missing -s:b build_type=Release
 cmake -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --config Release
 ./rippled --help
