@@ -72,14 +72,13 @@ jobs:
         run: |
           mkdir ${build_dir}
           cd ${build_dir}
-          conan install .. --build missing
+          conan install .. --build missing -s build_type=${{ matrix.configuration }}
       - name: configure
         run: |
           cd ${build_dir}
           cmake \
             -G ${{ matrix.generator }} \
             -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
-            -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
             -Dassert=ON \
             -Dcoverage=OFF \
             -Dreporting=OFF \
