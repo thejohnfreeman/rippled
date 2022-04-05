@@ -58,7 +58,6 @@ class Xrpl(ConanFile):
     }
 
     requires = [
-        'doctest/2.4.6',
         'boost/1.77.0',
         'cassandra-cpp-driver/2.15.3',
         'date/3.0.1',
