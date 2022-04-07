@@ -1,23 +1,34 @@
-from conans import ConanFile
+from conans import ConanFile, tools
+from conan.tools.cmake import CMake
+from conan.tools.cmake import CMakeToolchain
+import re
 
 class Xrpl(ConanFile):
     name = 'xrpl'
-    version = '1.8.5'
+    generators = 'CMakeToolchain', 'cmake_find_package'
 
     license = 'ISC'
     author = 'John Freeman <jfreeman@ripple.com>'
     url = 'https://github.com/ripple/rippled'
-
+    description = "XRP Ledger"
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {
         'shared': [True, False],
         'fPIC': [True, False],
         'with_jemalloc': [True, False],
+        'reporting': [True, False],
+        'static': [True, False],
+        'tests': [True, False],
+        'unity': [True, False],
     }
 
     default_options = {
-        'shared': False,
         'fPIC': True,
+        'reporting': False,
+        'shared': False,
+        'static': True,
+        'tests': True,
+        'unity': False,
         'with_jemalloc': False,
 
         'cassandra-cpp-driver:shared': False,
@@ -58,11 +69,10 @@ class Xrpl(ConanFile):
     }
 
     requires = [
+        'doctest/2.4.6',
         'boost/1.77.0',
-        'cassandra-cpp-driver/2.15.3',
         'date/3.0.1',
         'libarchive/3.6.0',
-        'libpq/13.6',
         'lz4/1.9.3',
         'grpc/1.44.0',
         'nudb/2.0.8',
@@ -75,8 +85,46 @@ class Xrpl(ConanFile):
         'zlib/1.2.11',
     ]
 
+    def set_version(self):
+        BUILDINFO = f"src/ripple/protocol/impl/BuildInfo.cpp"
+        regex = r"versionString\s?=\s?\"(.*)\""
+        with open(BUILDINFO, 'r') as file:
+            while True:
+                if match := re.search(regex, file.readline()): break
+            self.version =  match.group(1)
+
     def requirements(self):
         if self.options.with_jemalloc:
             self.requires('jemalloc/5.2.1')
+        if self.options.reporting:
+            self.requires('cassandra-cpp-driver/2.15.3')
+            self.requires('libpq/13.6')
 
-    generators = 'CMakeToolchain', 'cmake_find_package'
+    def export_sources(self):
+        self.copy("*", excludes=["build", ".github"])
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        if not self.options.tests:
+            tc.variables["tests"] = False
+        tc.variables["reporting"] = self.options.reporting
+        tc.variables["unity"] = self.options.unity
+        tc.generate()
+
+    def build(self, cli_args="--parallel $(nproc)"):
+        cmake = CMake(self)
+        cmake.verbose = True
+        cmake.configure()
+        cmake.build()
+
+    def package(self):
+        cmake = CMake(self)
+        cmake.verbose = True
+        cmake.install()
+
+    def package_info(self):
+        self.cpp_info.libs = [
+            "libxrpl_core.a",
+            "libed25519-donna.a",
+            "libsecp256k1.a",
+            ]
