@@ -261,8 +261,13 @@ LedgerMaster::getPublishedLedgerAge()
     std::chrono::seconds ret = app_.timeKeeper().closeTime().time_since_epoch();
     ret -= pubClose;
     ret = (ret > 0s) ? ret : 0s;
+    static std::chrono::seconds lastRet = -1s;
 
-    JLOG(m_journal.trace()) << "Published ledger age is " << ret.count();
+    if (ret != lastRet)
+    {
+        JLOG(m_journal.trace()) << "Published ledger age is " << ret.count();
+        lastRet = ret;
+    }
     return ret;
 }
 
@@ -287,8 +292,13 @@ LedgerMaster::getValidatedLedgerAge()
     std::chrono::seconds ret = app_.timeKeeper().closeTime().time_since_epoch();
     ret -= valClose;
     ret = (ret > 0s) ? ret : 0s;
+    static std::chrono::seconds lastRet = -1s;
 
-    JLOG(m_journal.trace()) << "Validated ledger age is " << ret.count();
+    if (ret != lastRet)
+    {
+        JLOG(m_journal.trace()) << "Validated ledger age is " << ret.count();
+        lastRet = ret;
+    }
     return ret;
 }
 
@@ -699,7 +709,7 @@ LedgerMaster::getEarliestFetch()
 }
 
 void
-LedgerMaster::tryFill(Job& job, std::shared_ptr<Ledger const> ledger)
+LedgerMaster::tryFill(std::shared_ptr<Ledger const> ledger)
 {
     std::uint32_t seq = ledger->info().seq;
     uint256 prevHash = ledger->info().parentHash;
@@ -710,7 +720,7 @@ LedgerMaster::tryFill(Job& job, std::shared_ptr<Ledger const> ledger)
     std::uint32_t maxHas = seq;
 
     NodeStore::Database& nodeStore{app_.getNodeStore()};
-    while (!job.shouldCancel() && seq > 0)
+    while (!app_.getJobQueue().isStopping() && seq > 0)
     {
         {
             std::lock_guard ml(m_mutex);
@@ -1453,7 +1463,7 @@ LedgerMaster::tryAdvance()
     if (!mAdvanceThread && !mValidLedger.empty())
     {
         mAdvanceThread = true;
-        app_.getJobQueue().addJob(jtADVANCE, "advanceLedger", [this](Job&) {
+        app_.getJobQueue().addJob(jtADVANCE, "advanceLedger", [this]() {
             std::unique_lock sl(m_mutex);
 
             assert(!mValidLedger.empty() && mAdvanceThread);
@@ -1476,19 +1486,21 @@ LedgerMaster::tryAdvance()
 }
 
 void
-LedgerMaster::updatePaths(Job& job)
+LedgerMaster::updatePaths()
 {
     {
         std::lock_guard ml(m_mutex);
         if (app_.getOPs().isNeedNetworkLedger())
         {
             --mPathFindThread;
+            JLOG(m_journal.debug()) << "Need network ledger for updating paths";
             return;
         }
     }
 
-    while (!job.shouldCancel())
+    while (!app_.getJobQueue().isStopping())
     {
+        JLOG(m_journal.debug()) << "updatePaths running";
         std::shared_ptr<ReadView const> lastLedger;
         {
             std::lock_guard ml(m_mutex);
@@ -1506,6 +1518,7 @@ LedgerMaster::updatePaths(Job& job)
             else
             {  // Nothing to do
                 --mPathFindThread;
+                JLOG(m_journal.debug()) << "Nothing to do for updating paths";
                 return;
             }
         }
@@ -1527,8 +1540,31 @@ LedgerMaster::updatePaths(Job& job)
 
         try
         {
-            app_.getPathRequests().updateAll(
-                lastLedger, job.getCancelCallback());
+            auto& pathRequests = app_.getPathRequests();
+            {
+                std::lock_guard ml(m_mutex);
+                if (!pathRequests.requestsPending())
+                {
+                    --mPathFindThread;
+                    JLOG(m_journal.debug())
+                        << "No path requests found. Nothing to do for updating "
+                           "paths. "
+                        << mPathFindThread << " jobs remaining";
+                    return;
+                }
+            }
+            JLOG(m_journal.debug()) << "Updating paths";
+            pathRequests.updateAll(lastLedger);
+
+            std::lock_guard ml(m_mutex);
+            if (!pathRequests.requestsPending())
+            {
+                JLOG(m_journal.debug())
+                    << "No path requests left. No need for further updating "
+                       "paths";
+                --mPathFindThread;
+                return;
+            }
         }
         catch (SHAMapMissingNode const& mn)
         {
@@ -1588,10 +1624,14 @@ LedgerMaster::newPFWork(
     const char* name,
     std::unique_lock<std::recursive_mutex>&)
 {
-    if (mPathFindThread < 2)
+    if (!app_.isStopping() && mPathFindThread < 2 &&
+        app_.getPathRequests().requestsPending())
     {
+        JLOG(m_journal.debug())
+            << "newPFWork: Creating job. path find threads: "
+            << mPathFindThread;
         if (app_.getJobQueue().addJob(
-                jtUPDATE_PF, name, [this](Job& j) { updatePaths(j); }))
+                jtUPDATE_PF, name, [this]() { updatePaths(); }))
         {
             ++mPathFindThread;
         }
@@ -1830,12 +1870,6 @@ LedgerMaster::setLedgerRangePresent(std::uint32_t minV, std::uint32_t maxV)
 }
 
 void
-LedgerMaster::tune(int size, std::chrono::seconds age)
-{
-    mLedgerHistory.tune(size, age);
-}
-
-void
 LedgerMaster::sweep()
 {
     mLedgerHistory.sweep();
@@ -1942,8 +1976,8 @@ LedgerMaster::fetchForHistory(
                         mFillInProgress = seq;
                     }
                     app_.getJobQueue().addJob(
-                        jtADVANCE, "tryFill", [this, ledger](Job& j) {
-                            tryFill(j, ledger);
+                        jtADVANCE, "tryFill", [this, ledger]() {
+                            tryFill(ledger);
                         });
                 }
             }
@@ -2075,7 +2109,7 @@ LedgerMaster::doAdvance(std::unique_lock<std::recursive_mutex>& sl)
         {
             JLOG(m_journal.trace()) << "tryAdvance found " << pubLedgers.size()
                                     << " ledgers to publish";
-            for (auto ledger : pubLedgers)
+            for (auto const& ledger : pubLedgers)
             {
                 {
                     ScopedUnlock sul{sl};
@@ -2124,7 +2158,7 @@ LedgerMaster::gotFetchPack(bool progress, std::uint32_t seq)
 {
     if (!mGotFetchPackThread.test_and_set(std::memory_order_acquire))
     {
-        app_.getJobQueue().addJob(jtLEDGER_DATA, "gotFetchPack", [&](Job&) {
+        app_.getJobQueue().addJob(jtLEDGER_DATA, "gotFetchPack", [&]() {
             app_.getInboundLedgers().gotFetchPack();
             mGotFetchPackThread.clear(std::memory_order_release);
         });

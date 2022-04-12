@@ -74,6 +74,12 @@ public:
             reason != InboundLedger::Reason::SHARD ||
             (seq != 0 && app_.getShardStore()));
 
+        // probably not the right rule
+        if (app_.getOPs().isNeedNetworkLedger() &&
+            (reason != InboundLedger::Reason::GENERIC) &&
+            (reason != InboundLedger::Reason::CONSENSUS))
+            return {};
+
         bool isNew = true;
         std::shared_ptr<InboundLedger> inbound;
         {
@@ -82,6 +88,7 @@ public:
             {
                 return {};
             }
+
             auto it = mLedgers.find(hash);
             if (it != mLedgers.end())
             {
@@ -183,7 +190,7 @@ public:
             // dispatch
             if (ledger->gotData(std::weak_ptr<Peer>(peer), packet))
                 app_.getJobQueue().addJob(
-                    jtLEDGER_DATA, "processLedgerData", [ledger](Job&) {
+                    jtLEDGER_DATA, "processLedgerData", [ledger]() {
                         ledger->runData();
                     });
 
@@ -198,7 +205,7 @@ public:
         if (packet->type() == protocol::liAS_NODE)
         {
             app_.getJobQueue().addJob(
-                jtLEDGER_DATA, "gotStaleData", [this, packet](Job&) {
+                jtLEDGER_DATA, "gotStaleData", [this, packet]() {
                     gotStaleData(packet);
                 });
         }

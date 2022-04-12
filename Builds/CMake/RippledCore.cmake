@@ -120,11 +120,7 @@ add_library (Ripple::xrpl_core ALIAS xrpl_core)
 target_include_directories (xrpl_core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/ripple>
-    # this one is for beast/legacy files:
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/beast/extras>
     $<INSTALL_INTERFACE:include>)
-
 
 target_compile_definitions(xrpl_core
   PUBLIC
@@ -295,23 +291,23 @@ install (
 if (tests)
   install (
     FILES
-      src/beast/extras/beast/unit_test/amount.hpp
-      src/beast/extras/beast/unit_test/dstream.hpp
-      src/beast/extras/beast/unit_test/global_suites.hpp
-      src/beast/extras/beast/unit_test/match.hpp
-      src/beast/extras/beast/unit_test/recorder.hpp
-      src/beast/extras/beast/unit_test/reporter.hpp
-      src/beast/extras/beast/unit_test/results.hpp
-      src/beast/extras/beast/unit_test/runner.hpp
-      src/beast/extras/beast/unit_test/suite.hpp
-      src/beast/extras/beast/unit_test/suite_info.hpp
-      src/beast/extras/beast/unit_test/suite_list.hpp
-      src/beast/extras/beast/unit_test/thread.hpp
-    DESTINATION include/beast/unit_test)
+      src/ripple/beast/unit_test/amount.hpp
+      src/ripple/beast/unit_test/dstream.hpp
+      src/ripple/beast/unit_test/global_suites.hpp
+      src/ripple/beast/unit_test/match.hpp
+      src/ripple/beast/unit_test/recorder.hpp
+      src/ripple/beast/unit_test/reporter.hpp
+      src/ripple/beast/unit_test/results.hpp
+      src/ripple/beast/unit_test/runner.hpp
+      src/ripple/beast/unit_test/suite.hpp
+      src/ripple/beast/unit_test/suite_info.hpp
+      src/ripple/beast/unit_test/suite_list.hpp
+      src/ripple/beast/unit_test/thread.hpp
+    DESTINATION include/ripple/beast/extras/unit_test)
   install (
     FILES
-      src/beast/extras/beast/unit_test/detail/const_container.hpp
-    DESTINATION include/beast/unit_test/detail)
+      src/ripple/beast/unit_test/detail/const_container.hpp
+    DESTINATION include/ripple/beast/unit_test/detail)
 endif () #tests
 #[===================================================================[
    rippled executable
@@ -399,7 +395,7 @@ target_sources (rippled PRIVATE
   src/ripple/app/paths/Pathfinder.cpp
   src/ripple/app/paths/RippleCalc.cpp
   src/ripple/app/paths/RippleLineCache.cpp
-  src/ripple/app/paths/RippleState.cpp
+  src/ripple/app/paths/TrustLine.cpp
   src/ripple/app/paths/impl/BookStep.cpp
   src/ripple/app/paths/impl/DirectStep.cpp
   src/ripple/app/paths/impl/PaySteps.cpp
@@ -424,6 +420,11 @@ target_sources (rippled PRIVATE
   src/ripple/app/tx/impl/DepositPreauth.cpp
   src/ripple/app/tx/impl/Escrow.cpp
   src/ripple/app/tx/impl/InvariantCheck.cpp
+  src/ripple/app/tx/impl/NFTokenAcceptOffer.cpp
+  src/ripple/app/tx/impl/NFTokenBurn.cpp
+  src/ripple/app/tx/impl/NFTokenCancelOffer.cpp
+  src/ripple/app/tx/impl/NFTokenCreateOffer.cpp
+  src/ripple/app/tx/impl/NFTokenMint.cpp
   src/ripple/app/tx/impl/OfferStream.cpp
   src/ripple/app/tx/impl/PayChan.cpp
   src/ripple/app/tx/impl/Payment.cpp
@@ -436,13 +437,13 @@ target_sources (rippled PRIVATE
   src/ripple/app/tx/impl/Transactor.cpp
   src/ripple/app/tx/impl/apply.cpp
   src/ripple/app/tx/impl/applySteps.cpp
+  src/ripple/app/tx/impl/details/NFTokenUtils.cpp
   #[===============================[
      main sources:
        subdir: basics (partial)
   #]===============================]
   src/ripple/basics/impl/Archive.cpp
   src/ripple/basics/impl/BasicConfig.cpp
-  src/ripple/basics/impl/PerfLogImp.cpp
   src/ripple/basics/impl/ResolverAsio.cpp
   src/ripple/basics/impl/UptimeClock.cpp
   src/ripple/basics/impl/make_SSLContext.cpp
@@ -598,6 +599,7 @@ target_sources (rippled PRIVATE
   src/ripple/rpc/handlers/LogLevel.cpp
   src/ripple/rpc/handlers/LogRotate.cpp
   src/ripple/rpc/handlers/Manifest.cpp
+  src/ripple/rpc/handlers/NFTOffers.cpp
   src/ripple/rpc/handlers/NodeToShard.cpp
   src/ripple/rpc/handlers/NoRippleCheck.cpp
   src/ripple/rpc/handlers/OwnerInfo.cpp
@@ -640,6 +642,11 @@ target_sources (rippled PRIVATE
   src/ripple/rpc/impl/ShardVerificationScheduler.cpp
   src/ripple/rpc/impl/Status.cpp
   src/ripple/rpc/impl/TransactionSign.cpp
+  #[===============================[
+     main sources:
+       subdir: perflog
+  #]===============================]
+  src/ripple/perflog/impl/PerfLogImp.cpp
 
   #[===============================[
      main sources:
@@ -687,6 +694,9 @@ if (tests)
     src/test/app/LoadFeeTrack_test.cpp
     src/test/app/Manifest_test.cpp
     src/test/app/MultiSign_test.cpp
+    src/test/app/NFToken_test.cpp
+    src/test/app/NFTokenBurn_test.cpp
+    src/test/app/NFTokenDir_test.cpp
     src/test/app/OfferStream_test.cpp
     src/test/app/Offer_test.cpp
     src/test/app/OversizeMeta_test.cpp
@@ -733,6 +743,7 @@ if (tests)
     src/test/basics/contract_test.cpp
     src/test/basics/FeeUnits_test.cpp
     src/test/basics/hardened_hash_test.cpp
+    src/test/basics/join_test.cpp
     src/test/basics/mulDiv_test.cpp
     src/test/basics/tagged_integer_test.cpp
     #[===============================[
@@ -835,6 +846,7 @@ if (tests)
     src/test/jtx/impl/sig.cpp
     src/test/jtx/impl/tag.cpp
     src/test/jtx/impl/ticket.cpp
+    src/test/jtx/impl/token.cpp
     src/test/jtx/impl/trust.cpp
     src/test/jtx/impl/txflags.cpp
     src/test/jtx/impl/utility.cpp
@@ -891,6 +903,7 @@ if (tests)
     src/test/protocol/InnerObjectFormats_test.cpp
     src/test/protocol/Issue_test.cpp
     src/test/protocol/KnownFormatToGRPC_test.cpp
+    src/test/protocol/Hooks_test.cpp
     src/test/protocol/PublicKey_test.cpp
     src/test/protocol/Quality_test.cpp
     src/test/protocol/STAccount_test.cpp
@@ -989,17 +1002,18 @@ if (is_ci)
   target_compile_definitions(rippled PRIVATE RIPPLED_RUNNING_IN_CI)
 endif ()
 
-if (reporting)
-    target_compile_definitions(rippled PRIVATE RIPPLED_REPORTING)
-endif ()
+if(reporting)
+set_target_properties(rippled PROPERTIES OUTPUT_NAME rippled-reporting)
+get_target_property(BIN_NAME rippled OUTPUT_NAME)
+message(STATUS "Reporting mode build: rippled renamed ${BIN_NAME}")
+  target_compile_definitions(rippled PRIVATE RIPPLED_REPORTING)
+endif()
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.16)
-  # any files that don't play well with unity should be added here
-  if (tests)
-    set_source_files_properties(
-      # these two seem to produce conflicts in beast teardown template methods
-      src/test/rpc/ValidatorRPC_test.cpp
-      src/test/rpc/ShardArchiveHandler_test.cpp
-      PROPERTIES SKIP_UNITY_BUILD_INCLUSION TRUE)
-  endif () #tests
-endif ()
+# any files that don't play well with unity should be added here
+if (tests)
+  set_source_files_properties(
+    # these two seem to produce conflicts in beast teardown template methods
+    src/test/rpc/ValidatorRPC_test.cpp
+    src/test/rpc/ShardArchiveHandler_test.cpp
+    PROPERTIES SKIP_UNITY_BUILD_INCLUSION TRUE)
+endif () #tests
