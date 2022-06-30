@@ -190,8 +190,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa9220ccf8382acf85ccd1043f68b9c37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afdcc25285fc9cb83eab4ed36d95be527"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#afdcc25285fc9cb83eab4ed36d95be527">pubLedger</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1ReadView.html">ReadView</a> const &gt; const &amp;lpAccepted)=0</td></tr>
 <tr class="separator:afdcc25285fc9cb83eab4ed36d95be527"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a707bd1efa527ac55091d9652145cde"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a1a707bd1efa527ac55091d9652145cde">pubProposedTransaction</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1ReadView.html">ReadView</a> const &gt; const &amp;lpCurrent, <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1STTx.html">STTx</a> const &gt; const &amp;stTxn, <a class="el" href="namespaceripple.html#adfb760bc3e4ccb79d5d4f6ecff2f1817">TER</a> terResult)=0</td></tr>
-<tr class="separator:a1a707bd1efa527ac55091d9652145cde"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a522a02f40a2c93b1a951ff4217478777"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a522a02f40a2c93b1a951ff4217478777">pubProposedTransaction</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1ReadView.html">ReadView</a> const &gt; const &amp;ledger, <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1STTx.html">STTx</a> const &gt; const &amp;transaction, <a class="el" href="namespaceripple.html#adfb760bc3e4ccb79d5d4f6ecff2f1817">TER</a> result)=0</td></tr>
+<tr class="separator:a522a02f40a2c93b1a951ff4217478777"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5228b52adce7276a83d4d0cf14991589"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a5228b52adce7276a83d4d0cf14991589">pubValidation</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1STValidation.html">STValidation</a> &gt; const &amp;val)=0</td></tr>
 <tr class="separator:a5228b52adce7276a83d4d0cf14991589"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d7d7f55b2e28f300f0745217592d832"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a6d7d7f55b2e28f300f0745217592d832">forwardValidation</a> (<a class="el" href="classJson_1_1Value.html">Json::Value</a> const &amp;jvObj)=0</td></tr>
@@ -202,6 +202,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af8bc22e121fc8db46ec0cae484d474a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aa539c0415cfa0f8bb92381906b4a02"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a6aa539c0415cfa0f8bb92381906b4a02">forwardProposedAccountTransaction</a> (<a class="el" href="classJson_1_1Value.html">Json::Value</a> const &amp;jvObj)=0</td></tr>
 <tr class="separator:a6aa539c0415cfa0f8bb92381906b4a02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51bff8f9e909c4983b14ba2682ac118c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1NetworkOPs.html#a51bff8f9e909c4983b14ba2682ac118c">stateAccounting</a> (<a class="el" href="classJson_1_1Value.html">Json::Value</a> &amp;obj)=0</td></tr>
+<tr class="separator:a51bff8f9e909c4983b14ba2682ac118c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea604ab89e0a3db02a467019229d3252"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1InfoSub_1_1Source.html#aea604ab89e0a3db02a467019229d3252">subAccount</a> (ref ispListener, <a class="el" href="namespaceripple.html#a7750eec5e079354285f1d60cfd0247ca">hash_set</a>&lt; <a class="el" href="namespaceripple.html#a00ae0d729cb3e35b6bcac9a27ebb5284">AccountID</a> &gt; const &amp;vnaAccountIDs, bool realTime)=0</td></tr>
 <tr class="separator:aea604ab89e0a3db02a467019229d3252"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba84e61b320524b25e0c692efc8eb24a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classripple_1_1InfoSub_1_1Source.html#aba84e61b320524b25e0c692efc8eb24a">unsubAccount</a> (ref isplistener, <a class="el" href="namespaceripple.html#a7750eec5e079354285f1d60cfd0247ca">hash_set</a>&lt; <a class="el" href="namespaceripple.html#a00ae0d729cb3e35b6bcac9a27ebb5284">AccountID</a> &gt; const &amp;vnaAccountIDs, bool realTime)=0</td></tr>
@@ -1576,8 +1578,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a1a707bd1efa527ac55091d9652145cde"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1a707bd1efa527ac55091d9652145cde">&#9670;&nbsp;</a></span>pubProposedTransaction()</h2>
+<a id="a522a02f40a2c93b1a951ff4217478777"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a522a02f40a2c93b1a951ff4217478777">&#9670;&nbsp;</a></span>pubProposedTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1589,19 +1591,19 @@ Static Public Member Functions</h2></td></tr>
           <td class="memname">virtual void ripple::NetworkOPs::pubProposedTransaction </td>
           <td>(</td>
           <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1ReadView.html">ReadView</a> const &gt; const &amp;&#160;</td>
-          <td class="paramname"><em>lpCurrent</em>, </td>
+          <td class="paramname"><em>ledger</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classripple_1_1STTx.html">STTx</a> const &gt; const &amp;&#160;</td>
-          <td class="paramname"><em>stTxn</em>, </td>
+          <td class="paramname"><em>transaction</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="namespaceripple.html#adfb760bc3e4ccb79d5d4f6ecff2f1817">TER</a>&#160;</td>
-          <td class="paramname"><em>terResult</em>&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1616,7 +1618,7 @@ Static Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classripple_1_1NetworkOPsImp.html#ad693a1a91bd4903121b790a16b3a5f8d">ripple::NetworkOPsImp</a>.</p>
+<p>Implemented in <a class="el" href="classripple_1_1NetworkOPsImp.html#a03d6069293bde0a411dfb7d783d2e4a3">ripple::NetworkOPsImp</a>.</p>
 
 </div>
 </div>
@@ -1757,6 +1759,34 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Implemented in <a class="el" href="classripple_1_1NetworkOPsImp.html#a04ffda4808b4335cb1c524b00702cd4e">ripple::NetworkOPsImp</a>.</p>
+
+</div>
+</div>
+<a id="a51bff8f9e909c4983b14ba2682ac118c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51bff8f9e909c4983b14ba2682ac118c">&#9670;&nbsp;</a></span>stateAccounting()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void ripple::NetworkOPs::stateAccounting </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classJson_1_1Value.html">Json::Value</a> &amp;&#160;</td>
+          <td class="paramname"><em>obj</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classripple_1_1NetworkOPsImp.html#a8b1bc0c096f1d10f0537c5aac5040431">ripple::NetworkOPsImp</a>.</p>
 
 </div>
 </div>
