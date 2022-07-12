@@ -1,0 +1,30 @@
+name: build
+runs:
+  using: composite
+  steps:
+    - name: export custom recipes
+      shell: bash
+      run: conan export external/*
+    - name: install dependencies
+      shell: bash
+      run: |
+        mkdir ${build_dir}
+        cd ${build_dir}
+        conan install .. --build missing --settings build_type=${{ matrix.configuration }}
+    - name: configure
+      shell: bash
+      run: |
+        cd ${build_dir}
+        cmake \
+          -G ${{ matrix.generator }} \
+          -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+          -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} \
+          -Dassert=ON \
+          -Dcoverage=OFF \
+          -Dreporting=OFF \
+          -Dunity=OFF \
+          ..
+    - name: build
+      shell: bash
+      run: |
+        cmake --build ${build_dir} --config ${{ matrix.configuration }} --parallel $(nproc)
