@@ -108,7 +108,7 @@ class Invariants_test : public beast::unit_test::suite
                     return false;
                 auto amt = acctRoot->balance();
                 acctRoot->setBalance(amt + STAmount{500});
-                ac.view().update(*acctRoot);
+                ac.view().update(acctRoot);
                 return true;
             });
     }
@@ -127,7 +127,7 @@ class Invariants_test : public beast::unit_test::suite
                 auto acctRoot = ac.view().peek(keylet::account(A1.id()));
                 if (!acctRoot)
                     return false;
-                ac.view().erase(*acctRoot);
+                ac.view().erase(acctRoot);
                 return true;
             });
 
@@ -154,8 +154,8 @@ class Invariants_test : public beast::unit_test::suite
                 auto acctRoot2 = ac.view().peek(keylet::account(A2.id()));
                 if (!acctRoot1 || !acctRoot2)
                     return false;
-                ac.view().erase(*acctRoot1);
-                ac.view().erase(*acctRoot2);
+                ac.view().erase(acctRoot1);
+                ac.view().erase(acctRoot2);
                 return true;
             },
             XRPAmount{},
@@ -233,7 +233,7 @@ class Invariants_test : public beast::unit_test::suite
                     return false;
                 STAmount nonNative(A2["USD"](51));
                 acctRoot->setBalance(nonNative);
-                ac.view().update(*acctRoot);
+                ac.view().update(acctRoot);
                 return true;
             });
 
@@ -249,7 +249,7 @@ class Invariants_test : public beast::unit_test::suite
                 // with an invalid value
                 acctRoot->setBalance(INITIAL_XRP + drops(1));
                 BEAST_EXPECT(!acctRoot->balance().negative());
-                ac.view().update(*acctRoot);
+                ac.view().update(acctRoot);
                 return true;
             });
 
@@ -263,7 +263,7 @@ class Invariants_test : public beast::unit_test::suite
                     return false;
                 acctRoot->setBalance(STAmount{1, true});
                 BEAST_EXPECT(acctRoot->balance().negative());
-                ac.view().update(*acctRoot);
+                ac.view().update(acctRoot);
                 return true;
             });
     }

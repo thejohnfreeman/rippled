@@ -719,11 +719,11 @@ adjustOwnerCount(
     beast::Journal j)
 {
     assert(amount != 0);
-    std::uint32_t const current = acctRoot.ownerCount();
-    AccountID const id = acctRoot.accountID();
+    std::uint32_t const current = acctRoot->ownerCount();
+    AccountID const id = acctRoot->accountID();
     std::uint32_t const adjusted = confineOwnerCount(current, amount, id, j);
     view.adjustOwnerCountHook(id, current, adjusted);
-    acctRoot.setOwnerCount(adjusted);
+    acctRoot->setOwnerCount(adjusted);
     view.update(acctRoot);
 }
 
@@ -783,7 +783,8 @@ trustCreate(
     const bool bSetDst = saLimit.getIssuer() == uDstAccountID;
     const bool bSetHigh = bSrcHigh ^ bSetDst;
 
-    assert(acctRoot.accountID() == (bSetHigh ? uHighAccountID : uLowAccountID));
+    assert(
+        acctRoot->accountID() == (bSetHigh ? uHighAccountID : uLowAccountID));
     auto acctRootPeer =
         view.peek(keylet::account(bSetHigh ? uLowAccountID : uHighAccountID));
     if (!acctRootPeer)
@@ -915,7 +916,7 @@ offerDelete(ApplyView& view, std::shared_ptr<SLE> const& sle, beast::Journal j)
     auto ownerAcctRoot = view.peek(keylet::account(owner));
     if (!ownerAcctRoot)
         return tefBAD_LEDGER;
-    adjustOwnerCount(view, *ownerAcctRoot, -1, j);
+    adjustOwnerCount(view, ownerAcctRoot, -1, j);
 
     view.erase(sle);
 
@@ -1002,7 +1003,7 @@ rippleCredit(
             auto ownerAcctRoot = view.peek(keylet::account(uSenderID));
             if (!ownerAcctRoot)
                 return tefBAD_LEDGER;
-            adjustOwnerCount(view, *ownerAcctRoot, -1, j);
+            adjustOwnerCount(view, ownerAcctRoot, -1, j);
 
             // Clear reserve flag.
             sleRippleState->setFieldU32(
@@ -1058,7 +1059,7 @@ rippleCredit(
         uSenderID,
         uReceiverID,
         index.key,
-        *acctRoot,
+        acctRoot,
         false,
         noRipple,
         false,
@@ -1152,10 +1153,10 @@ accountSend(
 
     auto senderAcctRoot = uSenderID != beast::zero
         ? view.peek(keylet::account(uSenderID))
-        : std::nullopt;
+        : nullptr;
     auto receiverAcctRoot = uReceiverID != beast::zero
         ? view.peek(keylet::account(uReceiverID))
-        : std::nullopt;
+        : nullptr;
 
     if (auto stream = j.trace())
     {
@@ -1189,7 +1190,7 @@ accountSend(
 
             // Decrement XRP balance.
             senderAcctRoot->setBalance(sndBal - saAmount);
-            view.update(*senderAcctRoot);
+            view.update(senderAcctRoot);
         }
     }
 
@@ -1200,7 +1201,7 @@ accountSend(
         receiverAcctRoot->setBalance(rcvBal + saAmount);
         view.creditHook(xrpAccount(), uReceiverID, saAmount, -rcvBal);
 
-        view.update(*receiverAcctRoot);
+        view.update(receiverAcctRoot);
     }
 
     if (auto stream = j.trace())
@@ -1261,7 +1262,7 @@ updateTrustLine(
     {
         // VFALCO Where is the line being deleted?
         // Clear the reserve of the sender, possibly delete the line!
-        adjustOwnerCount(view, *senderAcctRoot, -1, j);
+        adjustOwnerCount(view, senderAcctRoot, -1, j);
 
         // Clear reserve flag.
         state->setFieldU32(
@@ -1360,7 +1361,7 @@ issueIOU(
         issue.account,
         account,
         index.key,
-        *receiverAcctRoot,
+        receiverAcctRoot,
         false,
         noRipple,
         false,
@@ -1473,10 +1474,10 @@ transferXRP(
 
     // Decrement XRP balance.
     senderAcctRoot->setBalance(senderAcctRoot->balance() - amount);
-    view.update(*senderAcctRoot);
+    view.update(senderAcctRoot);
 
     receiverAcctRoot->setBalance(receiverAcctRoot->balance() + amount);
-    view.update(*receiverAcctRoot);
+    view.update(receiverAcctRoot);
 
     return tesSUCCESS;
 }

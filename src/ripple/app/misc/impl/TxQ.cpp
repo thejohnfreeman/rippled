@@ -374,7 +374,7 @@ TxQ::canBeHeld(
     STTx const& tx,
     ApplyFlags const flags,
     OpenView const& view,
-    std::optional<AcctRootRd const> const& acctRoot,
+    AcctRootRd const& acctRoot,
     AccountMap::iterator const& accountIter,
     std::optional<TxQAccount::TxMap::iterator> const& replacementIter,
     std::lock_guard<std::mutex> const& lock)
@@ -1578,7 +1578,7 @@ TxQ::accept(Application& app, OpenView& view)
 //
 // Acquires a lock and calls the implementation.
 SeqProxy
-TxQ::nextQueuableSeq(std::optional<AcctRootRd const> const& acctRoot) const
+TxQ::nextQueuableSeq(AcctRootRd const& acctRoot) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return nextQueuableSeqImpl(acctRoot, lock);
@@ -1592,7 +1592,7 @@ TxQ::nextQueuableSeq(std::optional<AcctRootRd const> const& acctRoot) const
 // be found and returned.
 SeqProxy
 TxQ::nextQueuableSeqImpl(
-    std::optional<AcctRootRd const> const& acctRoot,
+    AcctRootRd const& acctRoot,
     std::lock_guard<std::mutex> const&) const
 {
     // If the account is not in the ledger or a non-account was passed

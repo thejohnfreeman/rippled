@@ -26,6 +26,7 @@
 #include <ripple/ledger/OpenView.h>
 #include <ripple/ledger/RawView.h>
 #include <ripple/ledger/ReadView.h>
+#include <ripple/protocol/AcctRoot.h>
 #include <ripple/protocol/Protocol.h>
 #include <ripple/protocol/Rate.h>
 #include <ripple/protocol/STLedgerEntry.h>

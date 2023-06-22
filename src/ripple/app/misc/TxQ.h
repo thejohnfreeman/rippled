@@ -23,6 +23,7 @@
 #include <ripple/app/tx/applySteps.h>
 #include <ripple/ledger/ApplyView.h>
 #include <ripple/ledger/OpenView.h>
+#include <ripple/protocol/AcctRoot.h>
 #include <ripple/protocol/RippleLedgerHash.h>
 #include <ripple/protocol/STTx.h>
 #include <ripple/protocol/SeqProxy.h>
@@ -306,7 +307,7 @@ public:
 
     /** Return the next sequence that would go in the TxQ for an account. */
     SeqProxy
-    nextQueuableSeq(std::optional<AcctRootRd const> const& acctRoot) const;
+    nextQueuableSeq(AcctRootRd const& acctRoot) const;
 
     /** Returns fee metrics in reference fee level units.
      */
@@ -363,7 +364,7 @@ private:
     // Implementation for nextQueuableSeq().  The passed lock must be held.
     SeqProxy
     nextQueuableSeqImpl(
-        std::optional<AcctRootRd const> const& acctRoot,
+        AcctRootRd const& acctRoot,
         std::lock_guard<std::mutex> const&) const;
 
     /**
@@ -812,7 +813,7 @@ private:
         STTx const&,
         ApplyFlags const,
         OpenView const&,
-        std::optional<AcctRootRd const> const& acctRoot,
+        AcctRootRd const& acctRoot,
         AccountMap::iterator const&,
         std::optional<TxQAccount::TxMap::iterator> const&,
         std::lock_guard<std::mutex> const& lock);

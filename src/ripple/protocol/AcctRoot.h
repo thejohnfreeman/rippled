@@ -20,122 +20,103 @@
 #ifndef RIPPLE_PROTOCOL_ACCT_ROOT_H_INCLUDED
 #define RIPPLE_PROTOCOL_ACCT_ROOT_H_INCLUDED
 
-#include <ripple/protocol/LedgerEntryWrapper.h>
 #include <ripple/protocol/STAccount.h>
 #include <ripple/protocol/STAmount.h>
+#include <ripple/protocol/STLedgerEntry.h>
 
 namespace ripple {
 
-template <bool Writable>
-class AcctRootImpl final : public LedgerEntryWrapper<Writable>
+class AcctRootImpl final : public STLedgerEntry
 {
 private:
-    using Base = LedgerEntryWrapper<Writable>;
-    using SleT = typename Base::SleT;
-    using Base::wrapped_;
+    // Inherit constructors.
+    using STLedgerEntry::STLedgerEntry;
 
-    // This constructor is private so only the factory functions can
-    // construct an AcctRootImpl.
-    AcctRootImpl(std::shared_ptr<SleT>&& w) : Base(std::move(w))
-    {
-    }
-
-    // Friend declarations of factory functions.
-    //
-    // For classes that contain factories we must declare the entire class
-    // as a friend unless the class declaration is visible at this point.
+    // Friends who construct.
     friend class ReadView;
     friend class ApplyView;
 
 public:
-    // Conversion operator from AcctRootImpl<true> to AcctRootImpl<false>.
-    operator AcctRootImpl<true>() const
-    {
-        return AcctRootImpl<false>(
-            std::const_pointer_cast<std::shared_ptr<STLedgerEntry const>>(
-                wrapped_));
-    }
-
     [[nodiscard]] AccountID
     accountID() const
     {
-        return wrapped_->at(sfAccount);
+        return at(sfAccount);
     }
 
     [[nodiscard]] std::uint32_t
     sequence() const
     {
-        return wrapped_->at(sfSequence);
+        return at(sfSequence);
     }
 
     void
-    setSequence(std::uint32_t seq) requires Writable
+    setSequence(std::uint32_t seq)
     {
-        wrapped_->at(sfSequence) = seq;
+        at(sfSequence) = seq;
     }
 
     [[nodiscard]] STAmount
     balance() const
     {
-        return wrapped_->at(sfBalance);
+        return at(sfBalance);
     }
 
     void
-    setBalance(STAmount const& amount) requires Writable
+    setBalance(STAmount const& amount)
     {
-        wrapped_->at(sfBalance) = amount;
+        at(sfBalance) = amount;
     }
 
     [[nodiscard]] std::uint32_t
     ownerCount() const
     {
-        return wrapped_->at(sfOwnerCount);
+        return at(sfOwnerCount);
     }
 
     void
-    setOwnerCount(std::uint32_t newCount) requires Writable
+    setOwnerCount(std::uint32_t newCount)
     {
-        wrapped_->at(sfOwnerCount) = newCount;
+        at(sfOwnerCount) = newCount;
     }
 
     [[nodiscard]] std::uint32_t
     previousTxnID() const
     {
-        return wrapped_->at(sfOwnerCount);
+        return at(sfOwnerCount);
     }
 
     void
-    setPreviousTxnID(uint256 prevTxID) requires Writable
+    setPreviousTxnID(uint256 prevTxID)
     {
-        wrapped_->at(sfPreviousTxnID) = prevTxID;
+        at(sfPreviousTxnID) = prevTxID;
     }
 
     [[nodiscard]] std::uint32_t
     previousTxnLgrSeq() const
     {
-        return wrapped_->at(sfPreviousTxnLgrSeq);
+        return at(sfPreviousTxnLgrSeq);
     }
 
     void
-    setPreviousTxnLgrSeq(std::uint32_t prevTxLgrSeq) requires Writable
+    setPreviousTxnLgrSeq(std::uint32_t prevTxLgrSeq)
     {
-        wrapped_->at(sfPreviousTxnLgrSeq) = prevTxLgrSeq;
+        at(sfPreviousTxnLgrSeq) = prevTxLgrSeq;
     }
 
     [[nodiscard]] std::optional<uint256>
     accountTxnID() const
     {
-        return wrapped_->at(~sfAccountTxnID);
+        return at(~sfAccountTxnID);
     }
 
     void
-    setAccountTxnID(uint256 const& newAcctTxnID) requires Writable
+    setAccountTxnID(uint256 const& newAcctTxnID)
     {
         this->setOptional(sfAccountTxnID, newAcctTxnID);
     }
 
     void
-    clearAccountTxnID() requires Writable
+    clearAccountTxnID()
     {
         this->clearOptional(sfAccountTxnID);
     }
@@ -143,17 +124,17 @@ public:
     [[nodiscard]] std::optional<AccountID>
     regularKey() const
     {
-        return wrapped_->at(~sfRegularKey);
+        return at(~sfRegularKey);
     }
 
     void
-    setRegularKey(AccountID const& newRegKey) requires Writable
+    setRegularKey(AccountID const& newRegKey)
     {
         this->setOptional(sfRegularKey, newRegKey);
     }
 
     void
-    clearRegularKey() requires Writable
+    clearRegularKey()
     {
         this->clearOptional(sfRegularKey);
     }
@@ -161,11 +142,11 @@ public:
     [[nodiscard]] std::optional<uint128>
     emailHash() const
     {
-        return wrapped_->at(~sfEmailHash);
+        return at(~sfEmailHash);
     }
 
     void
-    setEmailHash(uint128 const& newEmailHash) requires Writable
+    setEmailHash(uint128 const& newEmailHash)
     {
         this->setOrClearBaseUintIfZero(sfEmailHash, newEmailHash);
     }
@@ -173,11 +154,11 @@ public:
     [[nodiscard]] std::optional<uint256>
     walletLocator() const
     {
-        return wrapped_->at(~sfWalletLocator);
+        return at(~sfWalletLocator);
     }
 
     void
-    setWalletLocator(uint256 const& newWalletLocator) requires Writable
+    setWalletLocator(uint256 const& newWalletLocator)
     {
         this->setOrClearBaseUintIfZero(sfWalletLocator, newWalletLocator);
     }
@@ -185,7 +166,7 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     walletSize() const
     {
-        return wrapped_->at(~sfWalletSize);
+        return at(~sfWalletSize);
     }
 
     [[nodiscard]] Blob
@@ -195,7 +176,7 @@ public:
     }
 
     void
-    setMessageKey(Blob const& newMessageKey) requires Writable
+    setMessageKey(Blob const& newMessageKey)
     {
         this->setOrClearVLIfEmpty(sfMessageKey, newMessageKey);
     }
@@ -203,17 +184,17 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     transferRate() const
     {
-        return wrapped_->at(~sfTransferRate);
+        return at(~sfTransferRate);
     }
 
     void
-    setTransferRate(std::uint32_t newTransferRate) requires Writable
+    setTransferRate(std::uint32_t newTransferRate)
     {
         this->setOptional(sfTransferRate, newTransferRate);
     }
 
     void
-    clearTransferRate() requires Writable
+    clearTransferRate()
     {
         this->clearOptional(sfTransferRate);
     }
@@ -225,7 +206,7 @@ public:
     }
 
     void
-    setDomain(Blob const& newDomain) requires Writable
+    setDomain(Blob const& newDomain)
     {
         this->setOrClearVLIfEmpty(sfDomain, newDomain);
     }
@@ -233,17 +214,17 @@ public:
     [[nodiscard]] std::optional<std::uint8_t>
     tickSize() const
     {
-        return wrapped_->at(~sfTickSize);
+        return at(~sfTickSize);
     }
 
     void
-    setTickSize(std::uint8_t newTickSize) requires Writable
+    setTickSize(std::uint8_t newTickSize)
     {
         this->setOptional(sfTickSize, newTickSize);
     }
 
     void
-    clearTickSize() requires Writable
+    clearTickSize()
     {
         this->clearOptional(sfTickSize);
     }
@@ -251,17 +232,17 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     ticketCount() const
     {
-        return wrapped_->at(~sfTicketCount);
+        return at(~sfTicketCount);
     }
 
     void
-    setTicketCount(std::uint32_t newTicketCount) requires Writable
+    setTicketCount(std::uint32_t newTicketCount)
     {
         this->setOptional(sfTicketCount, newTicketCount);
     }
 
     void
-    clearTicketCount() requires Writable
+    clearTicketCount()
     {
         this->clearOptional(sfTicketCount);
     }
@@ -269,17 +250,17 @@ public:
     [[nodiscard]] std::optional<AccountID>
     NFTokenMinter() const
     {
-        return wrapped_->at(~sfNFTokenMinter);
+        return at(~sfNFTokenMinter);
     }
 
     void
-    setNFTokenMinter(AccountID const& newMinter) requires Writable
+    setNFTokenMinter(AccountID const& newMinter)
     {
         this->setOptional(sfNFTokenMinter, newMinter);
     }
 
     void
-    clearNFTokenMinter() requires Writable
+    clearNFTokenMinter()
     {
         this->clearOptional(sfNFTokenMinter);
     }
@@ -287,11 +268,11 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     mintedNFTokens() const
     {
-        return wrapped_->at(~sfMintedNFTokens);
+        return at(~sfMintedNFTokens);
     }
 
     void
-    setMintedNFTokens(std::uint32_t newMintedCount) requires Writable
+    setMintedNFTokens(std::uint32_t newMintedCount)
     {
         this->setOptional(sfMintedNFTokens, newMintedCount);
     }
@@ -299,11 +280,11 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     burnedNFTokens() const
     {
-        return wrapped_->at(~sfBurnedNFTokens);
+        return at(~sfBurnedNFTokens);
     }
 
     void
-    setBurnedNFTokens(std::uint32_t newBurnedCount) requires Writable
+    setBurnedNFTokens(std::uint32_t newBurnedCount)
     {
         this->setOptional(sfBurnedNFTokens, newBurnedCount);
     }
@@ -311,35 +292,35 @@ public:
     [[nodiscard]] std::optional<std::uint32_t>
     firstNFTokenSequence() const
     {
-        return wrapped_->at(~sfFirstNFTokenSequence);
+        return at(~sfFirstNFTokenSequence);
     }
 
     void
     setFirstNFTokenSequence(std::uint32_t newFirstNFTokenSeq)
     {
-        static_assert(Writable, "Cannot set member of const ledger entry.");
         this->setOptional(sfFirstNFTokenSequence, newFirstNFTokenSeq);
     }
 };
 
-using AcctRootRd = AcctRootImpl<false>;
-using AcctRoot = AcctRootImpl<true>;
+// TODO: Rename `AcctRootImpl` to `AccountRoot` and eliminate these aliases.
+using AcctRootRd = std::shared_ptr<AcctRootImpl const>;
+using AcctRoot = std::shared_ptr<AcctRootImpl>;
 
 // clang-format off
 #ifndef __INTELLISENSE__
-static_assert(! std::is_default_constructible_v<AcctRootRd>);
-static_assert(  std::is_copy_constructible_v<AcctRootRd>);
-static_assert(  std::is_move_constructible_v<AcctRootRd>);
-static_assert(  std::is_copy_assignable_v<AcctRootRd>);
-static_assert(  std::is_move_assignable_v<AcctRootRd>);
-static_assert(  std::is_nothrow_destructible_v<AcctRootRd>);
+static_assert(std::is_default_constructible_v<AcctRootRd>);
+static_assert(std::is_copy_constructible_v<AcctRootRd>);
+static_assert(std::is_move_constructible_v<AcctRootRd>);
+static_assert(std::is_copy_assignable_v<AcctRootRd>);
+static_assert(std::is_move_assignable_v<AcctRootRd>);
+static_assert(std::is_nothrow_destructible_v<AcctRootRd>);
 
-static_assert(! std::is_default_constructible_v<AcctRoot>);
-static_assert(  std::is_copy_constructible_v<AcctRoot>);
-static_assert(  std::is_move_constructible_v<AcctRoot>);
-static_assert(  std::is_copy_assignable_v<AcctRoot>);
-static_assert(  std::is_move_assignable_v<AcctRoot>);
-static_assert(  std::is_nothrow_destructible_v<AcctRoot>);
+static_assert(std::is_default_constructible_v<AcctRoot>);
+static_assert(std::is_copy_constructible_v<AcctRoot>);
+static_assert(std::is_move_constructible_v<AcctRoot>);
+static_assert(std::is_copy_assignable_v<AcctRoot>);
+static_assert(std::is_move_assignable_v<AcctRoot>);
+static_assert(std::is_nothrow_destructible_v<AcctRoot>);
 #endif  // __INTELLISENSE__
 // clang-format on
 

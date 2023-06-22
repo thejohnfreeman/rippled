@@ -17,6 +17,7 @@
 */
 //==============================================================================
 
+#include <ripple/protocol/AcctRoot.h>
 #include <ripple/protocol/Keylet.h>
 #include <ripple/protocol/STLedgerEntry.h>
 
@@ -34,6 +35,19 @@ KeyletBase::check(STLedgerEntry const& sle) const
         return sle.getType() != ltDIR_NODE;
 
     return sle.getType() == type;
+}
+
+std::shared_ptr<STLedgerEntry>
+Keylet::make_sle(SerialIter&& sit, uint256 const& index) const
+{
+    return std::make_shared<STLedgerEntry>(std::move(sit), index);
+}
+
+std::shared_ptr<STLedgerEntry>
+AccountRootKeylet::make_sle(SerialIter&& sit, uint256 const& index) const
+{
+    auto sle = std::make_shared<AcctRootImpl>(std::move(sit), index);
+    return std::static_pointer_cast<STLedgerEntry>(std::move(sle));
 }
 
 }  // namespace ripple

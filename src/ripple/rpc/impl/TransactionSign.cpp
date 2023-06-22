@@ -120,7 +120,7 @@ public:
 
 static error_code_i
 acctMatchesPubKey(
-    std::optional<AcctRootRd> const& acctRoot,
+    AcctRootRd const& acctRoot,
     AccountID const& accountID,
     PublicKey const& publicKey)
 {
@@ -398,12 +398,11 @@ transactionPreProcessImpl(
     if (!verify && !tx_json.isMember(jss::Sequence))
         return RPC::missing_field_error("tx_json.Sequence");
 
-    std::optional<AcctRootRd> acctRoot;
+    AcctRootRd acctRoot;
     if (verify)
     {
-        std::optional<AcctRootRd> temp =
+        acctRoot =
             app.openLedger().current()->read(keylet::account(srcAddressID));
-        acctRoot.swap(temp);
     }
 
     if (verify && !acctRoot)
@@ -991,8 +990,7 @@ transactionSignFor(
         return preprocResult.first;
 
     {
-        std::optional<AcctRootRd> const acctRoot =
-            ledger->read(keylet::account(*signerAccountID));
+        auto acctRoot = ledger->read(keylet::account(*signerAccountID));
         // Make sure the account and secret belong together.
         auto const err =
             acctMatchesPubKey(acctRoot, *signerAccountID, multiSignPubKey);

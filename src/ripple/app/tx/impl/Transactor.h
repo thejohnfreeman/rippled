@@ -24,6 +24,7 @@
 #include <ripple/app/tx/impl/ApplyContext.h>
 #include <ripple/basics/XRPAmount.h>
 #include <ripple/beast/utility/Journal.h>
+#include <ripple/protocol/AcctRoot.h>
 
 namespace ripple {
 

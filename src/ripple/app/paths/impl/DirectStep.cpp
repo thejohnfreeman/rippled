@@ -416,7 +416,7 @@ DirectIPaymentStep::check(
 
         auto const authField = (src_ > dst_) ? lsfHighAuth : lsfLowAuth;
 
-        if (acctRootSrc.isFlag(lsfRequireAuth) &&
+        if (acctRootSrc->isFlag(lsfRequireAuth) &&
             !((*sleLine)[sfFlags] & authField) &&
             (*sleLine)[sfBalance] == beast::zero)
         {
@@ -944,7 +944,7 @@ DirectStepI<TDerived>::check(StrandContext const& ctx) const
         }
     }
 
-    return static_cast<TDerived const*>(this)->check(ctx, *acctRootSrc);
+    return static_cast<TDerived const*>(this)->check(ctx, acctRootSrc);
 }
 
 //------------------------------------------------------------------------------

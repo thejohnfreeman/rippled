@@ -24,6 +24,8 @@
 #include <ripple/ledger/RawView.h>
 #include <ripple/ledger/ReadView.h>
 
+#include <memory>
+
 namespace ripple {
 
 enum ApplyFlags : std::uint32_t {
@@ -173,15 +175,13 @@ public:
     virtual std::shared_ptr<SLE>
     peekSLE(KeyletBase const& k) = 0;
 
-    template <
-        class TKeylet,
-        typename Wrapped = typename TKeylet::template TWrapped<true>>
+    template <class K, typename T = typename K::sle_type>
     auto
-    peek(TKeylet const& keylet) -> std::optional<Wrapped>
+    peek(K const& keylet) -> std::shared_ptr<T>
     {
         if (auto sle = peekSLE(keylet))
         {
-            return Wrapped(std::move(sle));
+            return std::static_pointer_cast<T>(std::move(sle));
         }
         return {};
     }
@@ -199,14 +199,6 @@ public:
     */
     virtual void
     erase(std::shared_ptr<SLE> const& sle) = 0;
-
-    template <class T>
-    requires(std::is_convertible_v<
-             decltype(std::declval<T>().slePtr()),
-             std::shared_ptr<SLE> const&>) void erase(T& wrapper)
-    {
-        erase(wrapper.slePtr());
-    }
 
     /** Insert a new state SLE
 
@@ -247,14 +239,6 @@ public:
     /** @{ */
     virtual void
     update(std::shared_ptr<SLE> const& sle) = 0;
-
-    template <class T>
-    requires(std::is_convertible_v<
-             decltype(std::declval<T>().slePtr()),
-             std::shared_ptr<SLE> const&>) void update(T& wrapper)
-    {
-        update(wrapper.slePtr());
-    }
 
     //--------------------------------------------------------------------------
 

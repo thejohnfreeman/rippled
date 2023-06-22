@@ -113,7 +113,7 @@ doAccountInfo(RPC::JsonContext& context)
             return result;
         }
 
-        RPC::injectSLE(jvAccepted, *acctRootAccepted->slePtr());
+        RPC::injectSLE(jvAccepted, *acctRootAccepted);
         result[jss::account_data] = jvAccepted;
 
         Json::Value acctFlags{Json::objectValue};

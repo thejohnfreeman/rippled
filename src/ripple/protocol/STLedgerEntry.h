@@ -20,14 +20,16 @@
 #ifndef RIPPLE_PROTOCOL_STLEDGERENTRY_H_INCLUDED
 #define RIPPLE_PROTOCOL_STLEDGERENTRY_H_INCLUDED
 
-#include <ripple/protocol/Indexes.h>
+#include <ripple/basics/CountedObject.h>
+#include <ripple/protocol/Keylet.h>
+#include <ripple/protocol/LedgerFormats.h>
 #include <ripple/protocol/STObject.h>
 
 namespace ripple {
 
 class Invariants_test;
 
-class STLedgerEntry final : public STObject, public CountedObject<STLedgerEntry>
+class STLedgerEntry : public STObject, public CountedObject<STLedgerEntry>
 {
     uint256 key_;
     LedgerEntryType type_;
@@ -75,6 +77,82 @@ public:
         std::uint32_t ledgerSeq,
         uint256& prevTxID,
         std::uint32_t& prevLedgerID);
+
+protected:
+    template <typename F, typename T>
+    void
+    setOptional(F const& field, T const& value)
+    {
+        if (!isFieldPresent(field))
+            makeFieldPresent(field);
+        this->at(field) = value;
+    }
+
+    void
+    clearOptional(SField const& field)
+    {
+        if (isFieldPresent(field))
+            makeFieldAbsent(field);
+    }
+
+    [[nodiscard]] Blob
+    getOptionalVL(SF_VL const& field) const
+    {
+        Blob blob;
+        if (isFieldPresent(field))
+            blob = getFieldVL(field);
+        return blob;
+    }
+
+    template <typename F, typename T>
+    void
+    setOrClearBaseUintIfZero(F const& field, T const& value)
+    {
+        if (value.signum() == 0)
+            return clearOptional(field);
+        setOptional(field, value);
+    }
+
+    void
+    setOrClearVLIfEmpty(SF_VL const& field, Blob const& value)
+    {
+        if (value.empty())
+            return clearOptional(field);
+        if (!isFieldPresent(field))
+            makeFieldPresent(field);
+        setFieldVL(field, value);
+    }
+
+public:
+    [[nodiscard]] std::uint32_t
+    flags() const
+    {
+        return at(sfFlags);
+    }
+
+    [[nodiscard]] bool
+    isFlag(std::uint32_t flagsToCheck) const
+    {
+        return (flags() & flagsToCheck) == flagsToCheck;
+    }
+
+    void
+    replaceAllFlags(std::uint32_t newFlags)
+    {
+        at(sfFlags) = newFlags;
+    }
+
+    void
+    setFlag(std::uint32_t flagsToSet)
+    {
+        replaceAllFlags(flags() | flagsToSet);
+    }
+
+    void
+    clearFlag(std::uint32_t flagsToClear)
+    {
+        replaceAllFlags(flags() & ~flagsToClear);
+    }
 
 private:
     /*  Make STObject comply with the template for this SLE type

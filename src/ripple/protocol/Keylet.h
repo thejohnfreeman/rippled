@@ -21,8 +21,8 @@
 #define RIPPLE_PROTOCOL_KEYLET_H_INCLUDED
 
 #include <ripple/basics/base_uint.h>
-#include <ripple/protocol/AcctRoot.h>
 #include <ripple/protocol/LedgerFormats.h>
+#include <ripple/protocol/Serializer.h>
 
 namespace ripple {
 
@@ -66,6 +66,9 @@ public:
     /** Returns true if the SLE matches the type */
     bool
     check(STLedgerEntry const&) const;
+
+    virtual std::shared_ptr<STLedgerEntry>
+    make_sle(SerialIter&& sit, uint256 const& index) const = 0;
 };
 
 #ifndef __INTELLISENSE__
@@ -77,6 +80,7 @@ static_assert(!std::is_move_assignable_v<KeyletBase>);
 static_assert(!std::is_nothrow_destructible_v<KeyletBase>);
 #endif
 
+// TODO: Rename `KeyletBase` to `Keylet` and `Keylet` to `GenericKeylet`.
 struct Keylet final : public KeyletBase
 {
     Keylet(LedgerEntryType type, uint256 const& key) : KeyletBase(type, key)
@@ -84,6 +88,9 @@ struct Keylet final : public KeyletBase
     }
 
     using KeyletBase::check;
+
+    std::shared_ptr<STLedgerEntry>
+    make_sle(SerialIter&& sit, uint256 const& index) const override;
 };
 
 #ifndef __INTELLISENSE__
@@ -95,13 +102,11 @@ static_assert(std::is_move_assignable_v<Keylet>);
 static_assert(std::is_nothrow_destructible_v<Keylet>);
 #endif
 
-template <bool>
 class AcctRootImpl;
 
 struct AccountRootKeylet final : public KeyletBase
 {
-    template <bool Writable>
-    using TWrapped = AcctRootImpl<Writable>;
+    using sle_type = AcctRootImpl;
 
     using KeyletBase::check;
 
@@ -109,6 +114,9 @@ struct AccountRootKeylet final : public KeyletBase
         : KeyletBase(ltACCOUNT_ROOT, key)
     {
     }
+
+    virtual std::shared_ptr<STLedgerEntry>
+    make_sle(SerialIter&& sit, uint256 const& index) const override;
 };
 
 #ifndef __INTELLISENSE__

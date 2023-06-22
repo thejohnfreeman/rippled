@@ -460,7 +460,7 @@ Ledger::readSLE(KeyletBase const& k) const
     auto const& item = stateMap_.peekItem(k.key);
     if (!item)
         return nullptr;
-    auto sle = std::make_shared<SLE>(SerialIter{item->slice()}, item->key());
+    auto sle = k.make_sle(SerialIter{item->slice()}, item->key());
     if (!k.check(*sle))
         return nullptr;
     return sle;

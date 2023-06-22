@@ -369,7 +369,7 @@ Transactor::consumeSeqProxy(AcctRoot& acctRoot)
         // Note that if this transaction is a TicketCreate, then
         // the transaction will modify the account root sfSequence
         // yet again.
-        acctRoot.setSequence(seqProx.value() + 1);
+        acctRoot->setSequence(seqProx.value() + 1);
         return tesSUCCESS;
     }
     return ticketDelete(
@@ -423,7 +423,7 @@ Transactor::ticketDelete(
     }
 
     // Update the Ticket owner's reserve.
-    adjustOwnerCount(view, *acctRoot, -1, j);
+    adjustOwnerCount(view, acctRoot, -1, j);
 
     // Remove Ticket from ledger.
     view.erase(sleTicket);
@@ -455,7 +455,7 @@ Transactor::apply()
         mPriorBalance = acctRoot->balance().xrp();
         mSourceBalance = mPriorBalance;
 
-        TER result = consumeSeqProxy(*acctRoot);
+        TER result = consumeSeqProxy(acctRoot);
         if (result != tesSUCCESS)
             return result;
 
@@ -466,7 +466,7 @@ Transactor::apply()
         if (acctRoot->accountTxnID())
             acctRoot->setAccountTxnID(ctx_.tx.getTransactionID());
 
-        view().update(*acctRoot);
+        view().update(acctRoot);
     }
 
     return doApply();
@@ -784,11 +784,11 @@ Transactor::reset(XRPAmount fee)
     // then the ledger is corrupted.  Rather than make things worse we
     // reject the transaction.
     txnAcctRoot->setBalance(balance - fee);
-    TER const ter = consumeSeqProxy(*txnAcctRoot);
+    TER const ter = consumeSeqProxy(txnAcctRoot);
     assert(isTesSuccess(ter));
 
     if (isTesSuccess(ter))
-        view().update(*txnAcctRoot);
+        view().update(txnAcctRoot);
 
     return {ter, fee};
 }
