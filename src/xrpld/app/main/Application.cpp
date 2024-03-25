@@ -50,7 +50,6 @@
 #include <xrpld/app/reporting/ReportingETL.h>
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/core/DatabaseCon.h>
-#include <xrpld/nodestore/DatabaseShard.h>
 #include <xrpld/nodestore/DummyScheduler.h>
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/overlay/PeerReservationTable.h>
@@ -58,9 +57,7 @@
 #include <xrpld/overlay/make_Overlay.h>
 #include <xrpld/perflog/PerfLog.h>
 #include <xrpld/rpc/RPCHelpers.h>
-#include <xrpld/rpc/ShardArchiveHandler.h>
 #include <xrpld/shamap/NodeFamily.h>
-#include <xrpld/shamap/ShardFamily.h>
 #include <xrpl/basics/ByteUtilities.h>
 #include <xrpl/basics/ResolverAsio.h>
 #include <xrpl/basics/random.h>
@@ -192,9 +189,6 @@ public:
 
     std::unique_ptr<NodeStore::Database> m_nodeStore;
     NodeFamily nodeFamily_;
-    std::unique_ptr<NodeStore::DatabaseShard> shardStore_;
-    std::unique_ptr<ShardFamily> shardFamily_;
-    std::unique_ptr<RPC::ShardArchiveHandler> shardArchiveHandler_;
     // VFALCO TODO Make OrderBookDB abstract
     OrderBookDB m_orderBookDB;
     std::unique_ptr<PathRequests> m_pathRequests;
@@ -359,13 +353,6 @@ public:
               config_->PREFETCH_WORKERS > 0 ? config_->PREFETCH_WORKERS : 4))
 
         , nodeFamily_(*this, *m_collectorManager)
-
-        // The shard store is optional and make_ShardStore can return null.
-        , shardStore_(make_ShardStore(
-              *this,
-              m_nodeStoreScheduler,
-              4,
-              logs_->journal("ShardStore")))
 
         , m_orderBookDB(*this)
 
@@ -564,14 +551,6 @@ public:
         return nodeFamily_;
     }
 
-    // The shard store is an optional feature. If the sever is configured for
-    // shards, this function will return a valid pointer, otherwise a nullptr.
-    Family*
-    getShardFamily() override
-    {
-        return shardFamily_.get();
-    }
-
     TimeKeeper&
     timeKeeper() override
     {
@@ -693,72 +672,6 @@ public:
     getNodeStore() override
     {
         return *m_nodeStore;
-    }
-
-    // The shard store is an optional feature. If the sever is configured for
-    // shards, this function will return a valid pointer, otherwise a nullptr.
-    NodeStore::DatabaseShard*
-    getShardStore() override
-    {
-        return shardStore_.get();
-    }
-
-    RPC::ShardArchiveHandler*
-    getShardArchiveHandler(bool tryRecovery) override
-    {
-        static std::mutex handlerMutex;
-        std::lock_guard lock(handlerMutex);
-
-        // After constructing the handler, try to
-        // initialize it. Log on error; set the
-        // member variable on success.
-        auto initAndSet =
-            [this](std::unique_ptr<RPC::ShardArchiveHandler>&& handler) {
-                if (!handler)
-                    return false;
-
-                if (!handler->init())
-                {
-                    JLOG(m_journal.error())
-                        << "Failed to initialize ShardArchiveHandler.";
-
-                    return false;
-                }
-
-                shardArchiveHandler_ = std::move(handler);
-                return true;
-            };
-
-        // Need to resume based on state from a previous
-        // run.
-        if (tryRecovery)
-        {
-            if (shardArchiveHandler_ != nullptr)
-            {
-                JLOG(m_journal.error())
-                    << "ShardArchiveHandler already created at startup.";
-
-                return nullptr;
-            }
-
-            auto handler =
-                RPC::ShardArchiveHandler::tryMakeRecoveryHandler(*this);
-
-            if (!initAndSet(std::move(handler)))
-                return nullptr;
-        }
-
-        // Construct the ShardArchiveHandler
-        if (shardArchiveHandler_ == nullptr)
-        {
-            auto handler =
-                RPC::ShardArchiveHandler::makeShardArchiveHandler(*this);
-
-            if (!initAndSet(std::move(handler)))
-                return nullptr;
-        }
-
-        return shardArchiveHandler_.get();
     }
 
     Application::MutexType&
@@ -1074,10 +987,10 @@ public:
 
         {
             std::shared_ptr<FullBelowCache const> const fullBelowCache =
-                nodeFamily_.getFullBelowCache(0);
+                nodeFamily_.getFullBelowCache();
 
             std::shared_ptr<TreeNodeCache const> const treeNodeCache =
-                nodeFamily_.getTreeNodeCache(0);
+                nodeFamily_.getTreeNodeCache();
 
             std::size_t const oldFullBelowSize = fullBelowCache->size();
             std::size_t const oldTreeNodeSize = treeNodeCache->size();
@@ -1092,25 +1005,6 @@ public:
             JLOG(m_journal.debug())
                 << "NodeFamily::TreeNodeCache sweep.  Size before: "
                 << oldTreeNodeSize << "; size after: " << treeNodeCache->size();
-        }
-        if (shardFamily_)
-        {
-            std::size_t const oldFullBelowSize =
-                shardFamily_->getFullBelowCacheSize();
-            std::size_t const oldTreeNodeSize =
-                shardFamily_->getTreeNodeCacheSize().second;
-
-            shardFamily_->sweep();
-
-            JLOG(m_journal.debug())
-                << "ShardFamily::FullBelowCache sweep.  Size before: "
-                << oldFullBelowSize
-                << "; size after: " << shardFamily_->getFullBelowCacheSize();
-
-            JLOG(m_journal.debug())
-                << "ShardFamily::TreeNodeCache sweep.  Size before: "
-                << oldTreeNodeSize << "; size after: "
-                << shardFamily_->getTreeNodeCacheSize().second;
         }
         {
             TaggedCache<uint256, Transaction> const& masterTxCache =
@@ -1127,11 +1021,6 @@ public:
         {
             // Does not appear to have an associated cache.
             getNodeStore().sweep();
-        }
-        if (shardStore_)
-        {
-            // Does not appear to have an associated cache.
-            shardStore_->sweep();
         }
         {
             std::size_t const oldLedgerMasterCacheSize =
@@ -1259,9 +1148,6 @@ private:
     // and new validations must be greater than this.
     std::atomic<LedgerIndex> maxDisallowedLedger_{0};
 
-    bool
-    nodeToShards();
-
     void
     startGenesisLedger();
 
@@ -1336,15 +1222,6 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
 
     if (!initRelationalDatabase() || !initNodeStore())
         return false;
-
-    if (shardStore_)
-    {
-        shardFamily_ =
-            std::make_unique<ShardFamily>(*this, *m_collectorManager);
-
-        if (!shardStore_->init())
-            return false;
-    }
 
     if (!peerReservations_->load(getWalletDB()))
     {
@@ -1531,13 +1408,6 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
         add(*overlay_);  // add to PropertyStream
     }
 
-    if (!config_->standalone())
-    {
-        // NodeStore import into the ShardStore requires the SQLite database
-        if (config_->nodeToShard && !nodeToShards())
-            return false;
-    }
-
     // start first consensus round
     if (!config_->reporting() &&
         !m_networkOPs->beginConsensus(
@@ -1652,38 +1522,6 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
         }
     }
 
-    RPC::ShardArchiveHandler* shardArchiveHandler = nullptr;
-    if (shardStore_)
-    {
-        try
-        {
-            // Create a ShardArchiveHandler if recovery
-            // is needed (there's a state database left
-            // over from a previous run).
-            auto handler = getShardArchiveHandler(true);
-
-            // Recovery is needed.
-            if (handler)
-                shardArchiveHandler = handler;
-        }
-        catch (std::exception const& e)
-        {
-            JLOG(m_journal.fatal())
-                << "Exception when starting ShardArchiveHandler from "
-                   "state database: "
-                << e.what();
-
-            return false;
-        }
-    }
-
-    if (shardArchiveHandler && !shardArchiveHandler->start())
-    {
-        JLOG(m_journal.fatal()) << "Failed to start ShardArchiveHandler.";
-
-        return false;
-    }
-
     validatorSites_->start();
 
     if (reportingETL_)
@@ -1795,12 +1633,8 @@ ApplicationImp::run()
     m_loadManager->stop();
     m_shaMapStore->stop();
     m_jobQueue->stop();
-    if (shardArchiveHandler_)
-        shardArchiveHandler_->stop();
     if (overlay_)
         overlay_->stop();
-    if (shardStore_)
-        shardStore_->stop();
     grpcServer_->stop();
     m_networkOPs->stop();
     serverHandler_->stop();
@@ -1863,9 +1697,6 @@ ApplicationImp::fdRequired() const
     // the number of fds needed by the backend (internally
     // doubled if online delete is enabled).
     needed += std::max(5, m_shaMapStore->fdRequired());
-
-    if (shardStore_)
-        needed += shardStore_->fdRequired();
 
     // One fd per incoming connection a port can accept, or
     // if no limit is set, assume it'll handle 256 clients.
@@ -2317,27 +2148,6 @@ beast::Journal
 ApplicationImp::journal(std::string const& name)
 {
     return logs_->journal(name);
-}
-
-bool
-ApplicationImp::nodeToShards()
-{
-    assert(overlay_);
-    assert(!config_->standalone());
-
-    if (config_->section(ConfigSection::shardDatabase()).empty())
-    {
-        JLOG(m_journal.fatal())
-            << "The [shard_db] configuration setting must be set";
-        return false;
-    }
-    if (!shardStore_)
-    {
-        JLOG(m_journal.fatal()) << "Invalid [shard_db] configuration";
-        return false;
-    }
-    shardStore_->importDatabase(getNodeStore());
-    return true;
 }
 
 void
