@@ -24,10 +24,10 @@
 #include <xrpld/app/tx/NFTokenUtils.h>
 #include <xrpld/app/tx/SetSignerList.h>
 #include <xrpld/ledger/View.h>
-#include <xrpl/basics/FeeUnits.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/mulDiv.h>
 #include <xrpl/protocol/Feature.h>
+#include <xrpl/protocol/FeeUnits.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/TxFlags.h>
