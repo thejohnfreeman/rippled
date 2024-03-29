@@ -22,8 +22,8 @@
 
 #include <xrpld/app/tx/ApplyContext.h>
 #include <xrpld/app/tx/applySteps.h>
-#include <xrpl/basics/XRPAmount.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/protocol/XRPAmount.h>
 
 namespace ripple {
 
