@@ -213,5 +213,5 @@ jobs:
           fail_ci_if_error: true
           disable_search: true
           verbose: true
-          plugin: gcov
+          plugin: cobertura
           token: ${{ secrets.CODECOV_TOKEN }}

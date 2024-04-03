@@ -4,3 +4,10 @@ coverage:
       default:
         target: 60%
         threshold: 2%
+
+ignore:
+  - "src/test/"
+
+parsers:
+  cobertura:
+    partials_as_hits: true
