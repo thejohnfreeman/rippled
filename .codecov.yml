@@ -9,5 +9,9 @@ ignore:
   - "src/test/"
 
 parsers:
-  cobertura:
-    partials_as_hits: true
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      method: no
+      macro: no
