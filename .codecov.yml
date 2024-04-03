@@ -10,4 +10,4 @@ ignore:
 
 parsers:
   cobertura:
-    partials_as_hits: true
+    partials_as_hits: false
