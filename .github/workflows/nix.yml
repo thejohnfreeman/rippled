@@ -193,7 +193,7 @@ jobs:
           configuration: ${{ matrix.configuration }}
           cmake-args: >-
             -Dcoverage=ON
-            -Dcoverage_format=lcov
+            -Dcoverage_format=xml
             -DCODE_COVERAGE_VERBOSE=ON
             -DCMAKE_CXX_FLAGS="-O0"
             -DCMAKE_C_FLAGS="-O0"
@@ -201,17 +201,17 @@ jobs:
       - name: build
         shell: bash
         run: |
-          mv "${build_dir}/coverage.lcov" ./
+          mv "${build_dir}/coverage.xml" ./
       - name: archive coverage report
         uses: actions/upload-artifact@v3
         with:
-          name: coverage.lcov
-          path: coverage.lcov
+          name: coverage.xml
+          path: coverage.xml
           retention-days: 30
       - name: upload coverage report
         uses: codecov/codecov-action@v4.1.1
         with:
-          files: coverage.lcov
+          files: coverage.xml
           fail_ci_if_error: true
           disable_search: true
           verbose: true
