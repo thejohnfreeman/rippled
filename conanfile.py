@@ -26,6 +26,7 @@ class Xrpl(ConanFile):
     requires = [
         'boost/1.82.0',
         'date/3.0.1',
+        'doctest/2.4.11',
         'grpc/1.50.1',
         'libarchive/3.6.2',
         'lz4/1.9.3',
@@ -116,6 +117,7 @@ class Xrpl(ConanFile):
         'external/*',
         'include/*',
         'src/*',
+        'tests/*',
     )
 
     def layout(self):
