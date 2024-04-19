@@ -19,9 +19,9 @@
 
 #include <xrpl/basics/contract.h>
 #include <xrpl/crypto/csprng.h>
+#include <openssl/rand.h>
 #include <array>
 #include <cassert>
-#include <openssl/rand.h>
 #include <random>
 #include <stdexcept>
 
