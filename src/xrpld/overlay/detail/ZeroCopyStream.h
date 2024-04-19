@@ -21,8 +21,8 @@
 #define RIPPLE_OVERLAY_ZEROCOPYSTREAM_H_INCLUDED
 
 #include <boost/asio/buffer.hpp>
-#include <cstdint>
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <cstdint>
 
 namespace ripple {
 
