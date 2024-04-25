@@ -14,7 +14,7 @@ Loop: xrpld.app xrpld.ledger
   xrpld.app > xrpld.ledger
 
 Loop: xrpld.app xrpld.net
-  xrpld.app > xrpld.net
+  xrpld.net ~= xrpld.app
 
 Loop: xrpld.app xrpld.overlay
   xrpld.overlay ~= xrpld.app
