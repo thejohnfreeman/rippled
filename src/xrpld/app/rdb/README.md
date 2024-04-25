@@ -28,7 +28,7 @@ src/xrpld/app/rdb/
 │   ├── detail
 │   │   ├── Node.cpp
 │   │   └── Node.h
-│   └── SQLiteDatabase.cpp
+│   ├── SQLiteDatabase.cpp
 │   └── SQLiteDatabase.h
 ├── Download.cpp
 ├── Download.h

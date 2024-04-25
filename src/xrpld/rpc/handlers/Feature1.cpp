@@ -35,9 +35,6 @@ namespace ripple {
 Json::Value
 doFeature(RPC::JsonContext& context)
 {
-    if (context.app.config().reporting())
-        return rpcError(rpcREPORTING_UNSUPPORTED);
-
     bool const isAdmin = context.role == Role::ADMIN;
     // Get majority amendment status
     majorityAmendments_t majorities;
