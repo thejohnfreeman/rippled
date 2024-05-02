@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#include <ripple/basics/safe_cast.h>
-#include <ripple/conditions/impl/error.h>
+#include <xrpld/conditions/error.h>
+#include <xrpl/basics/safe_cast.h>
 #include <string>
 #include <system_error>
 #include <type_traits>

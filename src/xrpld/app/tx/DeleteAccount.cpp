@@ -17,21 +17,21 @@
 */
 //==============================================================================
 
-#include <ripple/app/tx/impl/DID.h>
-#include <ripple/app/tx/impl/DeleteAccount.h>
-#include <ripple/app/tx/impl/DeleteOracle.h>
-#include <ripple/app/tx/impl/DepositPreauth.h>
-#include <ripple/app/tx/impl/SetSignerList.h>
-#include <ripple/app/tx/impl/details/NFTokenUtils.h>
-#include <ripple/basics/FeeUnits.h>
-#include <ripple/basics/Log.h>
-#include <ripple/basics/mulDiv.h>
-#include <ripple/ledger/View.h>
-#include <ripple/protocol/Feature.h>
-#include <ripple/protocol/Indexes.h>
-#include <ripple/protocol/Protocol.h>
-#include <ripple/protocol/TxFlags.h>
-#include <ripple/protocol/st.h>
+#include <xrpld/app/tx/DID.h>
+#include <xrpld/app/tx/DeleteAccount.h>
+#include <xrpld/app/tx/DeleteOracle.h>
+#include <xrpld/app/tx/DepositPreauth.h>
+#include <xrpld/app/tx/NFTokenUtils.h>
+#include <xrpld/app/tx/SetSignerList.h>
+#include <xrpld/ledger/View.h>
+#include <xrpl/basics/FeeUnits.h>
+#include <xrpl/basics/Log.h>
+#include <xrpl/basics/mulDiv.h>
+#include <xrpl/protocol/Feature.h>
+#include <xrpl/protocol/Indexes.h>
+#include <xrpl/protocol/Protocol.h>
+#include <xrpl/protocol/TxFlags.h>
+#include <xrpl/protocol/st.h>
 
 namespace ripple {
 

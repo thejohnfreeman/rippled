@@ -17,14 +17,14 @@
 */
 //==============================================================================
 
-#include <ripple/app/ledger/LedgerMaster.h>
-#include <ripple/app/main/Application.h>
-#include <ripple/basics/base64.h>
-#include <ripple/basics/safe_cast.h>
-#include <ripple/beast/core/LexicalCast.h>
-#include <ripple/beast/rfc2616.h>
-#include <ripple/overlay/impl/Handshake.h>
-#include <ripple/protocol/digest.h>
+#include <xrpld/app/ledger/LedgerMaster.h>
+#include <xrpld/app/main/Application.h>
+#include <xrpld/overlay/Handshake.h>
+#include <xrpl/basics/base64.h>
+#include <xrpl/basics/safe_cast.h>
+#include <xrpl/beast/core/LexicalCast.h>
+#include <xrpl/beast/rfc2616.h>
+#include <xrpl/protocol/digest.h>
 
 #include <boost/regex.hpp>
 

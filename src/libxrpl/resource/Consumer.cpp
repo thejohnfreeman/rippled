@@ -17,9 +17,9 @@
 */
 //==============================================================================
 
-#include <ripple/resource/Consumer.h>
-#include <ripple/resource/impl/Entry.h>
-#include <ripple/resource/impl/Logic.h>
+#include <xrpl/resource/Consumer.h>
+#include <xrpl/resource/Entry.h>
+#include <xrpl/resource/Logic.h>
 #include <cassert>
 
 namespace ripple {
