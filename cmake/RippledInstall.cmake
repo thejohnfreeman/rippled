@@ -15,6 +15,7 @@ install (
     xrpl.libxrpl.crypto
     xrpl.libxrpl.jobqueue
     xrpl.libxrpl.json
+    xrpl.libxrpl.nodestore
     xrpl.libxrpl.protocol
     xrpl.libxrpl.resource
     xrpl.libxrpl.server

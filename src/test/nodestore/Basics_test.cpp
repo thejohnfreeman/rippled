@@ -18,10 +18,10 @@
 //==============================================================================
 
 #include <test/nodestore/TestBase.h>
-#include <xrpld/nodestore/DecodedBlob.h>
-#include <xrpld/nodestore/DummyScheduler.h>
-#include <xrpld/nodestore/EncodedBlob.h>
-#include <xrpld/nodestore/Manager.h>
+#include <xrpl/nodestore/DecodedBlob.h>
+#include <xrpl/nodestore/DummyScheduler.h>
+#include <xrpl/nodestore/EncodedBlob.h>
+#include <xrpl/nodestore/Manager.h>
 
 namespace ripple {
 namespace NodeStore {

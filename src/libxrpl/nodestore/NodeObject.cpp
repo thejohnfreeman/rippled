@@ -17,41 +17,45 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-
-#include <xrpld/app/ledger/AbstractFetchPackContainer.h>
-#include <xrpld/shamap/SHAMapSyncFilter.h>
-#include <xrpl/nodestore/Database.h>
+#include <xrpl/nodestore/NodeObject.h>
+#include <memory>
 
 namespace ripple {
 
-// This class is only needed on add functions
-// sync filter for transactions tree during ledger sync
-class TransactionStateSF : public SHAMapSyncFilter
+//------------------------------------------------------------------------------
+
+NodeObject::NodeObject(
+    NodeObjectType type,
+    Blob&& data,
+    uint256 const& hash,
+    PrivateAccess)
+    : mType(type), mHash(hash), mData(std::move(data))
 {
-public:
-    TransactionStateSF(NodeStore::Database& db, AbstractFetchPackContainer& fp)
-        : db_(db), fp_(fp)
-    {
-    }
+}
 
-    void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
+std::shared_ptr<NodeObject>
+NodeObject::createObject(NodeObjectType type, Blob&& data, uint256 const& hash)
+{
+    return std::make_shared<NodeObject>(
+        type, std::move(data), hash, PrivateAccess());
+}
 
-    std::optional<Blob>
-    getNode(SHAMapHash const& nodeHash) const override;
+NodeObjectType
+NodeObject::getType() const
+{
+    return mType;
+}
 
-private:
-    NodeStore::Database& db_;
-    AbstractFetchPackContainer& fp_;
-};
+uint256 const&
+NodeObject::getHash() const
+{
+    return mHash;
+}
+
+Blob const&
+NodeObject::getData() const
+{
+    return mData;
+}
 
 }  // namespace ripple
-
-#endif

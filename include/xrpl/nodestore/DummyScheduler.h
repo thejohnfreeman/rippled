@@ -17,41 +17,29 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
+#ifndef RIPPLE_NODESTORE_DUMMYSCHEDULER_H_INCLUDED
+#define RIPPLE_NODESTORE_DUMMYSCHEDULER_H_INCLUDED
 
-#include <xrpld/app/ledger/AbstractFetchPackContainer.h>
-#include <xrpld/shamap/SHAMapSyncFilter.h>
-#include <xrpl/nodestore/Database.h>
+#include <xrpl/nodestore/Scheduler.h>
 
 namespace ripple {
+namespace NodeStore {
 
-// This class is only needed on add functions
-// sync filter for transactions tree during ledger sync
-class TransactionStateSF : public SHAMapSyncFilter
+/** Simple NodeStore Scheduler that just peforms the tasks synchronously. */
+class DummyScheduler : public Scheduler
 {
 public:
-    TransactionStateSF(NodeStore::Database& db, AbstractFetchPackContainer& fp)
-        : db_(db), fp_(fp)
-    {
-    }
-
+    DummyScheduler() = default;
+    ~DummyScheduler() = default;
     void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
-
-    std::optional<Blob>
-    getNode(SHAMapHash const& nodeHash) const override;
-
-private:
-    NodeStore::Database& db_;
-    AbstractFetchPackContainer& fp_;
+    scheduleTask(Task& task) override;
+    void
+    onFetch(FetchReport const& report) override;
+    void
+    onBatchWrite(BatchWriteReport const& report) override;
 };
 
+}  // namespace NodeStore
 }  // namespace ripple
 
 #endif

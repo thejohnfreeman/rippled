@@ -17,41 +17,41 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
+#ifndef RIPPLE_NODESTORE_DATABASEROTATING_H_INCLUDED
+#define RIPPLE_NODESTORE_DATABASEROTATING_H_INCLUDED
 
-#include <xrpld/app/ledger/AbstractFetchPackContainer.h>
-#include <xrpld/shamap/SHAMapSyncFilter.h>
 #include <xrpl/nodestore/Database.h>
 
 namespace ripple {
+namespace NodeStore {
 
-// This class is only needed on add functions
-// sync filter for transactions tree during ledger sync
-class TransactionStateSF : public SHAMapSyncFilter
+/* This class has two key-value store Backend objects for persisting SHAMap
+ * records. This facilitates online deletion of data. New backends are
+ * rotated in. Old ones are rotated out and deleted.
+ */
+
+class DatabaseRotating : public Database
 {
 public:
-    TransactionStateSF(NodeStore::Database& db, AbstractFetchPackContainer& fp)
-        : db_(db), fp_(fp)
+    DatabaseRotating(
+        Scheduler& scheduler,
+        int readThreads,
+        Section const& config,
+        beast::Journal journal)
+        : Database(scheduler, readThreads, config, journal)
     {
     }
 
-    void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
+    /** Rotates the backends.
 
-    std::optional<Blob>
-    getNode(SHAMapHash const& nodeHash) const override;
-
-private:
-    NodeStore::Database& db_;
-    AbstractFetchPackContainer& fp_;
+        @param f A function executed before the rotation and under the same lock
+    */
+    virtual void
+    rotateWithLock(std::function<std::unique_ptr<NodeStore::Backend>(
+                       std::string const& writableBackendName)> const& f) = 0;
 };
 
+}  // namespace NodeStore
 }  // namespace ripple
 
 #endif

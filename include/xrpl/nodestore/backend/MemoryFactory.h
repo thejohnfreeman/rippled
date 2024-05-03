@@ -17,32 +17,58 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_MAIN_NODESTORESCHEDULER_H_INCLUDED
-#define RIPPLE_APP_MAIN_NODESTORESCHEDULER_H_INCLUDED
+#ifndef XRPL_NODESTORE_BACKEND_MEMORYFACTORY_H_INCLUDED
+#define XRPL_NODESTORE_BACKEND_MEMORYFACTORY_H_INCLUDED
 
-#include <xrpl/jobqueue/JobQueue.h>
+#include <xrpl/basics/BasicConfig.h>
+#include <xrpl/beast/utility/Journal.h>
+#include <xrpl/nodestore/Factory.h>
 #include <xrpl/nodestore/Scheduler.h>
-#include <atomic>
+
+#include <boost/beast/core/string.hpp>
+
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
 
 namespace ripple {
+namespace NodeStore {
 
-/** A NodeStore::Scheduler which uses the JobQueue. */
-class NodeStoreScheduler : public NodeStore::Scheduler
+struct MemoryDB;
+
+/**
+ * If you want the `MemoryFactory` available in your program,
+ * you need to allocate and register it yourself,
+ * but it can be as simple as defining a single static `MemoryFactory`.
+ */
+class MemoryFactory : public Factory
 {
-public:
-    explicit NodeStoreScheduler(JobQueue& jobQueue);
-
-    void
-    scheduleTask(NodeStore::Task& task) override;
-    void
-    onFetch(NodeStore::FetchReport const& report) override;
-    void
-    onBatchWrite(NodeStore::BatchWriteReport const& report) override;
-
 private:
-    JobQueue& jobQueue_;
+    std::mutex mutex_;
+    std::map<std::string, MemoryDB, boost::beast::iless> map_;
+
+public:
+    MemoryFactory();
+    ~MemoryFactory() override;
+
+    std::string
+    getName() const override;
+
+    std::unique_ptr<Backend>
+    createInstance(
+        std::size_t keyBytes,
+        Section const& keyValues,
+        std::size_t burstSize,
+        Scheduler& scheduler,
+        beast::Journal journal) override;
+
+    MemoryDB&
+    open(std::string const& path);
 };
 
+}  // namespace NodeStore
 }  // namespace ripple
 
 #endif
