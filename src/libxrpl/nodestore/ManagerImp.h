@@ -17,41 +17,58 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
+#ifndef RIPPLE_NODESTORE_MANAGERIMP_H_INCLUDED
+#define RIPPLE_NODESTORE_MANAGERIMP_H_INCLUDED
 
-#include <xrpld/app/ledger/AbstractFetchPackContainer.h>
-#include <xrpld/shamap/SHAMapSyncFilter.h>
-#include <xrpl/nodestore/Database.h>
+#include <xrpl/nodestore/Manager.h>
 
 namespace ripple {
 
-// This class is only needed on add functions
-// sync filter for transactions tree during ledger sync
-class TransactionStateSF : public SHAMapSyncFilter
+namespace NodeStore {
+
+class ManagerImp : public Manager
 {
+private:
+    std::mutex mutex_;
+    std::vector<Factory*> list_;
+
 public:
-    TransactionStateSF(NodeStore::Database& db, AbstractFetchPackContainer& fp)
-        : db_(db), fp_(fp)
-    {
-    }
+    static ManagerImp&
+    instance();
+
+    static void
+    missing_backend();
+
+    ManagerImp() = default;
+
+    ~ManagerImp() = default;
+
+    Factory*
+    find(std::string const& name) override;
 
     void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
+    insert(Factory& factory) override;
 
-    std::optional<Blob>
-    getNode(SHAMapHash const& nodeHash) const override;
+    void
+    erase(Factory& factory) override;
 
-private:
-    NodeStore::Database& db_;
-    AbstractFetchPackContainer& fp_;
+    std::unique_ptr<Backend>
+    make_Backend(
+        Section const& parameters,
+        std::size_t burstSize,
+        Scheduler& scheduler,
+        beast::Journal journal) override;
+
+    std::unique_ptr<Database>
+    make_Database(
+        std::size_t burstSize,
+        Scheduler& scheduler,
+        int readThreads,
+        Section const& config,
+        beast::Journal journal) override;
 };
 
+}  // namespace NodeStore
 }  // namespace ripple
 
 #endif

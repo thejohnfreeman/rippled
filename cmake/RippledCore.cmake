@@ -104,6 +104,15 @@ target_link_libraries(xrpl.libxrpl.resource PUBLIC xrpl.libxrpl.protocol)
 add_module(xrpl server)
 target_link_libraries(xrpl.libxrpl.server PUBLIC xrpl.libxrpl.protocol)
 
+add_module(xrpl nodestore)
+target_link_libraries(xrpl.libxrpl.nodestore PUBLIC
+  ${nudb}
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.jobqueue
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+)
 
 add_library(xrpl.libxrpl)
 set_target_properties(xrpl.libxrpl PROPERTIES OUTPUT_NAME xrpl)
@@ -123,6 +132,7 @@ target_link_modules(xrpl PUBLIC
   beast
   crypto
   json
+  nodestore
   protocol
   resource
   server

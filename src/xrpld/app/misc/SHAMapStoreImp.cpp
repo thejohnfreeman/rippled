@@ -24,10 +24,10 @@
 #include <xrpld/app/rdb/State.h>
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/core/ConfigSections.h>
-#include <xrpld/nodestore/DatabaseRotatingImp.h>
-#include <xrpld/nodestore/Scheduler.h>
 #include <xrpld/shamap/SHAMapMissingNode.h>
 #include <xrpl/beast/core/CurrentThreadName.h>
+#include <xrpl/nodestore/DatabaseRotatingImp.h>
+#include <xrpl/nodestore/Scheduler.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
