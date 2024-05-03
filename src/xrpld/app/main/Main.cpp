@@ -31,6 +31,9 @@
 #include <xrpl/beast/clock/basic_seconds_clock.h>
 #include <xrpl/beast/core/CurrentThreadName.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/nodestore/backend/MemoryFactory.h>
+#include <xrpl/nodestore/backend/NuDBFactory.h>
+#include <xrpl/nodestore/backend/RocksDBFactory.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/resource/Fees.h>
 
@@ -70,6 +73,10 @@
 #endif
 
 namespace po = boost::program_options;
+
+static ripple::NodeStore::MemoryFactory theMemoryFactory;
+static ripple::NodeStore::NuDBFactory theNudbFactory;
+static ripple::NodeStore::RocksDBFactory theRocksdbFactory;
 
 namespace ripple {
 

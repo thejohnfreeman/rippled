@@ -94,6 +94,7 @@ if(rocksdb)
     INTERFACE_COMPILE_DEFINITIONS RIPPLE_ROCKSDB_AVAILABLE=1
   )
   target_link_libraries(ripple_libs INTERFACE RocksDB::rocksdb)
+  target_link_libraries(ripple_syslibs INTERFACE RocksDB::rocksdb)
 endif()
 
 find_package(nudb REQUIRED)

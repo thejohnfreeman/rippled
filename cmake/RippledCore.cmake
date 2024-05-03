@@ -103,6 +103,16 @@ target_link_libraries(xrpl.libxrpl.protocol PUBLIC
 )
 
 # Level 05
+add_module(xrpl nodestore)
+target_link_libraries(xrpl.libxrpl.nodestore PUBLIC
+  ${nudb}
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.jobqueue
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+)
+
 add_module(xrpl resource)
 target_link_libraries(xrpl.libxrpl.resource PUBLIC
   xrpl.libxrpl.basics
@@ -139,6 +149,7 @@ target_link_modules(xrpl PUBLIC
   crypto
   jobqueue
   json
+  nodestore
   protocol
   resource
   server

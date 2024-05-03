@@ -17,41 +17,51 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define RIPPLE_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
+#ifndef XRPL_NODESTORE_BACKEND_NUDBFACTORY_H_INCLUDED
+#define XRPL_NODESTORE_BACKEND_NUDBFACTORY_H_INCLUDED
 
-#include <xrpld/app/ledger/AbstractFetchPackContainer.h>
-#include <xrpld/shamap/SHAMapSyncFilter.h>
-#include <xrpl/nodestore/Database.h>
+#include <xrpl/basics/BasicConfig.h>
+#include <xrpl/beast/utility/Journal.h>
+#include <xrpl/nodestore/Factory.h>
+#include <xrpl/nodestore/Scheduler.h>
+
+#include <nudb/nudb.hpp>
+
+#include <cstdint>
+#include <memory>
+#include <string>
 
 namespace ripple {
+namespace NodeStore {
 
-// This class is only needed on add functions
-// sync filter for transactions tree during ledger sync
-class TransactionStateSF : public SHAMapSyncFilter
+class NuDBFactory : public Factory
 {
 public:
-    TransactionStateSF(NodeStore::Database& db, AbstractFetchPackContainer& fp)
-        : db_(db), fp_(fp)
-    {
-    }
+    NuDBFactory();
+    ~NuDBFactory() override;
 
-    void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
+    std::string
+    getName() const override;
 
-    std::optional<Blob>
-    getNode(SHAMapHash const& nodeHash) const override;
+    std::unique_ptr<Backend>
+    createInstance(
+        std::size_t keyBytes,
+        Section const& keyValues,
+        std::size_t burstSize,
+        Scheduler& scheduler,
+        beast::Journal journal) override;
 
-private:
-    NodeStore::Database& db_;
-    AbstractFetchPackContainer& fp_;
+    std::unique_ptr<Backend>
+    createInstance(
+        std::size_t keyBytes,
+        Section const& keyValues,
+        std::size_t burstSize,
+        Scheduler& scheduler,
+        nudb::context& context,
+        beast::Journal journal) override;
 };
 
+}  // namespace NodeStore
 }  // namespace ripple
 
 #endif

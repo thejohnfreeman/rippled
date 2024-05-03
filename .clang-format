@@ -54,7 +54,7 @@ IncludeCategories:
   - Regex:           '^<test/'
     Priority:        20
   # Private headers of our internal targets.
-  - Regex:           '^<(libxrpl|xrpld)/'
+  - Regex:           '^<(src/libxrpl|xrpld)/'
     Priority:        30
   # Public headers of our internal libraries.
   - Regex:           '^<xrpl/'
