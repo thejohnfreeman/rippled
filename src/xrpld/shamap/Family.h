@@ -20,11 +20,11 @@
 #ifndef RIPPLE_SHAMAP_FAMILY_H_INCLUDED
 #define RIPPLE_SHAMAP_FAMILY_H_INCLUDED
 
-#include <xrpld/nodestore/Database.h>
 #include <xrpld/shamap/FullBelowCache.h>
 #include <xrpld/shamap/TreeNodeCache.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/nodestore/Database.h>
 #include <cstdint>
 
 namespace ripple {

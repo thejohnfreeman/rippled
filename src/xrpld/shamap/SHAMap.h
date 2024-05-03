@@ -20,8 +20,6 @@
 #ifndef RIPPLE_SHAMAP_SHAMAP_H_INCLUDED
 #define RIPPLE_SHAMAP_SHAMAP_H_INCLUDED
 
-#include <xrpld/nodestore/Database.h>
-#include <xrpld/nodestore/NodeObject.h>
 #include <xrpld/shamap/Family.h>
 #include <xrpld/shamap/FullBelowCache.h>
 #include <xrpld/shamap/SHAMapAddNode.h>
@@ -34,6 +32,8 @@
 #include <xrpl/basics/UnorderedContainers.h>
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/nodestore/Database.h>
+#include <xrpl/nodestore/NodeObject.h>
 #include <stack>
 #include <vector>
 

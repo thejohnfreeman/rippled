@@ -33,7 +33,6 @@
 #include <xrpld/consensus/LedgerTiming.h>
 #include <xrpld/core/Config.h>
 #include <xrpld/core/SociDB.h>
-#include <xrpld/nodestore/Database.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/StringUtilities.h>
 #include <xrpl/basics/contract.h>
@@ -41,6 +40,7 @@
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/nodestore/Database.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/HashPrefix.h>
 #include <xrpl/protocol/Indexes.h>
@@ -52,8 +52,6 @@
 #include <boost/optional.hpp>
 #include <utility>
 #include <vector>
-
-#include <xrpld/nodestore/detail/DatabaseNodeImp.h>
 
 namespace ripple {
 

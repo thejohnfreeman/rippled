@@ -34,7 +34,6 @@
 #include <xrpld/app/main/GRPCServer.h>
 #include <xrpld/app/main/LoadManager.h>
 #include <xrpld/app/main/NodeIdentity.h>
-#include <xrpld/app/main/NodeStoreScheduler.h>
 #include <xrpld/app/main/Tuning.h>
 #include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/HashRouter.h>
@@ -49,7 +48,6 @@
 #include <xrpld/app/rdb/Wallet.h>
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/core/DatabaseCon.h>
-#include <xrpld/nodestore/DummyScheduler.h>
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/overlay/PeerReservationTable.h>
 #include <xrpld/overlay/PeerSet.h>
@@ -65,6 +63,8 @@
 #include <xrpl/beast/core/LexicalCast.h>
 #include <xrpl/crypto/csprng.h>
 #include <xrpl/json/json_reader.h>
+#include <xrpl/nodestore/DummyScheduler.h>
+#include <xrpl/nodestore/NodeStoreScheduler.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Protocol.h>
