@@ -21,11 +21,11 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/NetworkOPs.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/beast/container/aged_map.h>
 #include <xrpl/beast/core/LexicalCast.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/protocol/jss.h>
 #include <memory>
 #include <mutex>

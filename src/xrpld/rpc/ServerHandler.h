@@ -21,9 +21,9 @@
 #define RIPPLE_RPC_SERVERHANDLER_H_INCLUDED
 
 #include <xrpld/app/main/CollectorManager.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/rpc/RPCHandler.h>
 #include <xrpld/rpc/WSInfoSub.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/json/Output.h>
 #include <xrpl/server/Server.h>
 #include <xrpl/server/Session.h>

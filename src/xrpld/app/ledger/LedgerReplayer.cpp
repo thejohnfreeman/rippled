@@ -20,7 +20,7 @@
 #include <xrpld/app/ledger/LedgerDeltaAcquire.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/SkipListAcquire.h>
-#include <xrpld/core/JobQueue.h>
+#include <xrpl/jobqueue/JobQueue.h>
 
 namespace ripple {
 

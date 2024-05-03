@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2018 Ripple Labs Inc.
+    Copyright (c) 2017 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -17,41 +17,70 @@
 */
 //==============================================================================
 
-#ifndef XRPLD_PERFLOG_PERFLOG_H
-#define XRPLD_PERFLOG_PERFLOG_H
+#ifndef TESTS_JOBQUEUE_NULLPERFLOG_H
+#define TESTS_JOBQUEUE_NULLPERFLOG_H
 
-#include <xrpld/core/Config.h>
-#include <xrpl/jobqueue/JobTypes.h>
+#include <xrpl/jobqueue/Job.h>  // JobType
 #include <xrpl/jobqueue/PerfLog.h>
 #include <xrpl/json/json_value.h>
 
-#include <boost/filesystem.hpp>
-
-#include <chrono>
 #include <cstdint>
-#include <functional>
-#include <memory>
 #include <string>
 
-namespace beast {
-class Journal;
-}
-
 namespace ripple {
-class Application;
 namespace perf {
 
-PerfLog::Setup
-setup_PerfLog(Section const& section, boost::filesystem::path const& configDir);
-
-std::unique_ptr<PerfLog>
-make_PerfLog(
-    PerfLog::Setup const& setup,
-    Application& app,
-    beast::Journal journal,
-    std::function<void()>&& signalStop);
+struct NullPerfLog : public perf::PerfLog
+{
+    void
+    rpcStart(std::string const& method, std::uint64_t requestId) override
+    {
+    }
+    void
+    rpcFinish(std::string const& method, std::uint64_t requestId) override
+    {
+    }
+    void
+    rpcError(std::string const& method, std::uint64_t requestId) override
+    {
+    }
+    void
+    jobQueue(JobType const type) override
+    {
+    }
+    void
+    jobStart(
+        JobType const type,
+        microseconds dur,
+        steady_time_point startTime,
+        int instance) override
+    {
+    }
+    void
+    jobFinish(JobType const type, microseconds dur, int instance) override
+    {
+    }
+    Json::Value
+    countersJson() const override
+    {
+        return {};
+    }
+    Json::Value
+    currentJson() const override
+    {
+        return {};
+    }
+    void
+    resizeJobs(int const resize) override
+    {
+    }
+    void
+    rotate() override
+    {
+    }
+};
 
 }  // namespace perf
 }  // namespace ripple
 
-#endif  // RIPPLE_BASICS_PERFLOG_H
+#endif

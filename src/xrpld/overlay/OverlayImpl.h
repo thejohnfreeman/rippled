@@ -21,7 +21,6 @@
 #define RIPPLE_OVERLAY_OVERLAYIMPL_H_INCLUDED
 
 #include <xrpld/app/main/Application.h>
-#include <xrpld/core/Job.h>
 #include <xrpld/overlay/Handshake.h>
 #include <xrpld/overlay/Message.h>
 #include <xrpld/overlay/Overlay.h>
@@ -33,6 +32,7 @@
 #include <xrpl/basics/Resolver.h>
 #include <xrpl/basics/UnorderedContainers.h>
 #include <xrpl/basics/chrono.h>
+#include <xrpl/jobqueue/Job.h>
 #include <xrpl/resource/ResourceManager.h>
 #include <xrpl/server/Handoff.h>
 #include <boost/asio/basic_waitable_timer.hpp>

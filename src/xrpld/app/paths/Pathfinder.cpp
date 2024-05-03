@@ -24,10 +24,10 @@
 #include <xrpld/app/paths/RippleCalc.h>
 #include <xrpld/app/paths/RippleLineCache.h>
 #include <xrpld/core/Config.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/ledger/PaymentSandbox.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/join.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/json/to_string.h>
 
 #include <tuple>

@@ -22,9 +22,9 @@
 
 #include <xrpld/app/consensus/RCLCxPeerPos.h>
 #include <xrpld/app/ledger/Ledger.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/ledger/ReadView.h>
 #include <xrpld/net/InfoSub.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/protocol/STValidation.h>
 #include <xrpl/protocol/messages.h>
 #include <boost/asio.hpp>

@@ -1,5 +1,7 @@
 libxrpl.basics > xrpl.basics
 libxrpl.crypto > xrpl.basics
+libxrpl.jobqueue > xrpl.basics
+libxrpl.jobqueue > xrpl.jobqueue
 libxrpl.json > xrpl.basics
 libxrpl.json > xrpl.json
 libxrpl.protocol > xrpl.basics
@@ -21,6 +23,7 @@ test.app > xrpld.core
 test.app > xrpld.ledger
 test.app > xrpld.overlay
 test.app > xrpld.rpc
+test.app > xrpl.jobqueue
 test.app > xrpl.json
 test.app > xrpl.protocol
 test.app > xrpl.resource
@@ -42,12 +45,9 @@ test.consensus > xrpld.app
 test.consensus > xrpld.consensus
 test.consensus > xrpld.ledger
 test.core > test.jtx
-test.core > test.toplevel
 test.core > test.unit_test
 test.core > xrpl.basics
 test.core > xrpld.core
-test.core > xrpld.perflog
-test.core > xrpl.json
 test.core > xrpl.server
 test.csf > xrpl.basics
 test.csf > xrpld.consensus
@@ -113,6 +113,7 @@ test.rpc > xrpld.core
 test.rpc > xrpld.net
 test.rpc > xrpld.overlay
 test.rpc > xrpld.rpc
+test.rpc > xrpl.jobqueue
 test.rpc > xrpl.json
 test.rpc > xrpl.protocol
 test.rpc > xrpl.resource
@@ -133,6 +134,8 @@ test.shamap > xrpl.protocol
 test.toplevel > test.csf
 test.toplevel > xrpl.json
 test.unit_test > xrpl.basics
+xrpl.jobqueue > xrpl.basics
+xrpl.jobqueue > xrpl.json
 xrpl.json > xrpl.basics
 xrpl.protocol > xrpl.basics
 xrpl.protocol > xrpl.json
@@ -148,6 +151,7 @@ xrpld.app > xrpld.conditions
 xrpld.app > xrpld.consensus
 xrpld.app > xrpld.nodestore
 xrpld.app > xrpld.perflog
+xrpld.app > xrpl.jobqueue
 xrpld.app > xrpl.json
 xrpld.app > xrpl.protocol
 xrpld.app > xrpl.resource
@@ -157,6 +161,7 @@ xrpld.consensus > xrpl.basics
 xrpld.consensus > xrpl.json
 xrpld.consensus > xrpl.protocol
 xrpld.core > xrpl.basics
+xrpld.core > xrpl.jobqueue
 xrpld.core > xrpl.json
 xrpld.core > xrpl.protocol
 xrpld.ledger > xrpl.basics
@@ -164,6 +169,7 @@ xrpld.ledger > xrpld.core
 xrpld.ledger > xrpl.json
 xrpld.ledger > xrpl.protocol
 xrpld.net > xrpl.basics
+xrpld.net > xrpl.jobqueue
 xrpld.net > xrpl.json
 xrpld.net > xrpl.protocol
 xrpld.net > xrpl.resource
@@ -175,6 +181,7 @@ xrpld.nodestore > xrpl.protocol
 xrpld.overlay > xrpl.basics
 xrpld.overlay > xrpld.core
 xrpld.overlay > xrpld.peerfinder
+xrpld.overlay > xrpl.jobqueue
 xrpld.overlay > xrpl.json
 xrpld.overlay > xrpl.protocol
 xrpld.overlay > xrpl.resource
@@ -183,12 +190,15 @@ xrpld.peerfinder > xrpl.basics
 xrpld.peerfinder > xrpld.core
 xrpld.peerfinder > xrpl.protocol
 xrpld.perflog > xrpl.basics
+xrpld.perflog > xrpld.core
+xrpld.perflog > xrpl.jobqueue
 xrpld.perflog > xrpl.json
 xrpld.perflog > xrpl.protocol
 xrpld.rpc > xrpl.basics
 xrpld.rpc > xrpld.core
 xrpld.rpc > xrpld.ledger
 xrpld.rpc > xrpld.nodestore
+xrpld.rpc > xrpl.jobqueue
 xrpld.rpc > xrpl.json
 xrpld.rpc > xrpl.protocol
 xrpld.rpc > xrpl.resource

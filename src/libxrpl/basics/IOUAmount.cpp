@@ -18,6 +18,7 @@
 //==============================================================================
 
 #include <xrpl/basics/IOUAmount.h>
+#include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/contract.h>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <algorithm>

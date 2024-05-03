@@ -19,10 +19,10 @@
 
 #include <xrpld/perflog/PerfLogImp.h>
 
-#include <xrpld/core/JobTypes.h>
 #include <xrpl/basics/BasicConfig.h>
 #include <xrpl/beast/core/CurrentThreadName.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/jobqueue/JobTypes.h>
 #include <xrpl/json/json_writer.h>
 #include <xrpl/json/to_string.h>
 #include <atomic>

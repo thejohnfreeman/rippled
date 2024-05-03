@@ -20,7 +20,7 @@
 #ifndef RIPPLE_CORE_WORKERS_H_INCLUDED
 #define RIPPLE_CORE_WORKERS_H_INCLUDED
 
-#include <xrpld/core/semaphore.h>
+#include <xrpl/basics/semaphore.h>
 #include <xrpl/beast/core/LockFreeStack.h>
 #include <atomic>
 #include <condition_variable>

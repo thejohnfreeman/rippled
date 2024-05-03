@@ -19,8 +19,8 @@
 
 #include <xrpld/app/ledger/TimeoutCounter.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/overlay/Overlay.h>
+#include <xrpl/jobqueue/JobQueue.h>
 
 namespace ripple {
 

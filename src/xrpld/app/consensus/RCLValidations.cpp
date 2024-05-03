@@ -25,11 +25,11 @@
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/ValidatorList.h>
 #include <xrpld/consensus/LedgerTiming.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/core/TimeKeeper.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/StringUtilities.h>
 #include <xrpl/basics/chrono.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <memory>
 #include <mutex>
 #include <thread>
