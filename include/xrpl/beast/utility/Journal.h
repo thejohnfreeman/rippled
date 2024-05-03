@@ -272,7 +272,9 @@ public:
     //--------------------------------------------------------------------------
 
     /** Journal has no default constructor. */
-    Journal() = delete;
+    Journal() : Journal(getNullSink())
+    {
+    }
 
     /** Create a journal that writes to the specified sink. */
     explicit Journal(Sink& sink) : m_sink(&sink)
@@ -344,7 +346,6 @@ public:
 };
 
 #ifndef __INTELLISENSE__
-static_assert(std::is_default_constructible<Journal>::value == false, "");
 static_assert(std::is_copy_constructible<Journal>::value == true, "");
 static_assert(std::is_move_constructible<Journal>::value == true, "");
 static_assert(std::is_copy_assignable<Journal>::value == true, "");

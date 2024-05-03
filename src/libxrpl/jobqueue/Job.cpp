@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#include <xrpld/core/Job.h>
 #include <xrpl/beast/core/CurrentThreadName.h>
+#include <xrpl/jobqueue/Job.h>
 #include <cassert>
 
 namespace ripple {

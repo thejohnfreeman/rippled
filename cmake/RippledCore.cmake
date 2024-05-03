@@ -78,25 +78,47 @@ target_link_libraries(xrpl.libxrpl.basics PUBLIC xrpl.libxrpl.beast)
 
 # Level 03
 add_module(xrpl json)
-target_link_libraries(xrpl.libxrpl.json PUBLIC xrpl.libxrpl.basics)
+target_link_libraries(xrpl.libxrpl.json PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+)
 
 add_module(xrpl crypto)
 target_link_libraries(xrpl.libxrpl.crypto PUBLIC xrpl.libxrpl.basics)
 
 # Level 04
+add_module(xrpl jobqueue)
+target_link_libraries(xrpl.libxrpl.jobqueue PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.json
+)
+
 add_module(xrpl protocol)
 target_link_libraries(xrpl.libxrpl.protocol PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
   xrpl.libxrpl.crypto
   xrpl.libxrpl.json
 )
 
 # Level 05
 add_module(xrpl resource)
-target_link_libraries(xrpl.libxrpl.resource PUBLIC xrpl.libxrpl.protocol)
+target_link_libraries(xrpl.libxrpl.resource PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+)
 
 add_module(xrpl server)
-target_link_libraries(xrpl.libxrpl.server PUBLIC xrpl.libxrpl.protocol)
-
+target_link_libraries(xrpl.libxrpl.server PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.crypto
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+)
 
 add_library(xrpl.libxrpl)
 set_target_properties(xrpl.libxrpl PROPERTIES OUTPUT_NAME xrpl)
@@ -115,6 +137,7 @@ target_link_modules(xrpl PUBLIC
   basics
   beast
   crypto
+  jobqueue
   json
   protocol
   resource
