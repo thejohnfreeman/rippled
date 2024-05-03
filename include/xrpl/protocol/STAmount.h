@@ -22,7 +22,6 @@
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/IOUAmount.h>
-#include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/Number.h>
 #include <xrpl/protocol/Issue.h>
 #include <xrpl/protocol/SField.h>

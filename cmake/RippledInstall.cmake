@@ -13,6 +13,7 @@ install (
     xrpl.libxrpl.basics
     xrpl.libxrpl.beast
     xrpl.libxrpl.crypto
+    xrpl.libxrpl.jobqueue
     xrpl.libxrpl.json
     xrpl.libxrpl.protocol
     xrpl.libxrpl.resource

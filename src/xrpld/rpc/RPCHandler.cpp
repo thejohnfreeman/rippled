@@ -23,7 +23,6 @@
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/core/Config.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/net/InfoSub.h>
 #include <xrpld/perflog/PerfLog.h>
 #include <xrpld/rpc/Context.h>
@@ -33,6 +32,7 @@
 #include <xrpld/rpc/Tuning.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/contract.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/json/Object.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/protocol/ErrorCodes.h>

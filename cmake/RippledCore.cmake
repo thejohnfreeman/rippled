@@ -90,6 +90,13 @@ target_link_libraries(xrpl.libxrpl.protocol PUBLIC
   xrpl.libxrpl.json
 )
 
+add_module(xrpl jobqueue)
+target_link_libraries(xrpl.libxrpl.jobqueue PUBLIC
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.json
+)
+
 # Level 05
 add_module(xrpl resource)
 target_link_libraries(xrpl.libxrpl.resource PUBLIC xrpl.libxrpl.protocol)

@@ -19,10 +19,10 @@
 
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
-#include <xrpld/core/Job.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/rpc/LegacyPathFind.h>
 #include <xrpld/rpc/Tuning.h>
+#include <xrpl/jobqueue/Job.h>
+#include <xrpl/jobqueue/JobQueue.h>
 
 namespace ripple {
 namespace RPC {

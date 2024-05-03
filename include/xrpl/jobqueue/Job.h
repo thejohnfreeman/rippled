@@ -20,10 +20,9 @@
 #ifndef RIPPLE_CORE_JOB_H_INCLUDED
 #define RIPPLE_CORE_JOB_H_INCLUDED
 
-#include <xrpld/core/ClosureCounter.h>
-#include <xrpld/core/LoadMonitor.h>
+#include <xrpl/basics/ClosureCounter.h>
 #include <xrpl/basics/CountedObject.h>
-#include <functional>
+#include <xrpl/jobqueue/LoadMonitor.h>
 
 #include <functional>
 
