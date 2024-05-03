@@ -32,7 +32,6 @@
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/consensus/LedgerTiming.h>
 #include <xrpld/core/Config.h>
-#include <xrpld/core/JobQueue.h>
 #include <xrpld/core/SociDB.h>
 #include <xrpld/nodestore/Database.h>
 #include <xrpl/basics/Log.h>
@@ -40,6 +39,7 @@
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/core/LexicalCast.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/jobqueue/JobQueue.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/HashPrefix.h>

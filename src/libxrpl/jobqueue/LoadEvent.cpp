@@ -17,9 +17,9 @@
 */
 //==============================================================================
 
-#include <xrpld/core/LoadEvent.h>
-#include <xrpld/core/LoadMonitor.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/jobqueue/LoadEvent.h>
+#include <xrpl/jobqueue/LoadMonitor.h>
 #include <iomanip>
 
 namespace ripple {

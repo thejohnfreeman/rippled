@@ -20,8 +20,8 @@
 #ifndef RIPPLE_CORE_JOBTYPES_H_INCLUDED
 #define RIPPLE_CORE_JOBTYPES_H_INCLUDED
 
-#include <xrpld/core/Job.h>
-#include <xrpld/core/JobTypeInfo.h>
+#include <xrpl/jobqueue/Job.h>
+#include <xrpl/jobqueue/JobTypeInfo.h>
 #include <map>
 #include <string>
 #include <type_traits>

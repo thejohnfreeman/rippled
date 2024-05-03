@@ -21,7 +21,6 @@
 #define RIPPLE_PROTOCOL_STAMOUNT_H_INCLUDED
 
 #include <xrpl/basics/CountedObject.h>
-#include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/Number.h>
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/protocol/Asset.h>

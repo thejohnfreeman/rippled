@@ -17,10 +17,10 @@
 */
 //==============================================================================
 
-#include <xrpld/core/detail/Workers.h>
-#include <xrpld/perflog/PerfLog.h>
 #include <xrpl/beast/core/CurrentThreadName.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/jobqueue/PerfLog.h>
+#include <xrpl/jobqueue/Workers.h>
 
 namespace ripple {
 
