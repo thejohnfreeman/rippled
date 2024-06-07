@@ -399,6 +399,7 @@ install (
     src/ripple/protocol/STObject.h
     src/ripple/protocol/STParsedJSON.h
     src/ripple/protocol/STPathSet.h
+    src/ripple/protocol/STPluginType.h
     src/ripple/protocol/STTx.h
     src/ripple/protocol/STValidation.h
     src/ripple/protocol/STVector256.h
