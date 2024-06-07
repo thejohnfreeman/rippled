@@ -337,6 +337,16 @@ install (
   DESTINATION include/ripple/json/impl)
 install (
   FILES
+    src/ripple/plugin/createSFields.h
+    src/ripple/plugin/exports.h
+    src/ripple/plugin/invariantChecks.h
+    src/ripple/plugin/ledgerObjects.h
+    src/ripple/plugin/macros.h
+    src/ripple/plugin/plugin.h
+    src/ripple/plugin/SField_plugin.h
+  DESTINATION include/ripple/plugin)
+install (
+  FILES
     src/ripple/protocol/AccountID.h
     src/ripple/protocol/AMMCore.h
     src/ripple/protocol/AmountConversions.h
