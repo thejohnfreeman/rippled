@@ -16,12 +16,12 @@
     OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 //==============================================================================
-#include <ripple/basics/make_SSLContext.h>
-#include <ripple/beast/unit_test.h>
-#include <ripple/overlay/impl/OverlayImpl.h>
-#include <ripple/overlay/impl/PeerImp.h>
-#include <ripple/peerfinder/impl/SlotImp.h>
 #include <test/jtx/Env.h>
+#include <xrpld/overlay/OverlayImpl.h>
+#include <xrpld/overlay/PeerImp.h>
+#include <xrpld/peerfinder/SlotImp.h>
+#include <xrpl/basics/make_SSLContext.h>
+#include <xrpl/beast/unit_test.h>
 
 namespace ripple {
 

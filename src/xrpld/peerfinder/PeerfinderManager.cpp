@@ -17,11 +17,11 @@
 */
 //==============================================================================
 
-#include <ripple/peerfinder/PeerfinderManager.h>
-#include <ripple/peerfinder/impl/Checker.h>
-#include <ripple/peerfinder/impl/Logic.h>
-#include <ripple/peerfinder/impl/SourceStrings.h>
-#include <ripple/peerfinder/impl/StoreSqdb.h>
+#include <xrpld/peerfinder/Checker.h>
+#include <xrpld/peerfinder/Logic.h>
+#include <xrpld/peerfinder/PeerfinderManager.h>
+#include <xrpld/peerfinder/SourceStrings.h>
+#include <xrpld/peerfinder/StoreSqdb.h>
 #include <boost/asio/io_service.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <memory>

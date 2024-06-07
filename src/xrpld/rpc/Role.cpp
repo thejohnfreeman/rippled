@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#include <ripple/rpc/Role.h>
+#include <xrpld/rpc/Role.h>
 #include <boost/beast/core/string.hpp>
 #include <boost/beast/http/field.hpp>
 #include <boost/beast/http/rfc7230.hpp>

@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#include <ripple/nodestore/impl/TaskQueue.h>
+#include <xrpld/nodestore/TaskQueue.h>
 
 #include <cassert>
 

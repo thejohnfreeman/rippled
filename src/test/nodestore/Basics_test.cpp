@@ -17,11 +17,11 @@
 */
 //==============================================================================
 
-#include <ripple/nodestore/DummyScheduler.h>
-#include <ripple/nodestore/Manager.h>
-#include <ripple/nodestore/impl/DecodedBlob.h>
-#include <ripple/nodestore/impl/EncodedBlob.h>
 #include <test/nodestore/TestBase.h>
+#include <xrpld/nodestore/DecodedBlob.h>
+#include <xrpld/nodestore/DummyScheduler.h>
+#include <xrpld/nodestore/EncodedBlob.h>
+#include <xrpld/nodestore/Manager.h>
 
 namespace ripple {
 namespace NodeStore {

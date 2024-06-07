@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#include <ripple/peerfinder/impl/SourceStrings.h>
+#include <xrpld/peerfinder/SourceStrings.h>
 
 namespace ripple {
 namespace PeerFinder {

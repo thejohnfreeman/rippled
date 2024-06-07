@@ -17,9 +17,9 @@
 */
 //==============================================================================
 
-#include <ripple/peerfinder/PeerfinderManager.h>
-#include <ripple/peerfinder/impl/SlotImp.h>
-#include <ripple/peerfinder/impl/Tuning.h>
+#include <xrpld/peerfinder/PeerfinderManager.h>
+#include <xrpld/peerfinder/SlotImp.h>
+#include <xrpld/peerfinder/Tuning.h>
 
 namespace ripple {
 namespace PeerFinder {

@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#include <ripple/nodestore/impl/BatchWriter.h>
+#include <xrpld/nodestore/BatchWriter.h>
 
 namespace ripple {
 namespace NodeStore {
