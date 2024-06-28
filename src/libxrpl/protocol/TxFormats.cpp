@@ -378,6 +378,7 @@ TxFormats::TxFormats()
         ttCLAWBACK,
         {
             {sfAmount, soeREQUIRED},
+            {sfMPTokenHolder, soeOPTIONAL},
         },
         commonFields);
 
@@ -503,6 +504,39 @@ TxFormats::TxFormats()
         ttORACLE_DELETE,
         {
             {sfOracleDocumentID, soeREQUIRED},
+        },
+        commonFields);
+
+    add(jss::MPTokenIssuanceCreate,
+        ttMPTOKEN_ISSUANCE_CREATE,
+        {
+            {sfAssetScale, soeOPTIONAL},
+            {sfTransferFee, soeOPTIONAL},
+            {sfMaximumAmount, soeOPTIONAL},
+            {sfMPTokenMetadata, soeOPTIONAL},
+        },
+        commonFields);
+
+    add(jss::MPTokenIssuanceDestroy,
+        ttMPTOKEN_ISSUANCE_DESTROY,
+        {
+            {sfMPTokenIssuanceID, soeREQUIRED},
+        },
+        commonFields);
+
+    add(jss::MPTokenAuthorize,
+        ttMPTOKEN_AUTHORIZE,
+        {
+            {sfMPTokenIssuanceID, soeREQUIRED},
+            {sfMPTokenHolder, soeOPTIONAL},
+        },
+        commonFields);
+
+    add(jss::MPTokenIssuanceSet,
+        ttMPTOKEN_ISSUANCE_SET,
+        {
+            {sfMPTokenIssuanceID, soeREQUIRED},
+            {sfMPTokenHolder, soeOPTIONAL},
         },
         commonFields);
 }
