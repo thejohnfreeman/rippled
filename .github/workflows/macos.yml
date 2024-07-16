@@ -32,6 +32,9 @@ jobs:
       build_dir: .build
       NUM_PROCESSORS: 12
     steps:
+      - name: clear environment
+        run: |
+          rm -rf ~/.conan
       - name: checkout
         uses: actions/checkout@v4
       - name: install Conan
