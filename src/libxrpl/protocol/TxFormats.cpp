@@ -505,6 +505,15 @@ TxFormats::TxFormats()
             {sfOracleDocumentID, soeREQUIRED},
         },
         commonFields);
+
+    add(jss::ObligationCreate,
+        ttOBLIGATION_CREATE,
+        {
+            {sfTransfers, soeREQUIRED},
+            {sfFinishAfter, soeREQUIRED},
+            {sfCancelAfter, soeREQUIRED},
+        },
+        commonFields);
 }
 
 TxFormats const&

@@ -57,6 +57,7 @@ enum class LedgerNameSpace : std::uint16_t {
     SKIP_LIST = 's',
     ESCROW = 'u',
     AMENDMENTS = 'f',
+    OBLIGATION = 'F',
     FEE_SETTINGS = 'e',
     TICKET = 'T',
     SIGNER_LIST = 'S',
@@ -396,6 +397,12 @@ Keylet
 amm(uint256 const& id) noexcept
 {
     return {ltAMM, id};
+}
+
+Keylet
+obligation(AccountID const& account, std::uint32_t seq)
+{
+    return {ltOBLIGATION, indexHash(LedgerNameSpace::OBLIGATION, account, seq)};
 }
 
 Keylet

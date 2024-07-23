@@ -43,6 +43,7 @@
 #include <xrpld/app/tx/detail/NFTokenCancelOffer.h>
 #include <xrpld/app/tx/detail/NFTokenCreateOffer.h>
 #include <xrpld/app/tx/detail/NFTokenMint.h>
+#include <xrpld/app/tx/detail/Obligation.h>
 #include <xrpld/app/tx/detail/PayChan.h>
 #include <xrpld/app/tx/detail/Payment.h>
 #include <xrpld/app/tx/detail/SetAccount.h>
@@ -165,6 +166,8 @@ with_txn_type(TxType txnType, F&& f)
             return f.template operator()<SetOracle>();
         case ttORACLE_DELETE:
             return f.template operator()<DeleteOracle>();
+        case ttOBLIGATION_CREATE:
+            return f.template operator()<ObligationCreate>();
         default:
             throw UnknownTxnType(txnType);
     }

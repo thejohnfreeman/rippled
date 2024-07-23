@@ -412,12 +412,12 @@ CONSTRUCT_UNTYPED_SFIELD(sfHookExecutions,      "HookExecutions",       ARRAY,  
 CONSTRUCT_UNTYPED_SFIELD(sfHookParameters,      "HookParameters",       ARRAY,     19);
 CONSTRUCT_UNTYPED_SFIELD(sfHookGrants,          "HookGrants",           ARRAY,     20);
 CONSTRUCT_UNTYPED_SFIELD(sfXChainClaimAttestations,
-                                                 "XChainClaimAttestations",
+                                                "XChainClaimAttestations",
                                                                         ARRAY,     21);
 CONSTRUCT_UNTYPED_SFIELD(sfXChainCreateAccountAttestations,
-                                                 "XChainCreateAccountAttestations",
+                                                "XChainCreateAccountAttestations",
                                                                         ARRAY,     22);
-// 23 is unused and available for use
+CONSTRUCT_UNTYPED_SFIELD(sfTransfers,           "Transfers",            ARRAY,     23);
 CONSTRUCT_UNTYPED_SFIELD(sfPriceDataSeries,     "PriceDataSeries",      ARRAY,     24);
 CONSTRUCT_UNTYPED_SFIELD(sfAuthAccounts,        "AuthAccounts",         ARRAY,     25);
 

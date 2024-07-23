@@ -673,6 +673,7 @@ extern SField const sfDisabledValidators;
 extern SField const sfHookExecutions;
 extern SField const sfHookParameters;
 extern SField const sfHookGrants;
+extern SField const sfTransfers;
 extern SField const sfXChainClaimAttestations;
 extern SField const sfXChainCreateAccountAttestations;
 

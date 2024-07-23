@@ -273,6 +273,9 @@ Keylet
 amm(uint256 const& amm) noexcept;
 
 Keylet
+obligation(AccountID const& account, std::uint32_t seq);
+
+Keylet
 bridge(STXChainBridge const& bridge, STXChainBridge::ChainType chainType);
 
 Keylet

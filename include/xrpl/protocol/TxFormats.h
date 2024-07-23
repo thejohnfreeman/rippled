@@ -197,6 +197,10 @@ enum TxType : std::uint16_t
     /** This transaction type deletes an Oracle instance */
     ttORACLE_DELETE = 52,
 
+    ttOBLIGATION_CREATE = 53,
+    ttOBLIGATION_FINISH = 54,
+    ttOBLIGATION_CANCEL = 55,
+
     /** This system-generated transaction type is used to update the status of the various amendments.
 
         For details, see: https://xrpl.org/amendments.html

@@ -185,6 +185,9 @@ constexpr std::uint32_t tfDepositMask = ~(tfUniversal | tfDepositSubTx);
 constexpr std::uint32_t tfClearAccountCreateAmount     = 0x00010000;
 constexpr std::uint32_t tfBridgeModifyMask = ~(tfUniversal | tfClearAccountCreateAmount);
 
+// Obligation flags:
+constexpr std::uint32_t tfEscrowed = 0x0000'0001;
+
 // clang-format on
 
 }  // namespace ripple

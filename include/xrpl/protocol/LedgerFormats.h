@@ -197,6 +197,8 @@ enum LedgerEntryType : std::uint16_t
      */
     ltORACLE = 0x0080,
 
+    ltOBLIGATION = 0x0081,
+
     //---------------------------------------------------------------------------
     /** A special type, matching any ledger entry type.
 
