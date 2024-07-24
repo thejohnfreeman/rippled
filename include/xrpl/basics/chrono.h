@@ -106,6 +106,18 @@ to_string_iso(NetClock::time_point tp)
         tp.time_since_epoch() + epoch_offset});
 }
 
+/** Has the specified time passed?
+
+    @param now  the current time
+    @param mark the cutoff point
+    @return true if \a now refers to a time strictly after \a mark, else false.
+*/
+inline bool
+after(NetClock::time_point now, std::uint32_t mark)
+{
+    return now.time_since_epoch().count() > mark;
+}
+
 /** A clock for measuring elapsed time.
 
     The epoch is unspecified.

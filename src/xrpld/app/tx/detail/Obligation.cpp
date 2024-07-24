@@ -37,15 +37,15 @@
  * If the Obligation is escrowed,
  * then each sender account is checked that it holds the amount it will send
  * before the ObligationCreate transaction can complete succesfully.
- * Otherwise, they are checked before the ObligationSettle transaction
+ * Otherwise, they are checked before the ObligationFinish transaction
  * can complete successfully.
  *
- * The amounts are delivered to the receivers only after an ObligationSettle
+ * The amounts are delivered to the receivers only after an ObligationFinish
  * transaction completes successfully.
  * If the Obligation is escrowed,
  * then the amounts are withdrawn from the senders when the ObligationCreate
  * transaction completes successfully.
- * Otherwise, they are withdrawn when the ObligationSettle transaction
+ * Otherwise, they are withdrawn when the ObligationFinish transaction
  * completes successfully.
  *
  * Accounts may send a zero amount.
@@ -84,10 +84,12 @@ ObligationCreate::preflight(PreflightContext const& ctx)
     if (transfers.size() < 2)
         return temMALFORMED;
 
-    for (auto const& transfer : transfers)
+    for (auto const& wrapper : transfers)
     {
-        if (!transfer[~sfAccount] || !transfer[~sfAmount])
+        auto transfer = dynamic_cast<STObject const*>(&wrapper);
+        if (!transfer->isFieldPresent(sfAccount) || !transfer->isFieldPresent(sfAmount))
             return temMALFORMED;
+        // Should we check that no other fields are passed?
     }
 
     // Check that non-zero senders appear in the signer list.
@@ -104,9 +106,10 @@ ObligationCreate::preclaim(PreclaimContext const& ctx)
     if (uTxFlags & tfEscrowed) {
         // Check that senders exist and hold enough assets.
         assert(ctx.tx.isFieldPresent(sfTransfers));
-        for (auto const& transfer : ctx.tx.getFieldArray(sfTransfers))
+        for (auto const& wrapper : ctx.tx.getFieldArray(sfTransfers))
         {
-            assert(transfer.isFieldPresent(sfAmount));
+            auto transfer = dynamic_cast<STObject const*>(&wrapper);
+            assert(transfer->isFieldPresent(sfAmount));
             if (!ctx.tx[sfAmount]) {
                 // Zero amount.
                 // A sender account can be missing in the ledger as long it is
@@ -115,7 +118,7 @@ ObligationCreate::preclaim(PreclaimContext const& ctx)
                 // fulfill the reserve requirement.
                 continue;
             }
-            assert(transfer.isFieldPresent(sfAccount));
+            assert(transfer->isFieldPresent(sfAccount));
             auto const sender = ctx.view.read(keylet::account(ctx.tx[sfAccount]));
             if (!sender)
                 return tecCLAIM;
@@ -134,6 +137,8 @@ ObligationCreate::doApply()
     // Create the object and insert it.
     auto const account = ctx_.tx[sfAccount];
 
+    // If escrowed == true, withdraw the amounts now.
+
     auto seq = ctx_.tx.getSeqProxy().value();
     Keylet const keylet = keylet::obligation(account, seq);
     auto const sle = std::make_shared<SLE>(keylet);
@@ -146,24 +151,78 @@ ObligationCreate::doApply()
 
     ctx_.view().insert(sle);
 
+    // Add to owner directory.
+    // Increase reserve.
+
     return tesSUCCESS;
 }
 
 NotTEC
-ObligationSettle::preflight(PreflightContext const& ctx)
+ObligationFinish::preflight(PreflightContext const& ctx)
 {
     return tesSUCCESS;
 }
 
 TER
-ObligationSettle::doApply()
+ObligationFinish::doApply()
 {
+    Keylet const keylet{ltOBLIGATION, ctx_.tx[sfObjectID]};
+    auto sle = ctx_.view().peek(keylet);
 
-    // Start with sender = 0, receiver = 1.
-    // while (true)
-    //   Transfer.
-    //   If receiver == 0, break.
-    //   Modulo increment sender and receiver.
+    if (!sle)
+        return tecOBJECT_NOT_FOUND;
+
+    auto const now = ctx_.view().info().parentCloseTime;
+    // Too soon.
+    if ((*sle)[~sfFinishAfter] && !after(now, (*sle)[sfFinishAfter]))
+        return tecNO_PERMISSION;
+
+    auto const transfers = ctx_.tx.getFieldArray(sfTransfers);
+    auto sender = transfers[0];
+    std::size_t i = 1;
+    auto receiver = transfers[i];
+    while (true)
+    {
+        // If escrowed == false, withdraw the amount now.
+
+        // Deliver the amount to the receiver.
+
+        // After we've delivered to the first sender, we're done.
+        if (i == 0)
+            break;
+
+        sender = receiver;
+        i = (i + 1) % transfers.size();
+        receiver = transfers[i];
+    }
+
+    // Call update() on all the receivers.
+    // Remove the obligation.
+    // Call delete()
+
+    return tesSUCCESS;
+}
+
+NotTEC
+ObligationCancel::preflight(PreflightContext const& ctx)
+{
+    return tesSUCCESS;
+}
+
+TER
+ObligationCancel::doApply()
+{
+    Keylet const keylet{ltOBLIGATION, ctx_.tx[sfObjectID]};
+    auto sle = ctx_.view().peek(keylet);
+
+    if (!sle)
+        return tecOBJECT_NOT_FOUND;
+
+    auto const now = ctx_.view().info().parentCloseTime;
+    // Too soon.
+    if ((*sle)[~sfCancelAfter] && !after(now, (*sle)[sfCancelAfter]))
+        return tecNO_PERMISSION;
+
     return tesSUCCESS;
 }
 

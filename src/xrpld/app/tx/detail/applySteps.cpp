@@ -168,6 +168,10 @@ with_txn_type(TxType txnType, F&& f)
             return f.template operator()<DeleteOracle>();
         case ttOBLIGATION_CREATE:
             return f.template operator()<ObligationCreate>();
+        case ttOBLIGATION_FINISH:
+            return f.template operator()<ObligationFinish>();
+        case ttOBLIGATION_CANCEL:
+            return f.template operator()<ObligationCancel>();
         default:
             throw UnknownTxnType(txnType);
     }

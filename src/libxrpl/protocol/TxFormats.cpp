@@ -514,6 +514,21 @@ TxFormats::TxFormats()
             {sfCancelAfter, soeREQUIRED},
         },
         commonFields);
+
+    add(jss::ObligationFinish,
+        ttOBLIGATION_FINISH,
+        {
+            {sfObjectID, soeREQUIRED},
+        },
+        commonFields);
+
+    add(jss::ObligationCancel,
+        ttOBLIGATION_CANCEL,
+        {
+            {sfObjectID, soeREQUIRED},
+        },
+        commonFields);
+
 }
 
 TxFormats const&

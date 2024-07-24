@@ -43,12 +43,12 @@ public:
     doApply() override;
 };
 
-class ObligationSettle : public Transactor
+class ObligationFinish : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit ObligationSettle(ApplyContext& ctx) : Transactor(ctx)
+    explicit ObligationFinish(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 
