@@ -365,6 +365,17 @@ LedgerFormats::LedgerFormats()
         },
         commonFields);
 
+    add(jss::Obligation,
+        ltOBLIGATION,
+        {
+            {sfOwner,               soeREQUIRED},
+            {sfSequence,            soeREQUIRED},
+            {sfTransfers,           soeREQUIRED},
+            {sfFinishAfter,         soeREQUIRED},
+            {sfCancelAfter,         soeREQUIRED},
+        },
+        commonFields);
+
     // clang-format on
 }
 

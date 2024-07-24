@@ -108,6 +108,7 @@ JSS(NFTokenPage);          // ledger type.
 JSS(LPTokenOut);           // in: AMM Liquidity Provider deposit tokens
 JSS(LPTokenIn);            // in: AMM Liquidity Provider withdraw tokens
 JSS(LPToken);              // out: AMM Liquidity Provider tokens info
+JSS(Obligation);           // ledger type.
 JSS(ObligationCancel);     // transaction type.
 JSS(ObligationCreate);     // transaction type.
 JSS(ObligationFinish);     // transaction type.
