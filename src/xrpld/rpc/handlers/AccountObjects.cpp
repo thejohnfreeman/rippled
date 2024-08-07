@@ -54,17 +54,19 @@ doAccountNFTs(RPC::JsonContext& context)
     if (!params.isMember(jss::account))
         return RPC::missing_field_error(jss::account);
 
-    std::shared_ptr<ReadView const> ledger;
-    auto result = RPC::lookupLedger(ledger, context);
-    if (ledger == nullptr)
-        return result;
+    if (!params[jss::account].isString())
+        return RPC::invalid_field_error(jss::account);
 
     auto id = parseBase58<AccountID>(params[jss::account].asString());
     if (!id)
     {
-        RPC::inject_error(rpcACT_MALFORMED, result);
-        return result;
+        return rpcError(rpcACT_MALFORMED);
     }
+
+    std::shared_ptr<ReadView const> ledger;
+    auto result = RPC::lookupLedger(ledger, context);
+    if (ledger == nullptr)
+        return result;
     auto const accountID{id.value()};
 
     if (!ledger->exists(keylet::account(accountID)))
@@ -75,8 +77,9 @@ doAccountNFTs(RPC::JsonContext& context)
         return *err;
 
     uint256 marker;
+    bool const markerSet = params.isMember(jss::marker);
 
-    if (params.isMember(jss::marker))
+    if (markerSet)
     {
         auto const& m = params[jss::marker];
         if (!m.isString())
@@ -98,6 +101,7 @@ doAccountNFTs(RPC::JsonContext& context)
 
     // Continue iteration from the current page:
     bool pastMarker = marker.isZero();
+    bool markerFound = false;
     uint256 const maskedMarker = marker & nft::pageMask;
     while (cp)
     {
@@ -119,12 +123,23 @@ doAccountNFTs(RPC::JsonContext& context)
             uint256 const nftokenID = o[sfNFTokenID];
             uint256 const maskedNftokenID = nftokenID & nft::pageMask;
 
-            if (!pastMarker && maskedNftokenID < maskedMarker)
-                continue;
+            if (!pastMarker)
+            {
+                if (maskedNftokenID < maskedMarker)
+                    continue;
 
-            if (!pastMarker && maskedNftokenID == maskedMarker &&
-                nftokenID <= marker)
-                continue;
+                if (maskedNftokenID == maskedMarker && nftokenID < marker)
+                    continue;
+
+                if (nftokenID == marker)
+                {
+                    markerFound = true;
+                    continue;
+                }
+            }
+
+            if (markerSet && !markerFound)
+                return RPC::invalid_field_error(jss::marker);
 
             pastMarker = true;
 
@@ -155,6 +170,9 @@ doAccountNFTs(RPC::JsonContext& context)
             cp = nullptr;
     }
 
+    if (markerSet && !markerFound)
+        return RPC::invalid_field_error(jss::marker);
+
     result[jss::account] = toBase58(accountID);
     context.loadType = Resource::feeMediumBurdenRPC;
     return result;
@@ -166,6 +184,9 @@ doAccountObjects(RPC::JsonContext& context)
     auto const& params = context.params;
     if (!params.isMember(jss::account))
         return RPC::missing_field_error(jss::account);
+
+    if (!params[jss::account].isString())
+        return RPC::invalid_field_error(jss::account);
 
     std::shared_ptr<ReadView const> ledger;
     auto result = RPC::lookupLedger(ledger, context);
@@ -221,6 +242,9 @@ doAccountObjects(RPC::JsonContext& context)
     else
     {
         auto [rpcStatus, type] = RPC::chooseLedgerEntryType(params);
+
+        if (!RPC::isAccountObjectsValidType(type))
+            return RPC::invalid_field_error(jss::type);
 
         if (rpcStatus)
         {
