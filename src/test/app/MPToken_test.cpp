@@ -58,7 +58,7 @@ class MPToken_test : public beast::unit_test::suite
                  .metadata = "test",
                  .err = temMALFORMED});
 
-            // tries to set a txfee while not enabling transfer
+            // tries to set a txfee greater than max
             mptAlice.create(
                 {.maxAmt = 100,
                  .assetScale = 0,
@@ -66,6 +66,14 @@ class MPToken_test : public beast::unit_test::suite
                  .metadata = "test",
                  .flags = tfMPTCanTransfer,
                  .err = temBAD_MPTOKEN_TRANSFER_FEE});
+
+            // tries to set a txfee while not enabling transfer
+            mptAlice.create(
+                {.maxAmt = 100,
+                 .assetScale = 0,
+                 .transferFee = maxTransferFee,
+                 .metadata = "test",
+                 .err = temMALFORMED});
 
             // empty metadata returns error
             mptAlice.create(
