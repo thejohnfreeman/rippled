@@ -38,6 +38,7 @@
 #include <xrpld/app/tx/detail/DeleteOracle.h>
 #include <xrpld/app/tx/detail/DepositPreauth.h>
 #include <xrpld/app/tx/detail/Escrow.h>
+#include <xrpld/app/tx/detail/LedgerStateFix.h>
 #include <xrpld/app/tx/detail/MPTokenAuthorize.h>
 #include <xrpld/app/tx/detail/MPTokenIssuanceCreate.h>
 #include <xrpld/app/tx/detail/MPTokenIssuanceDestroy.h>
@@ -101,6 +102,8 @@ with_txn_type(TxType txnType, F&& f)
             return f.template operator()<EscrowFinish>();
         case ttESCROW_CANCEL:
             return f.template operator()<EscrowCancel>();
+        case ttLEDGER_STATE_FIX:
+            return f.template operator()<LedgerStateFix>();
         case ttPAYCHAN_CLAIM:
             return f.template operator()<PayChanClaim>();
         case ttPAYCHAN_CREATE:

@@ -40,6 +40,7 @@
 #include <test/jtx/invoice_id.h>
 #include <test/jtx/jtx_json.h>
 #include <test/jtx/last_ledger_sequence.h>
+#include <test/jtx/ledgerStateFix.h>
 #include <test/jtx/memo.h>
 #include <test/jtx/mpt.h>
 #include <test/jtx/multisign.h>

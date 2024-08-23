@@ -539,6 +539,14 @@ TxFormats::TxFormats()
             {sfMPTokenHolder, soeOPTIONAL},
         },
         commonFields);
+
+    add(jss::LedgerStateFix,
+        ttLEDGER_STATE_FIX,
+        {
+            {sfLedgerFixType, soeREQUIRED},
+            {sfOwner, soeOPTIONAL},
+        },
+        commonFields);
 }
 
 TxFormats const&
