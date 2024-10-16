@@ -49,7 +49,8 @@ STNumber::getText() const
     return to_string(*this);
 }
 
-Json::Value STNumber::getJson(JsonOptions) const
+Json::Value
+STNumber::getJson(JsonOptions) const
 {
     return to_string(*this);
 }
