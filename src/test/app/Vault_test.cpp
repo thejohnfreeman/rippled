@@ -45,6 +45,12 @@ class Vault_test : public beast::unit_test::suite
             Asset asset = issuer["IOU"];
             auto tx = vault::create({.owner = owner, .asset = asset});
 
+            SUBCASE("happy path")
+            {
+                env(tx, fee);
+                env.close();
+            }
+
             SUBCASE("global freeze")
             {
                 env(fset(issuer, asfGlobalFreeze));
@@ -55,14 +61,8 @@ class Vault_test : public beast::unit_test::suite
 
             SUBCASE("data too large")
             {
-                // tx[sfData] = blob(260)
-                // env(tx, ter(tecFROZEN));
-                env.close();
-            }
-
-            SUBCASE("success")
-            {
-                env(tx, fee);
+                tx[sfData] = blob257;
+                env(tx, fee, ter(temMALFORMED));
                 env.close();
             }
         }
@@ -74,17 +74,17 @@ class Vault_test : public beast::unit_test::suite
             Asset asset = mptt.issuanceID();
             auto tx = vault::create({.owner = owner, .asset = asset});
 
-            SUBCASE("metadata too large")
+            SUBCASE("happy path")
             {
-                // tx[sfMPTokenMetadata] = blob(1100);
-                // env(tx, ter(???));
-                // env.close();
+                env(tx, fee);
+                env.close();
             }
 
-            SUBCASE("create")
+            SUBCASE("metadata too large")
             {
-                // env(tx);
-                // env.close();
+                // tx[sfMPTokenMetadata] = blob1025;
+                // env(tx, fee, ter(temMALFORMED));
+                env.close();
             }
         }
 

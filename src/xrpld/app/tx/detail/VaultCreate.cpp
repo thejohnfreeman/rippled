@@ -32,8 +32,14 @@ VaultCreate::preflight(PreflightContext const& ctx)
     if (!ctx.rules.enabled(featureSingleAssetVault))
         return temDISABLED;
 
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
+    if (auto const ter = preflight1(ctx))
+        return ter;
+
+    if (auto const data = ctx.tx[~sfData])
+    {
+        if (data->length() > maxVaultDataLength)
+            return temMALFORMED;
+    }
 
     return preflight2(ctx);
 }
@@ -63,20 +69,25 @@ VaultCreate::doApply()
     auto sequence = tx.getSequence();
 
     auto vault = std::make_shared<SLE>(keylet::vault(owner, sequence));
-    if (auto ter = dirLink(view(), owner, vault); !isTesSuccess(ter))
+    if (auto ter = dirLink(view(), owner, vault))
         return ter;
+
     auto maybePseudo = createPseudoAccount(view(), vault->key());
     if (!maybePseudo)
         return maybePseudo.error();
     auto& pseudo = *maybePseudo;
-    // TODO: create empty MPToken or RippleState for Asset.
     auto pseudoId = pseudo->at(sfAccount);
+
+    if (auto ter = enableHolding(view(), pseudoId, tx[sfAsset], j_))
+        return ter;
+
     auto txFlags = tx.getFlags();
     std::uint32_t mptFlags = 0;
     if (!(txFlags & tfVaultShareNonTransferable))
         mptFlags |= (lsfMPTCanEscrow | lsfMPTCanTrade | lsfMPTCanTransfer);
     if (txFlags & tfVaultPrivate)
         mptFlags |= lsfMPTRequireAuth;
+
     auto maybeShare = MPTokenIssuanceCreate::create(
         view(),
         j_,
@@ -89,6 +100,7 @@ VaultCreate::doApply()
     if (!maybeShare)
         return maybeShare.error();
     auto& share = *maybeShare;
+
     vault->at(sfFlags) = txFlags & tfVaultPrivate;
     vault->at(sfSequence) = sequence;
     vault->at(sfOwner) = owner;

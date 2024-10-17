@@ -1034,9 +1034,40 @@ trustDelete(
 }
 
 [[nodiscard]] TER
-enableHolding(ApplyView& view, AccountID const& account, Asset const& asset)
+enableHolding(
+    ApplyView& view,
+    AccountID const& account,
+    Asset const& asset,
+    beast::Journal journal)
 {
-    return tesSUCCESS;
+    // Every account can hold XRP by default.
+    if (asset.native())
+        return tesSUCCESS;
+
+    if (asset.holds<Issue>())
+    {
+        auto const& issue = asset.get<Issue>();
+        auto const& issuer = issue.getIssuer();
+        if (isGlobalFrozen(view, issuer))
+            return tecFROZEN;
+        return rippleCredit(
+            view,
+            issuer,
+            account,
+            STAmount{asset},
+            /*bCheckIssuer=*/false,
+            journal);
+    }
+
+    if (asset.holds<MPTIssue>())
+    {
+        auto const& mptIssue = asset.get<MPTIssue>();
+        return rippleCreditMPT(
+            view, mptIssue.getIssuer(), account, STAmount{asset}, journal);
+    }
+
+    // Should be unreachable.
+    return tecINTERNAL;
 }
 
 TER

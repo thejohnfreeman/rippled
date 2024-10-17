@@ -436,7 +436,11 @@ trustDelete(
  *   and create an MPToken.
  */
 [[nodiscard]] TER
-enableHolding(ApplyView& view, AccountID const& account, Asset const& asset);
+enableHolding(
+    ApplyView& view,
+    AccountID const& account,
+    Asset const& asset,
+    beast::Journal journal);
 
 /** Delete an offer.
 
