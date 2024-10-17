@@ -391,10 +391,9 @@ LEDGER_ENTRY(ltMPTOKEN_ISSUANCE, 0x007e, MPTokenIssuance, ({
     {sfAssetScale,           soeDEFAULT},
     {sfMaximumAmount,        soeOPTIONAL},
     {sfOutstandingAmount,    soeREQUIRED},
-    {sfLockedAmount,         soeDEFAULT},
     {sfMPTokenMetadata,      soeOPTIONAL},
     {sfPreviousTxnID,        soeREQUIRED},
-    {sfPreviousTxnLgrSeq,    soeREQUIRED}
+    {sfPreviousTxnLgrSeq,    soeREQUIRED},
 }))
 
 /** A ledger object representing an individual MPToken balance.
@@ -405,10 +404,9 @@ LEDGER_ENTRY(ltMPTOKEN, 0x007f, MPToken, ({
     {sfAccount,              soeREQUIRED},
     {sfMPTokenIssuanceID,    soeREQUIRED},
     {sfMPTAmount,            soeDEFAULT},
-    {sfLockedAmount,         soeDEFAULT},
     {sfOwnerNode,            soeREQUIRED},
     {sfPreviousTxnID,        soeREQUIRED},
-    {sfPreviousTxnLgrSeq,    soeREQUIRED}
+    {sfPreviousTxnLgrSeq,    soeREQUIRED},
 }))
 
 /** A ledger object which tracks Oracle

@@ -77,7 +77,7 @@ MPTokenIssuanceCreate::create(
     if (!acct)
         return Unexpected(tecINTERNAL);
 
-    auto mptId = getMptID(args.account, args.sequence);
+    auto mptId = makeMptID(args.sequence, args.account);
     auto const mptIssuanceKeylet = keylet::mptIssuance(mptId);
 
     // create the MPTokenIssuance

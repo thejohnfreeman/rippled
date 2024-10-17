@@ -82,11 +82,7 @@ operator==(MPTIssue const& lhs, MPTIssue const& rhs)
 constexpr bool
 operator!=(MPTIssue const& lhs, MPTIssue const& rhs)
 {
-<<<<<<< HEAD
-    return !(lhs.getMptID() == rhs.getMptID());
-=======
     return !(lhs == rhs);
->>>>>>> gregt/feature/stissue/mpt-v1-var-issues
 }
 
 /** MPT is a non-native token.

@@ -62,11 +62,6 @@ VaultSet::doApply()
     if (owner != vault->at(sfOwner))
         return tecNO_PERMISSION;
 
-    // Assert immutable flags not given.
-    auto txFlags = tx.getFlags();
-    if ((txFlags & tfVaultPrivate) || (txFlags & tfVaultShareNonTransferable))
-        return tecIMMUTABLE;
-
     // Update mutable flags and fields if given.
     if (tx.isFieldPresent(sfData))
         vault->at(sfData) = tx[sfData];
