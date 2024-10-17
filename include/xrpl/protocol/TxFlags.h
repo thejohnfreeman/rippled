@@ -106,6 +106,7 @@ constexpr std::uint32_t tfPartialPayment                   = 0x00020000;
 constexpr std::uint32_t tfLimitQuality                     = 0x00040000;
 constexpr std::uint32_t tfPaymentMask =
     ~(tfUniversal | tfPartialPayment | tfLimitQuality | tfNoRippleDirect);
+constexpr std::uint32_t tfMPTPaymentMask = ~(tfUniversal | tfPartialPayment);
 
 // TrustSet flags:
 constexpr std::uint32_t tfSetfAuth                         = 0x00010000;
@@ -133,8 +134,7 @@ constexpr std::uint32_t const tfTrustLine                  = 0x00000004;
 constexpr std::uint32_t const tfTransferable               = 0x00000008;
 
 // MPTokenIssuanceCreate flags:
-// NOTE - there is intentionally no flag here for 0x01 because that
-// corresponds to lsfMPTLocked, which this transaction cannot mutate. 
+// NOTE - there is intentionally no flag here for lsfMPTLocked, which this transaction cannot mutate. 
 constexpr std::uint32_t const tfMPTCanLock                 = lsfMPTCanLock;
 constexpr std::uint32_t const tfMPTRequireAuth             = lsfMPTRequireAuth;
 constexpr std::uint32_t const tfMPTCanEscrow               = lsfMPTCanEscrow;

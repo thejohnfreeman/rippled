@@ -40,7 +40,7 @@ MPTokenIssuanceCreate::preflight(PreflightContext const& ctx)
     if (auto const fee = ctx.tx[~sfTransferFee])
     {
         if (fee > maxTransferFee)
-            return temBAD_MPTOKEN_TRANSFER_FEE;
+            return temBAD_TRANSFER_FEE;
 
         // If a non-zero TransferFee is set then the tfTransferable flag
         // must also be set.
@@ -82,7 +82,7 @@ MPTokenIssuanceCreate::create(
         return tecINSUFFICIENT_RESERVE;
 
     auto const mptIssuanceKeylet =
-        keylet::mptIssuance(args.account, args.sequence);
+        keylet::mptIssuance(args.sequence, args.account);
 
     // create the MPTokenIssuance
     {

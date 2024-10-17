@@ -288,15 +288,15 @@ Keylet
 oracle(AccountID const& account, std::uint32_t const& documentID) noexcept;
 
 Keylet
-mptIssuance(AccountID const& issuer, std::uint32_t seq) noexcept;
+mptIssuance(std::uint32_t seq, AccountID const& issuer) noexcept;
 
 Keylet
-mptIssuance(MPTID const& mpt) noexcept;
+mptIssuance(MPTID const& issuanceID) noexcept;
 
 inline Keylet
-mptIssuance(uint256 const& issuance)
+mptIssuance(uint256 const& issuanceKey)
 {
-    return {ltMPTOKEN_ISSUANCE, issuance};
+    return {ltMPTOKEN_ISSUANCE, issuanceKey};
 }
 
 Keylet
@@ -352,7 +352,7 @@ std::array<keyletDesc<AccountID const&>, 6> const directAccountKeylets{
      {&keylet::did, jss::DID, true}}};
 
 MPTID
-getMptID(AccountID const& account, std::uint32_t sequence);
+makeMptID(std::uint32_t sequence, AccountID const& account);
 
 }  // namespace ripple
 

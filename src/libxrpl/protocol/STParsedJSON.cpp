@@ -398,9 +398,8 @@ parseLeaf(
 
                     std::uint64_t val;
 
-                    bool const useBase10 = field == sfMaximumAmount ||
-                        field == sfOutstandingAmount ||
-                        field == sfLockedAmount || field == sfMPTAmount;
+                    bool const useBase10 =
+                        field.shouldMeta(SField::sMD_BaseTen);
 
                     // if the field is amount, serialize as base 10
                     auto [p, ec] = std::from_chars(
@@ -999,8 +998,7 @@ parseArray(
             Json::Value const objectFields(json[i][objectName]);
 
             std::stringstream ss;
-            ss << json_name << "."
-               << "[" << i << "]." << objectName;
+            ss << json_name << "." << "[" << i << "]." << objectName;
 
             auto ret = parseObject(
                 ss.str(), objectFields, nameField, depth + 1, error);

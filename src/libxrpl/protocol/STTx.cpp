@@ -143,14 +143,9 @@ STTx::getMentionedAccounts() const
         }
         else if (auto samt = dynamic_cast<STAmount const*>(&it))
         {
-            if (samt->holds<Issue>())
-            {
-                auto const& issuer = samt->getIssuer();
-                if (!isXRP(issuer))
-                    list.insert(issuer);
-            }
-            else
-                list.insert(samt->getIssuer());
+            auto const& issuer = samt->getIssuer();
+            if (!isXRP(issuer))
+                list.insert(issuer);
         }
     }
 
@@ -565,7 +560,7 @@ invalidMPTAmountInTx(STObject const& tx)
                     field.getSType() == STI_AMOUNT &&
                     static_cast<STAmount const&>(field).holds<MPTIssue>())
                 {
-                    if (e.supportMPT() == soeMPTNotSupported)
+                    if (e.supportMPT() != soeMPTSupported)
                         return true;
                 }
             }

@@ -90,9 +90,17 @@ public:
     static constexpr Number
     lowest() noexcept;
 
-    explicit operator XRPAmount() const;  // round to nearest, even on tie
-    explicit operator MPTAmount() const;  // round to nearest, even on tie
-    explicit operator rep() const;        // round to nearest, even on tie
+    /** Conversions to Number are implicit and conversions away from Number
+     *  are explicit. This design encourages and facilitates the use of Number
+     *  as the preferred type for floating point arithmetic as it makes
+     *  "mixed mode" more convenient, e.g. MPTAmount + Number.
+     */
+    explicit
+    operator XRPAmount() const;  // round to nearest, even on tie
+    explicit
+    operator MPTAmount() const;  // round to nearest, even on tie
+    explicit
+    operator rep() const;  // round to nearest, even on tie
 
     friend constexpr bool
     operator==(Number const& x, Number const& y) noexcept

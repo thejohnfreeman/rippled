@@ -154,7 +154,7 @@ public:
     // Legacy support for new-style amounts
     STAmount(IOUAmount const& amount, Issue const& issue);
     STAmount(XRPAmount const& amount);
-    STAmount(MPTAmount const& amount, MPTIssue const& issue);
+    STAmount(MPTAmount const& amount, MPTIssue const& mptIssue);
     operator Number() const;
 
     //--------------------------------------------------------------------------
@@ -215,7 +215,8 @@ public:
     //
     //--------------------------------------------------------------------------
 
-    explicit operator bool() const noexcept;
+    explicit
+    operator bool() const noexcept;
 
     STAmount&
     operator+=(STAmount const&);
@@ -346,6 +347,7 @@ STAmount::STAmount(
     , mOffset(exponent)
     , mIsNegative(negative)
 {
+    // mValue is uint64, but needs to fit in the range of int64
     assert(mValue <= std::numeric_limits<std::int64_t>::max());
     canonicalize();
 }
@@ -381,15 +383,15 @@ inline STAmount::STAmount(IOUAmount const& amount, Issue const& issue)
     , mIsNegative(amount < beast::zero)
 {
     if (mIsNegative)
-        mValue = static_cast<std::uint64_t>(-amount.mantissa());
+        mValue = unsafe_cast<std::uint64_t>(-amount.mantissa());
     else
-        mValue = static_cast<std::uint64_t>(amount.mantissa());
+        mValue = unsafe_cast<std::uint64_t>(amount.mantissa());
 
     canonicalize();
 }
 
-inline STAmount::STAmount(MPTAmount const& amount, MPTIssue const& issue)
-    : mAsset(issue), mOffset(0), mIsNegative(amount < beast::zero)
+inline STAmount::STAmount(MPTAmount const& amount, MPTIssue const& mptIssue)
+    : mAsset(mptIssue), mOffset(0), mIsNegative(amount < beast::zero)
 {
     if (mIsNegative)
         mValue = unsafe_cast<std::uint64_t>(-amount.value());
@@ -441,7 +443,7 @@ STAmount::exponent() const noexcept
 inline bool
 STAmount::native() const noexcept
 {
-    return isXRP(mAsset);
+    return mAsset.native();
 }
 
 template <ValidIssueType TIss>
@@ -503,9 +505,7 @@ STAmount::signum() const noexcept
 inline STAmount
 STAmount::zeroed() const
 {
-    if (mAsset.holds<Issue>())
-        return STAmount(mAsset.get<Issue>());
-    return STAmount(mAsset.get<MPTIssue>());
+    return STAmount(mAsset);
 }
 
 inline STAmount::operator bool() const noexcept
@@ -522,7 +522,8 @@ inline STAmount::operator Number() const
     return iou();
 }
 
-inline STAmount& STAmount::operator=(beast::Zero)
+inline STAmount&
+STAmount::operator=(beast::Zero)
 {
     clear();
     return *this;
@@ -675,7 +676,7 @@ getRate(STAmount const& offerOut, STAmount const& offerIn);
 inline bool
 isXRP(STAmount const& amount)
 {
-    return isXRP(amount.asset());
+    return amount.native();
 }
 
 // Since `canonicalize` does not have access to a ledger, this is needed to put

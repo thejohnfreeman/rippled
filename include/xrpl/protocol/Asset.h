@@ -33,9 +33,15 @@ concept ValidIssueType =
     std::is_same_v<TIss, Issue> || std::is_same_v<TIss, MPTIssue>;
 
 template <typename A>
-concept AssetType = std::is_same_v<A, Asset> ||
-    std::is_convertible_v<A, Issue> || std::is_convertible_v<A, MPTIssue>;
+concept AssetType =
+    std::is_same_v<A, Asset> || std::is_convertible_v<A, Issue> ||
+    std::is_convertible_v<A, MPTIssue> || std::is_convertible_v<A, MPTID>;
 
+/* Asset is an abstraction of three different issue types: XRP, IOU, MPT.
+ * For historical reasons, two issue types XRP and IOU are wrapped in Issue
+ * type. Asset replaces Issue where any issue type is expected. For instance,
+ * STAmount replaces Issue with Asset to represent any issue amount.
+ */
 class Asset
 {
 private:
@@ -45,15 +51,20 @@ private:
 public:
     Asset() = default;
 
-    Asset(Issue const& issue);
+    /** Conversions to Asset are implicit and conversions to specific issue
+     *  type are explicit. This design facilitates the use of Asset.
+     */
+    Asset(Issue const& issue) : issue_(issue)
+    {
+    }
 
-    Asset(MPTIssue const& mpt);
+    Asset(MPTIssue const& mptIssue) : issue_(mptIssue)
+    {
+    }
 
-    Asset(MPTID const& mpt);
-
-    explicit operator Issue() const;
-
-    explicit operator MPTIssue() const;
+    Asset(MPTID const& issuanceID) : issue_(MPTIssue{issuanceID})
+    {
+    }
 
     AccountID const&
     getIssuer() const;
@@ -79,6 +90,12 @@ public:
     void
     setJson(Json::Value& jv) const;
 
+    bool
+    native() const
+    {
+        return holds<Issue>() && get<Issue>().native();
+    }
+
     friend constexpr bool
     operator==(Asset const& lhs, Asset const& rhs);
 
@@ -87,6 +104,9 @@ public:
 
     friend constexpr bool
     operator<(Asset const& lhs, Asset const& rhs);
+
+    friend constexpr bool
+    operator==(Currency const& lhs, Asset const& rhs);
 };
 
 template <ValidIssueType TIss>
@@ -156,10 +176,16 @@ operator<(Asset const& lhs, Asset const& rhs)
         rhs.issue_);
 }
 
+constexpr bool
+operator==(Currency const& lhs, Asset const& rhs)
+{
+    return rhs.holds<Issue>() && rhs.get<Issue>().currency == lhs;
+}
+
 inline bool
 isXRP(Asset const& asset)
 {
-    return asset.holds<Issue>() && isXRP(asset.get<Issue>());
+    return asset.native();
 }
 
 std::string

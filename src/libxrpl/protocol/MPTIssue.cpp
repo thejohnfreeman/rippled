@@ -23,13 +23,15 @@
 
 namespace ripple {
 
-MPTIssue::MPTIssue(MPTID const& id) : mptID_(id)
+MPTIssue::MPTIssue(MPTID const& issuanceID) : mptID_(issuanceID)
 {
 }
 
 AccountID const&
 MPTIssue::getIssuer() const
 {
+    // MPTID is concatenation of sequence + account
+    static_assert(sizeof(MPTID) == (sizeof(std::uint32_t) + sizeof(AccountID)));
     // copy from id skipping the sequence
     AccountID const* account = reinterpret_cast<AccountID const*>(
         mptID_.data() + sizeof(std::uint32_t));
@@ -43,11 +45,23 @@ MPTIssue::getMptID() const
     return mptID_;
 }
 
+std::string
+MPTIssue::getText() const
+{
+    return to_string(mptID_);
+}
+
+void
+MPTIssue::setJson(Json::Value& jv) const
+{
+    jv[jss::mpt_issuance_id] = to_string(mptID_);
+}
+
 Json::Value
-to_json(MPTIssue const& issue)
+to_json(MPTIssue const& mptIssue)
 {
     Json::Value jv;
-    jv[jss::mpt_issuance_id] = to_string(issue.getMptID());
+    mptIssue.setJson(jv);
     return jv;
 }
 

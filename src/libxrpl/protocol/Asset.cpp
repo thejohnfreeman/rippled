@@ -23,63 +23,31 @@
 
 namespace ripple {
 
-Asset::Asset(Issue const& issue) : issue_(issue)
-{
-}
-
-Asset::Asset(MPTIssue const& mpt) : issue_(mpt)
-{
-}
-
-Asset::Asset(MPTID const& mpt) : issue_(MPTIssue{mpt})
-{
-}
-
-Asset::operator Issue() const
-{
-    return get<Issue>();
-}
-
-Asset::operator MPTIssue() const
-{
-    return get<MPTIssue>();
-}
-
 AccountID const&
 Asset::getIssuer() const
 {
-    if (holds<Issue>())
-        return get<Issue>().getIssuer();
-    return get<MPTIssue>().getIssuer();
+    return std::visit(
+        [&](auto&& issue) -> AccountID const& { return issue.getIssuer(); },
+        issue_);
 }
 
 std::string
 Asset::getText() const
 {
-    if (holds<Issue>())
-        return get<Issue>().getText();
-    return to_string(get<MPTIssue>().getMptID());
+    return std::visit([&](auto&& issue) { return issue.getText(); }, issue_);
 }
 
 void
 Asset::setJson(Json::Value& jv) const
 {
-    if (holds<MPTIssue>())
-        jv[jss::mpt_issuance_id] = to_string(get<MPTIssue>().getMptID());
-    else
-    {
-        jv[jss::currency] = to_string(get<Issue>().currency);
-        if (!isXRP(get<Issue>().currency))
-            jv[jss::issuer] = toBase58(get<Issue>().account);
-    }
+    std::visit([&](auto&& issue) { issue.setJson(jv); }, issue_);
 }
 
 std::string
 to_string(Asset const& asset)
 {
-    if (asset.holds<Issue>())
-        return to_string(asset.get<Issue>());
-    return to_string(asset.get<MPTIssue>().getMptID());
+    return std::visit(
+        [&](auto const& issue) { return to_string(issue); }, asset.value());
 }
 
 bool

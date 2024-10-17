@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
     This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
+    Copyright (c) 2024 Ripple Labs Inc.
 
     Permission to use, copy, modify, and/or distribute this software for any
     purpose  with  or without fee is hereby granted, provided that the above
@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_BASICS_INTEGRALAMOUNT_H_INCLUDED
-#define RIPPLE_BASICS_INTEGRALAMOUNT_H_INCLUDED
+#ifndef RIPPLE_BASICS_MPTAMOUNT_H_INCLUDED
+#define RIPPLE_BASICS_MPTAMOUNT_H_INCLUDED
 
 #include <xrpl/basics/contract.h>
 #include <xrpl/basics/safe_cast.h>
@@ -75,14 +75,12 @@ public:
     operator<(MPTAmount const& other) const;
 
     /** Returns true if the amount is not zero */
-    explicit constexpr operator bool() const noexcept;
+    explicit constexpr
+    operator bool() const noexcept;
 
     /** Return the sign of the amount */
     constexpr int
     signum() const noexcept;
-
-    Json::Value
-    jsonClipped() const;
 
     /** Returns the underlying value. Code SHOULD NOT call this
         function unless the type has been abstracted away,
@@ -90,9 +88,6 @@ public:
     */
     constexpr value_type
     value() const;
-
-    friend std::istream&
-    operator>>(std::istream& s, MPTAmount& val);
 
     static MPTAmount
     minPositiveAmount();
@@ -102,7 +97,8 @@ constexpr MPTAmount::MPTAmount(value_type value) : value_(value)
 {
 }
 
-constexpr MPTAmount& MPTAmount::operator=(beast::Zero)
+constexpr MPTAmount&
+MPTAmount::operator=(beast::Zero)
 {
     value_ = 0;
     return *this;
@@ -129,21 +125,6 @@ constexpr MPTAmount::value_type
 MPTAmount::value() const
 {
     return value_;
-}
-
-inline std::istream&
-operator>>(std::istream& s, MPTAmount& val)
-{
-    s >> val.value_;
-    return s;
-}
-
-// Output MPTAmount as just the value.
-template <class Char, class Traits>
-std::basic_ostream<Char, Traits>&
-operator<<(std::basic_ostream<Char, Traits>& os, const MPTAmount& q)
-{
-    return os << q.value();
 }
 
 inline std::string
@@ -182,4 +163,4 @@ mulRatio(
 
 }  // namespace ripple
 
-#endif  // RIPPLE_BASICS_INTEGRALAMOUNT_H_INCLUDED
+#endif  // RIPPLE_BASICS_MPTAMOUNT_H_INCLUDED

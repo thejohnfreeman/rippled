@@ -25,6 +25,10 @@
 
 namespace ripple {
 
+/* Adapt MPTID to provide the same interface as Issue. Enables using static
+ * polymorphism by Asset and other classes. MPTID is a 192-bit concatenation
+ * of a 32-bit account sequence and a 160-bit account id.
+ */
 class MPTIssue
 {
 private:
@@ -33,7 +37,7 @@ private:
 public:
     MPTIssue() = default;
 
-    MPTIssue(MPTID const& id);
+    explicit MPTIssue(MPTID const& issuanceID);
 
     AccountID const&
     getIssuer() const;
@@ -41,11 +45,23 @@ public:
     MPTID const&
     getMptID() const;
 
+    std::string
+    getText() const;
+
+    void
+    setJson(Json::Value& jv) const;
+
     friend constexpr bool
     operator==(MPTIssue const& lhs, MPTIssue const& rhs);
 
     friend constexpr bool
     operator!=(MPTIssue const& lhs, MPTIssue const& rhs);
+
+    bool
+    native() const
+    {
+        return false;
+    }
 };
 
 constexpr bool
@@ -57,9 +73,11 @@ operator==(MPTIssue const& lhs, MPTIssue const& rhs)
 constexpr bool
 operator!=(MPTIssue const& lhs, MPTIssue const& rhs)
 {
-    return !(lhs.mptID_ == rhs.mptID_);
+    return !(lhs == rhs);
 }
 
+/** MPT is a non-native token.
+ */
 inline bool
 isXRP(MPTID const&)
 {
@@ -67,10 +85,10 @@ isXRP(MPTID const&)
 }
 
 Json::Value
-to_json(MPTIssue const& issue);
+to_json(MPTIssue const& mptIssue);
 
 std::string
-to_string(MPTIssue const& mpt);
+to_string(MPTIssue const& mptIssue);
 
 }  // namespace ripple
 
