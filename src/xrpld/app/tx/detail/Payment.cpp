@@ -105,9 +105,9 @@ Payment::preflight(PreflightContext const& ctx)
     if ((mptDirect && dstAmount.asset() != maxSourceAmount.asset()) ||
         (!mptDirect && maxSourceAmount.holds<MPTIssue>()))
     {
-        JLOG(j.trace()) << "Malformed transaction: "
-                        << "inconsistent issues: " << dstAmount.getFullText()
-                        << " " << maxSourceAmount.getFullText() << " "
+        JLOG(j.trace()) << "Malformed transaction: " << "inconsistent issues: "
+                        << dstAmount.getFullText() << " "
+                        << maxSourceAmount.getFullText() << " "
                         << deliverMin.value_or(STAmount{}).getFullText();
         return temMALFORMED;
     }
@@ -136,8 +136,8 @@ Payment::preflight(PreflightContext const& ctx)
     }
     if (dstAmount <= beast::zero)
     {
-        JLOG(j.trace()) << "Malformed transaction: "
-                        << "bad dst amount: " << dstAmount.getFullText();
+        JLOG(j.trace()) << "Malformed transaction: " << "bad dst amount: "
+                        << dstAmount.getFullText();
         return temBAD_AMOUNT;
     }
     if (badCurrency() == srcAsset || badCurrency() == dstAsset)
@@ -532,8 +532,8 @@ Payment::doApply()
     {
         // Vote no. However the transaction might succeed, if applied in
         // a different order.
-        JLOG(j_.trace()) << "Delay transaction: Insufficient funds: "
-                         << " " << to_string(mPriorBalance) << " / "
+        JLOG(j_.trace()) << "Delay transaction: Insufficient funds: " << " "
+                         << to_string(mPriorBalance) << " / "
                          << to_string(dstAmount.xrp() + mmm) << " ("
                          << to_string(reserve) << ")";
 

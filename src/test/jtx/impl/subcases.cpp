@@ -17,52 +17,50 @@
 */
 //==============================================================================
 
-#include <xrpl/protocol/Indexes.h>
-#include <xrpl/protocol/MPTIssue.h>
-#include <xrpl/protocol/jss.h>
+#include <test/jtx/subcases.h>
 
-namespace ripple {
+#include <stdexcept>
 
-MPTIssue::MPTIssue(MPTID const& issuanceID) : mptID_(issuanceID)
+namespace subcases {
+
+Subcase::Subcase(Context& context, char const* name) : _(context), name_(name)
 {
 }
 
-AccountID const&
-MPTIssue::getIssuer() const
+Subcase::operator bool() const
 {
-    // MPTID is concatenation of sequence + account
-    static_assert(sizeof(MPTID) == (sizeof(std::uint32_t) + sizeof(AccountID)));
-    // copy from id skipping the sequence
-    AccountID const* account = reinterpret_cast<AccountID const*>(
-        mptID_.data() + sizeof(std::uint32_t));
-
-    return *account;
+    ++_.level;
+    if (_.level >= MAXIMUM_SUBCASE_DEPTH)
+        throw std::logic_error("maximum subcase depth exceeded");
+    if (_.entered < _.level && _.skip[_.level] == _.skipped)
+    {
+        _.entered = _.level;
+        _.skipped = 0;
+        return true;
+    }
+    ++_.skipped;
+    return false;
 }
 
-std::string
-MPTIssue::getText() const
+Subcase::~Subcase()
 {
-    return to_string(mptID_);
+    if (_.skipped == 0)
+    {
+        ++_.skip[_.level];
+        _.skip[_.level + 1] = 0;
+    }
+    --_.level;
 }
 
 void
-MPTIssue::setJson(Json::Value& jv) const
+execute(Supercase supercase)
 {
-    jv[jss::mpt_issuance_id] = to_string(mptID_);
+    Context context;
+    do
+    {
+        context.lap();
+        supercase(context);
+    } while (context.skipped != 0);
 }
 
-Json::Value
-to_json(MPTIssue const& mptIssue)
-{
-    Json::Value jv;
-    mptIssue.setJson(jv);
-    return jv;
-}
-
-std::string
-to_string(MPTIssue const& mptIssue)
-{
-    return to_string(mptIssue.getMptID());
-}
-
-}  // namespace ripple
+}  // namespace subcases

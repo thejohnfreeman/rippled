@@ -17,52 +17,31 @@
 */
 //==============================================================================
 
-#include <xrpl/protocol/Indexes.h>
-#include <xrpl/protocol/MPTIssue.h>
+#include <test/jtx/vault.h>
+
+#include <xrpl/json/json_value.h>
 #include <xrpl/protocol/jss.h>
 
+#include <optional>
+
 namespace ripple {
-
-MPTIssue::MPTIssue(MPTID const& issuanceID) : mptID_(issuanceID)
-{
-}
-
-AccountID const&
-MPTIssue::getIssuer() const
-{
-    // MPTID is concatenation of sequence + account
-    static_assert(sizeof(MPTID) == (sizeof(std::uint32_t) + sizeof(AccountID)));
-    // copy from id skipping the sequence
-    AccountID const* account = reinterpret_cast<AccountID const*>(
-        mptID_.data() + sizeof(std::uint32_t));
-
-    return *account;
-}
-
-std::string
-MPTIssue::getText() const
-{
-    return to_string(mptID_);
-}
-
-void
-MPTIssue::setJson(Json::Value& jv) const
-{
-    jv[jss::mpt_issuance_id] = to_string(mptID_);
-}
+namespace test {
+namespace jtx {
+namespace vault {
 
 Json::Value
-to_json(MPTIssue const& mptIssue)
+create(CreateArgs const& args)
 {
     Json::Value jv;
-    mptIssue.setJson(jv);
+    jv[jss::TransactionType] = jss::VaultCreate;
+    jv[jss::Account] = args.owner.human();
+    jv[jss::Asset] = to_json(args.asset);
+    if (args.flags)
+        jv[jss::Flags] = *args.flags;
     return jv;
 }
 
-std::string
-to_string(MPTIssue const& mptIssue)
-{
-    return to_string(mptIssue.getMptID());
-}
-
+}  // namespace vault
+}  // namespace jtx
+}  // namespace test
 }  // namespace ripple
