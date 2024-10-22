@@ -1034,7 +1034,7 @@ trustDelete(
 }
 
 [[nodiscard]] TER
-enableHolding(
+authorizeHolding(
     ApplyView& view,
     AccountID const& account,
     Asset const& asset,
@@ -1050,6 +1050,7 @@ enableHolding(
         auto const& issuer = issue.getIssuer();
         if (isGlobalFrozen(view, issuer))
             return tecFROZEN;
+        // TODO: trustCreate
         return rippleCredit(
             view,
             issuer,
@@ -1061,6 +1062,7 @@ enableHolding(
 
     if (asset.holds<MPTIssue>())
     {
+        // TODO: MPTokenAuthorize::authorize
         auto const& mptIssue = asset.get<MPTIssue>();
         return rippleCreditMPT(
             view, mptIssue.getIssuer(), account, STAmount{asset}, journal);

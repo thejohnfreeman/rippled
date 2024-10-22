@@ -217,10 +217,11 @@ constexpr std::uint32_t const tfMPTokenAuthorizeMask  = ~(tfMPTUnauthorize | tfU
 // MPTokenIssuanceSet flags:
 constexpr std::uint32_t const tfMPTokenIssuanceSetMask  = ~(tfMPTLock | tfMPTUnlock | tfUniversal);
 
-// Vault flags:
+// VaultCreate flags:
 constexpr std::uint32_t const tfVaultPrivate               = 0x00000001;
 static_assert(tfVaultPrivate == lsfVaultPrivate);
 constexpr std::uint32_t const tfVaultShareNonTransferable  = 0x00000002;
+constexpr std::uint32_t const tfVaultCreateMask = ~(tfUniversal | tfVaultPrivate | tfVaultShareNonTransferable);
 // clang-format on
 
 }  // namespace ripple

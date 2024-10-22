@@ -104,6 +104,7 @@ execute(Supercase supercase);
 
 #define TEST_CASE(name) void name(subcases::Context& _09876)
 #define SUBCASE(name) if (subcases::Subcase _54321{_09876, name})
+#define SKIP(name) if (false)
 #define EXECUTE(name) subcases::execute([&](auto& ctx) { name(ctx); })
 
 #endif

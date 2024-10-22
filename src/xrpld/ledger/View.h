@@ -436,7 +436,7 @@ trustDelete(
  *   and create an MPToken.
  */
 [[nodiscard]] TER
-enableHolding(
+authorizeHolding(
     ApplyView& view,
     AccountID const& account,
     Asset const& asset,

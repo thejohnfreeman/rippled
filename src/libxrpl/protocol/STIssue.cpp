@@ -150,7 +150,7 @@ STIssue::move(std::size_t n, void* buf)
 STIssue
 issueFromJson(SField const& name, Json::Value const& v)
 {
-    return STIssue{name, issueFromJson(v)};
+    return STIssue{name, *assetFromJson(v)};
 }
 
 }  // namespace ripple

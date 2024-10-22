@@ -35,6 +35,9 @@ VaultCreate::preflight(PreflightContext const& ctx)
     if (auto const ter = preflight1(ctx))
         return ter;
 
+    if (ctx.tx.getFlags() & tfVaultCreateMask)
+        return temINVALID_FLAG;
+
     if (auto const data = ctx.tx[~sfData])
     {
         if (data->length() > maxVaultDataLength)
@@ -65,12 +68,19 @@ VaultCreate::doApply()
     // we can consider downgrading them to `tef` or `tem`.
 
     auto const& tx = ctx_.tx;
-    auto const& owner = account_;
+    auto const& ownerId = account_;
     auto sequence = tx.getSequence();
 
-    auto vault = std::make_shared<SLE>(keylet::vault(owner, sequence));
-    if (auto ter = dirLink(view(), owner, vault))
+    auto owner = view().peek(keylet::account(ownerId));
+    auto vault = std::make_shared<SLE>(keylet::vault(ownerId, sequence));
+
+    if (auto ter = dirLink(view(), ownerId, vault))
         return ter;
+    // Should the next 3 lines be folded into `dirLink`?
+    adjustOwnerCount(view(), owner, 1, j_);
+    auto ownerCount = owner->at(sfOwnerCount);
+    if (mPriorBalance < view().fees().accountReserve(ownerCount))
+        return tecINSUFFICIENT_RESERVE;
 
     auto maybePseudo = createPseudoAccount(view(), vault->key());
     if (!maybePseudo)
@@ -78,7 +88,7 @@ VaultCreate::doApply()
     auto& pseudo = *maybePseudo;
     auto pseudoId = pseudo->at(sfAccount);
 
-    if (auto ter = enableHolding(view(), pseudoId, tx[sfAsset], j_))
+    if (auto ter = authorizeHolding(view(), pseudoId, tx[sfAsset], j_))
         return ter;
 
     auto txFlags = tx.getFlags();
@@ -103,7 +113,7 @@ VaultCreate::doApply()
 
     vault->at(sfFlags) = txFlags & tfVaultPrivate;
     vault->at(sfSequence) = sequence;
-    vault->at(sfOwner) = owner;
+    vault->at(sfOwner) = ownerId;
     vault->at(sfAccount) = pseudoId;
     vault->at(sfAsset) = tx[sfAsset];
     // Leave default values for AssetTotal and AssetAvailable, both zero.
