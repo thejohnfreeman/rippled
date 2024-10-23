@@ -312,7 +312,7 @@ Keylet
 mptoken(uint256 const& issuanceKey, AccountID const& holder) noexcept;
 
 Keylet
-vault(AccountID const& creator, std::uint32_t seq) noexcept;
+vault(AccountID const& owner, std::uint32_t seq) noexcept;
 
 }  // namespace keylet
 

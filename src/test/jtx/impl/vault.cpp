@@ -18,30 +18,32 @@
 //==============================================================================
 
 #include <test/jtx/vault.h>
+#include <test/jtx/Env.h>
 
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/protocol/STAmount.h>
 
 #include <optional>
 
 namespace ripple {
 namespace test {
 namespace jtx {
-namespace vault {
 
 Json::Value
-create(CreateArgs const& args)
+Vault::create(CreateArgs const& args)
 {
+    id = keylet::vault(args.owner.id(), env.seq(args.owner)).key;
     Json::Value jv;
     jv[jss::TransactionType] = jss::VaultCreate;
     jv[jss::Account] = args.owner.human();
     jv[jss::Asset] = to_json(args.asset);
+    jv[jss::Fee] = STAmount(env.current()->fees().increment).getJson();
     if (args.flags)
         jv[jss::Flags] = *args.flags;
     return jv;
 }
 
-}  // namespace vault
 }  // namespace jtx
 }  // namespace test
 }  // namespace ripple

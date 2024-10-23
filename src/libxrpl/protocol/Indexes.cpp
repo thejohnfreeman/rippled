@@ -496,9 +496,9 @@ mptoken(uint256 const& issuanceKey, AccountID const& holder) noexcept
 }
 
 Keylet
-vault(AccountID const& creator, std::uint32_t seq) noexcept
+vault(AccountID const& owner, std::uint32_t seq) noexcept
 {
-    return {ltVAULT, indexHash(LedgerNameSpace::VAULT, creator, seq)};
+    return {ltVAULT, indexHash(LedgerNameSpace::VAULT, owner, seq)};
 }
 
 }  // namespace keylet

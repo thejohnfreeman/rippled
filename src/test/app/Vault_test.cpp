@@ -38,16 +38,17 @@ class Vault_test : public beast::unit_test::suite
         Account owner{"owner"};
         env.fund(XRP(1000), issuer, owner);
         env.close();
-        auto goodFee = fee(env.current()->fees().increment);
+        auto vault = env.vault();
 
         SUBCASE("IOU vault")
         {
             Asset asset = issuer["IOU"];
-            auto tx = vault::create({.owner = owner, .asset = asset});
+            auto tx = vault.create({.owner = owner, .asset = asset});
+            // vault.id available starting here
 
             SUBCASE("happy path")
             {
-                env(tx, goodFee);
+                env(tx);
                 env.close();
             }
 
@@ -63,7 +64,7 @@ class Vault_test : public beast::unit_test::suite
                 // expression for this amount, but it is sadly not easy.
                 env(pay(owner, issuer, XRP(775)));
                 env.close();
-                env(tx, goodFee, ter(tecINSUFFICIENT_RESERVE));
+                env(tx, ter(tecINSUFFICIENT_RESERVE));
                 env.close();
             }
 
@@ -71,14 +72,14 @@ class Vault_test : public beast::unit_test::suite
             {
                 env(fset(issuer, asfGlobalFreeze));
                 env.close();
-                env(tx, goodFee, ter(tecFROZEN));
+                env(tx, ter(tecFROZEN));
                 env.close();
             }
 
             SUBCASE("data too large")
             {
                 tx[sfData] = blob257;
-                env(tx, goodFee, ter(temMALFORMED));
+                env(tx, ter(temMALFORMED));
                 env.close();
             }
         }
@@ -88,18 +89,18 @@ class Vault_test : public beast::unit_test::suite
             MPTTester mptt{env, issuer, {.fund = false}};
             mptt.create();
             Asset asset = mptt.issuanceID();
-            auto tx = vault::create({.owner = owner, .asset = asset});
+            auto tx = vault.create({.owner = owner, .asset = asset});
 
             SUBCASE("happy path")
             {
-                env(tx, goodFee);
+                env(tx);
                 env.close();
             }
 
             SUBCASE("metadata too large")
             {
                 // tx[sfMPTokenMetadata] = blob1025;
-                // env(tx, goodFee, ter(temMALFORMED));
+                // env(tx, ter(temMALFORMED));
                 env.close();
             }
         }

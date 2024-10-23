@@ -21,8 +21,9 @@
 #define RIPPLE_TEST_JTX_VAULT_H_INCLUDED
 
 #include <test/jtx/Account.h>
-#include <test/jtx/Env.h>
 #include <xrpl/json/json_value.h>
+
+#include <xrpl/basics/base_uint.h>
 #include <xrpl/protocol/Asset.h>
 
 #include <optional>
@@ -30,20 +31,34 @@
 namespace ripple {
 namespace test {
 namespace jtx {
-namespace vault {
 
-struct CreateArgs
+class Env;
+
+struct Vault
 {
-    Account owner;
-    Asset asset;
-    std::optional<std::uint32_t> flags{};
+    Env& env;
+    uint256 id{};
+
+    struct CreateArgs
+    {
+        Account owner;
+        Asset asset;
+        std::optional<std::uint32_t> flags{};
+    };
+
+    /** Return a VaultCreate transaction to create a Vault. */
+    Json::Value
+    create(CreateArgs const& args);
+
+    struct SetArgs;
+    Json::Value
+    set(SetArgs const& args);
+
+    struct DeleteArgs;
+    Json::Value
+    del(DeleteArgs const& args);
 };
 
-/** Return a VaultSet transaction to create a Vault. */
-Json::Value
-create(CreateArgs const& args);
-
-}  // namespace vault
 }  // namespace jtx
 }  // namespace test
 }  // namespace ripple
