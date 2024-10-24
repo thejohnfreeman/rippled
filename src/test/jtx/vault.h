@@ -17,52 +17,56 @@
 */
 //==============================================================================
 
-#include <xrpl/protocol/Indexes.h>
-#include <xrpl/protocol/MPTIssue.h>
-#include <xrpl/protocol/jss.h>
+#ifndef RIPPLE_TEST_JTX_VAULT_H_INCLUDED
+#define RIPPLE_TEST_JTX_VAULT_H_INCLUDED
+
+#include <test/jtx/Account.h>
+#include <xrpl/json/json_value.h>
+
+#include <xrpl/basics/base_uint.h>
+#include <xrpl/protocol/Asset.h>
+#include <xrpl/protocol/Keylet.h>
+
+#include <optional>
+#include <tuple>
 
 namespace ripple {
+namespace test {
+namespace jtx {
 
-MPTIssue::MPTIssue(MPTID const& issuanceID) : mptID_(issuanceID)
+class Env;
+
+struct Vault
 {
-}
+    Env& env;
 
-AccountID const&
-MPTIssue::getIssuer() const
-{
-    // MPTID is concatenation of sequence + account
-    static_assert(sizeof(MPTID) == (sizeof(std::uint32_t) + sizeof(AccountID)));
-    // copy from id skipping the sequence
-    AccountID const* account = reinterpret_cast<AccountID const*>(
-        mptID_.data() + sizeof(std::uint32_t));
+    struct CreateArgs
+    {
+        Account owner;
+        Asset asset;
+        std::optional<std::uint32_t> flags{};
+    };
 
-    return *account;
-}
+    /** Return a VaultCreate transaction and the Vault's expected keylet. */
+    std::tuple<Json::Value, Keylet>
+    create(CreateArgs const& args);
 
-std::string
-MPTIssue::getText() const
-{
-    return to_string(mptID_);
-}
+    struct SetArgs;
+    Json::Value
+    set(SetArgs const& args);
 
-void
-MPTIssue::setJson(Json::Value& jv) const
-{
-    jv[jss::mpt_issuance_id] = to_string(mptID_);
-}
+    struct DeleteArgs
+    {
+        Account owner;
+        uint256 id;
+    };
 
-Json::Value
-to_json(MPTIssue const& mptIssue)
-{
-    Json::Value jv;
-    mptIssue.setJson(jv);
-    return jv;
-}
+    Json::Value
+    del(DeleteArgs const& args);
+};
 
-std::string
-to_string(MPTIssue const& mptIssue)
-{
-    return to_string(mptIssue.getMptID());
-}
-
+}  // namespace jtx
+}  // namespace test
 }  // namespace ripple
+
+#endif

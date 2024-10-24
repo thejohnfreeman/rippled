@@ -58,4 +58,25 @@ validJSONAsset(Json::Value const& jv)
     return jv.isMember(jss::currency);
 }
 
+std::optional<Asset>
+assetFromJson(Json::Value const& v)
+{
+    if (v.isMember(jss::mpt_issuance_id))
+    {
+        // TODO: Do we want to assert that there are no other members?
+        MPTID issuanceId;
+        if (!issuanceId.parseHex(v[jss::mpt_issuance_id].asString()))
+            return std::nullopt;
+        return issuanceId;
+    }
+    Issue issue;
+    auto currency = v[jss::currency];
+    auto issuer = v[jss::issuer];
+    if (!to_currency(issue.currency, currency.asString()))
+        return std::nullopt;
+    if (!issuer.isString() || !to_issuer(issue.account, issuer.asString()))
+        return std::nullopt;
+    return issue;
+}
+
 }  // namespace ripple

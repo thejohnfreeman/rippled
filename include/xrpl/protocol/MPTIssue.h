@@ -42,8 +42,11 @@ public:
     AccountID const&
     getIssuer() const;
 
-    MPTID const&
-    getMptID() const;
+    constexpr MPTID const&
+    getMptID() const
+    {
+        return mptID_;
+    }
 
     std::string
     getText() const;
@@ -65,9 +68,15 @@ public:
 };
 
 constexpr bool
+operator<(MPTIssue const& lhs, MPTIssue const& rhs)
+{
+    return lhs.getMptID() < rhs.getMptID();
+}
+
+constexpr bool
 operator==(MPTIssue const& lhs, MPTIssue const& rhs)
 {
-    return lhs.mptID_ == rhs.mptID_;
+    return lhs.getMptID() == rhs.getMptID();
 }
 
 constexpr bool

@@ -109,6 +109,14 @@ public:
     operator==(Currency const& lhs, Asset const& rhs);
 };
 
+inline Json::Value
+to_json(Asset const& asset)
+{
+    Json::Value jv;
+    asset.setJson(jv);
+    return jv;
+}
+
 template <ValidIssueType TIss>
 constexpr bool
 Asset::holds() const
@@ -193,6 +201,9 @@ to_string(Asset const& asset);
 
 bool
 validJSONAsset(Json::Value const& jv);
+
+std::optional<Asset>
+assetFromJson(Json::Value const& v);
 
 }  // namespace ripple
 

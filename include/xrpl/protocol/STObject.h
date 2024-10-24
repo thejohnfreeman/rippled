@@ -152,8 +152,7 @@ public:
     getText() const override;
 
     // TODO(tom): options should be an enum.
-    Json::Value
-    getJson(JsonOptions options) const override;
+    Json::Value getJson(JsonOptions = JsonOptions::none) const override;
 
     void
     addWithoutSigningFields(Serializer& s) const;
@@ -535,6 +534,20 @@ public:
     operator-=(U const& u);
 
     operator value_type() const;
+
+    template <typename U>
+    friend bool
+    operator==(U&& lhs, STObject::ValueProxy<T> const& rhs)
+    {
+        return rhs.value() == lhs;
+    }
+
+    template <typename U>
+    friend bool
+    operator!=(U&& lhs, STObject::ValueProxy<T> const& rhs)
+    {
+        return !(lhs == rhs);
+    }
 
 private:
     friend class STObject;

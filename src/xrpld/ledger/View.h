@@ -386,6 +386,12 @@ dirNext(
 [[nodiscard]] std::function<void(SLE::ref)>
 describeOwnerDir(AccountID const& account);
 
+[[nodiscard]] TER
+dirLink(ApplyView& view, AccountID const& owner, std::shared_ptr<SLE>& object);
+
+[[nodiscard]] Expected<std::shared_ptr<SLE>, TER>
+createPseudoAccount(ApplyView& view, uint256 const& pseudoOwnerKey);
+
 // VFALCO NOTE Both STAmount parameters should just
 //             be "Amount", a unit-less number.
 //
@@ -419,6 +425,22 @@ trustDelete(
     AccountID const& uLowAccountID,
     AccountID const& uHighAccountID,
     beast::Journal j);
+
+/** Create the structures necessary for an account to hold an asset.
+ *
+ * If the asset is:
+ * - XRP: Do nothing.
+ * - IOU: Check that the asset is not globally frozen,
+ *   and create a trust line (with limit 0).
+ * - MPT: Check that the asset is not globally locked,
+ *   and create an MPToken.
+ */
+[[nodiscard]] TER
+authorizeHolding(
+    ApplyView& view,
+    AccountID const& account,
+    Asset const& asset,
+    beast::Journal journal);
 
 /** Delete an offer.
 

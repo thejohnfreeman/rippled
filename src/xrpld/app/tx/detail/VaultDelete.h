@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 /*
   This file is part of rippled: https://github.com/ripple/rippled
-  Copyright (c) 2023 Ripple Labs Inc.
+  Copyright (c) 2024 Ripple Labs Inc.
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose  with  or without fee is hereby granted, provided that the above
@@ -17,43 +17,30 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_TX_MPTOKENISSUANCECREATE_H_INCLUDED
-#define RIPPLE_TX_MPTOKENISSUANCECREATE_H_INCLUDED
+#ifndef RIPPLE_TX_VAULTDELETE_H_INCLUDED
+#define RIPPLE_TX_VAULTDELETE_H_INCLUDED
 
 #include <xrpld/app/tx/detail/Transactor.h>
-#include <xrpl/basics/Expected.h>
-#include <xrpl/protocol/UintTypes.h>
 
 namespace ripple {
 
-struct MPTCreateArgs
-{
-    AccountID const& account;
-    std::uint32_t sequence;
-    std::uint32_t flags = 0;
-    std::optional<std::uint64_t> maxAmount{};
-    std::optional<std::uint8_t> assetScale{};
-    std::optional<std::uint16_t> transferFee{};
-    std::optional<Slice> const& metadata{};
-};
-
-class MPTokenIssuanceCreate : public Transactor
+class VaultDelete : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit MPTokenIssuanceCreate(ApplyContext& ctx) : Transactor(ctx)
+    explicit VaultDelete(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 
     static NotTEC
     preflight(PreflightContext const& ctx);
 
+    static TER
+    preclaim(PreclaimContext const& ctx);
+
     TER
     doApply() override;
-
-    static Expected<MPTID, TER>
-    create(ApplyView& view, beast::Journal journal, MPTCreateArgs const& args);
 };
 
 }  // namespace ripple

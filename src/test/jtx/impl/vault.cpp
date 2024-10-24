@@ -17,52 +17,43 @@
 */
 //==============================================================================
 
-#include <xrpl/protocol/Indexes.h>
-#include <xrpl/protocol/MPTIssue.h>
+#include <test/jtx/Env.h>
+#include <test/jtx/vault.h>
+
+#include <xrpl/json/json_value.h>
+#include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/jss.h>
 
+#include <optional>
+
 namespace ripple {
+namespace test {
+namespace jtx {
 
-MPTIssue::MPTIssue(MPTID const& issuanceID) : mptID_(issuanceID)
+std::tuple<Json::Value, Keylet>
+Vault::create(CreateArgs const& args)
 {
-}
-
-AccountID const&
-MPTIssue::getIssuer() const
-{
-    // MPTID is concatenation of sequence + account
-    static_assert(sizeof(MPTID) == (sizeof(std::uint32_t) + sizeof(AccountID)));
-    // copy from id skipping the sequence
-    AccountID const* account = reinterpret_cast<AccountID const*>(
-        mptID_.data() + sizeof(std::uint32_t));
-
-    return *account;
-}
-
-std::string
-MPTIssue::getText() const
-{
-    return to_string(mptID_);
-}
-
-void
-MPTIssue::setJson(Json::Value& jv) const
-{
-    jv[jss::mpt_issuance_id] = to_string(mptID_);
+    auto keylet = keylet::vault(args.owner.id(), env.seq(args.owner));
+    Json::Value jv;
+    jv[jss::TransactionType] = jss::VaultCreate;
+    jv[jss::Account] = args.owner.human();
+    jv[jss::Asset] = to_json(args.asset);
+    jv[jss::Fee] = STAmount(env.current()->fees().increment).getJson();
+    if (args.flags)
+        jv[jss::Flags] = *args.flags;
+    return {jv, keylet};
 }
 
 Json::Value
-to_json(MPTIssue const& mptIssue)
+Vault::del(DeleteArgs const& args)
 {
     Json::Value jv;
-    mptIssue.setJson(jv);
+    jv[jss::TransactionType] = jss::VaultDelete;
+    jv[jss::Account] = args.owner.human();
+    jv[jss::VaultID] = to_string(args.id);
     return jv;
 }
 
-std::string
-to_string(MPTIssue const& mptIssue)
-{
-    return to_string(mptIssue.getMptID());
-}
-
+}  // namespace jtx
+}  // namespace test
 }  // namespace ripple

@@ -177,24 +177,18 @@ MPTokenAuthorize::authorize(
 
         auto const mptokenKey =
             keylet::mptoken(args.mptIssuanceID, args.account);
-
-        auto const ownerNode = view.dirInsert(
-            keylet::ownerDir(args.account),
-            mptokenKey,
-            describeOwnerDir(args.account));
-
-        if (!ownerNode)
-            return tecDIR_FULL;
-
         auto mptoken = std::make_shared<SLE>(mptokenKey);
+
+        if (auto ter = dirLink(view, args.account, mptoken))
+            return ter;
+        adjustOwnerCount(view, sleAcct, 1, journal);
+
         (*mptoken)[sfAccount] = args.account;
         (*mptoken)[sfMPTokenIssuanceID] = args.mptIssuanceID;
         (*mptoken)[sfFlags] = 0;
-        (*mptoken)[sfOwnerNode] = *ownerNode;
         view.insert(mptoken);
 
         // Update owner count.
-        adjustOwnerCount(view, sleAcct, 1, journal);
 
         return tesSUCCESS;
     }

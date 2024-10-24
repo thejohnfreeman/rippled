@@ -58,6 +58,8 @@ JSS(AssetPrice);           // in: Oracle
 JSS(AuthAccount);          // in: AMM Auction Slot
 JSS(AuthAccounts);         // in: AMM Auction Slot
 JSS(BaseAsset);            // in: Oracle
+JSS(BidMax);               // in: AMM Bid
+JSS(BidMin);               // in: AMM Bid
 JSS(Bridge);               // ledger type.
 JSS(Check);                // ledger type.
 JSS(ClearFlag);            // field.
@@ -76,8 +78,6 @@ JSS(LastLedgerSequence);   // in: TransactionSign; field
 JSS(LastUpdateTime);       // field.
 JSS(LedgerHashes);         // ledger type.
 JSS(LimitAmount);          // field.
-JSS(BidMax);               // in: AMM Bid
-JSS(BidMin);               // in: AMM Bid
 JSS(MPToken);              // ledger type.
 JSS(MPTokenIssuance);      // ledger type.
 JSS(NetworkID);            // field.
@@ -109,14 +109,17 @@ JSS(SigningPubKey);                      // field.
 JSS(TakerGets);                          // field.
 JSS(TakerPays);                          // field.
 JSS(Ticket);                             // ledger type.
-JSS(TxnSignature);                       // field.
 JSS(TradingFee);                         // in/out: AMM trading fee
 JSS(TransactionType);                    // in: TransactionSign.
 JSS(TransferRate);                       // in: TransferRate.
+JSS(TxnSignature);                       // field.
 JSS(URI);                                // field.
+JSS(Vault);                              // ledger type.
+JSS(VaultID);                            // field.
 JSS(VoteSlots);                          // out: AMM Vote
 JSS(XChainOwnedClaimID);                 // ledger type.
 JSS(XChainOwnedCreateAccountClaimID);    // ledger type.
+                                         //
 JSS(aborted);                            // out: InboundLedger
 JSS(accepted);               // out: LedgerToJson, OwnerInfo, SubmitTransaction
 JSS(account);                // in/out: many
@@ -739,6 +742,8 @@ JSS(NegativeUNL);                           // out: ValidatorList; ledger type
 #pragma pop_macro("TRANSACTION")
 
 #undef JSS
+
+// clang-format on
 
 }  // namespace jss
 }  // namespace ripple
