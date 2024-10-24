@@ -47,13 +47,33 @@ class Vault_test : public beast::unit_test::suite
             SUBCASE("happy path")
             {
                 env(tx);
-                auto meta = env.meta();
+                {
+                    auto meta = env.meta()->getJson();
+                    // JLOG(env.journal.error()) << meta;
+                    auto n = 0;
+                    for (auto const& affected : meta[sfAffectedNodes])
+                    {
+                        if (!affected[sfCreatedNode])
+                            continue;
+                        ++n;
+                    }
+                }
                 BEAST_EXPECT(env.le(keylet));
-                JLOG(env.journal.error()) << *meta;
 
                 tx = vault.del({.owner = owner, .id = keylet.key});
                 env(tx);
-                env.close();
+                {
+                    auto n = 0;
+                    auto meta = env.meta()->getJson();
+                    for (auto const& affected : meta[sfAffectedNodes])
+                    {
+                        if (!affected[sfDeletedNode])
+                            continue;
+                        JLOG(env.journal.error())
+                            << affected[sfDeletedNode][sfLedgerEntryType];
+                        ++n;
+                    }
+                }
                 BEAST_EXPECT(!env.le(keylet));
             }
 

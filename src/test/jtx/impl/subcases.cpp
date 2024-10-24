@@ -45,7 +45,8 @@ Subcase::operator bool() const
 
 Subcase::~Subcase()
 {
-    if (_.level == _.entered && _.skipped == 0) {
+    if (_.level == _.entered && _.skipped == 0)
+    {
         // We are destroying the leaf subcase that executed on this pass.
         // We call `suite::testcase()` here, after the subcase is finished,
         // because only now do we know which subcase was the leaf,

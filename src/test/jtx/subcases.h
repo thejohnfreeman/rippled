@@ -82,17 +82,19 @@ struct Context
     std::uint8_t skipped = 0;
 
     std::string
-        name() const
+    name() const
+    {
+        std::string n;
+        for (auto i = 0; i <= level; ++i)
         {
-            std::string n;
-            for (auto i = 0; i <= level; ++i) {
-                if (i != 0) {
-                    n += " > ";
-                }
-                n += names[i];
+            if (i != 0)
+            {
+                n += " > ";
             }
-            return n;
+            n += names[i];
         }
+        return n;
+    }
 
     void
     lap()
@@ -123,6 +125,7 @@ execute(beast::unit_test::suite* suite, char const* name, Supercase supercase);
 #define TEST_CASE(name) void name(subcases::Context& _09876)
 #define SUBCASE(name) if (subcases::Subcase _54321{_09876, name})
 #define SKIP(name) if (false)
-#define EXECUTE(name) subcases::execute(this, #name, [&](auto& ctx) { name(ctx); })
+#define EXECUTE(name) \
+    subcases::execute(this, #name, [&](auto& ctx) { name(ctx); })
 
 #endif
