@@ -17,12 +17,12 @@
 */
 //==============================================================================
 
-#include <test/jtx/vault.h>
 #include <test/jtx/Env.h>
+#include <test/jtx/vault.h>
 
 #include <xrpl/json/json_value.h>
-#include <xrpl/protocol/jss.h>
 #include <xrpl/protocol/STAmount.h>
+#include <xrpl/protocol/jss.h>
 
 #include <optional>
 
@@ -30,10 +30,10 @@ namespace ripple {
 namespace test {
 namespace jtx {
 
-Json::Value
+std::tuple<Json::Value, Keylet>
 Vault::create(CreateArgs const& args)
 {
-    id = keylet::vault(args.owner.id(), env.seq(args.owner)).key;
+    auto keylet = keylet::vault(args.owner.id(), env.seq(args.owner));
     Json::Value jv;
     jv[jss::TransactionType] = jss::VaultCreate;
     jv[jss::Account] = args.owner.human();
@@ -41,6 +41,16 @@ Vault::create(CreateArgs const& args)
     jv[jss::Fee] = STAmount(env.current()->fees().increment).getJson();
     if (args.flags)
         jv[jss::Flags] = *args.flags;
+    return {jv, keylet};
+}
+
+Json::Value
+Vault::del(DeleteArgs const& args)
+{
+    Json::Value jv;
+    jv[jss::TransactionType] = jss::VaultDelete;
+    jv[jss::Account] = args.owner.human();
+    jv[jss::VaultID] = to_string(args.id);
     return jv;
 }
 

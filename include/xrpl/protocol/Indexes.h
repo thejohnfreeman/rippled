@@ -314,6 +314,12 @@ mptoken(uint256 const& issuanceKey, AccountID const& holder) noexcept;
 Keylet
 vault(AccountID const& owner, std::uint32_t seq) noexcept;
 
+inline Keylet
+vault(uint256 const& vaultKey)
+{
+    return {ltVAULT, vaultKey};
+}
+
 }  // namespace keylet
 
 // Everything below is deprecated and should be removed in favor of keylets:

@@ -25,8 +25,10 @@
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/protocol/Asset.h>
+#include <xrpl/protocol/Keylet.h>
 
 #include <optional>
+#include <tuple>
 
 namespace ripple {
 namespace test {
@@ -37,7 +39,6 @@ class Env;
 struct Vault
 {
     Env& env;
-    uint256 id{};
 
     struct CreateArgs
     {
@@ -46,15 +47,20 @@ struct Vault
         std::optional<std::uint32_t> flags{};
     };
 
-    /** Return a VaultCreate transaction to create a Vault. */
-    Json::Value
+    /** Return a VaultCreate transaction and the Vault's expected keylet. */
+    std::tuple<Json::Value, Keylet>
     create(CreateArgs const& args);
 
     struct SetArgs;
     Json::Value
     set(SetArgs const& args);
 
-    struct DeleteArgs;
+    struct DeleteArgs
+    {
+        Account owner;
+        uint256 id;
+    };
+
     Json::Value
     del(DeleteArgs const& args);
 };

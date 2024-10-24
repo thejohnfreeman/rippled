@@ -43,13 +43,18 @@ class Vault_test : public beast::unit_test::suite
         SUBCASE("IOU vault")
         {
             Asset asset = issuer["IOU"];
-            auto tx = vault.create({.owner = owner, .asset = asset});
-            // vault.id available starting here
+            auto [tx, keylet] = vault.create({.owner = owner, .asset = asset});
 
             SUBCASE("happy path")
             {
                 env(tx);
                 env.close();
+                BEAST_EXPECT(env.le(keylet));
+
+                tx = vault.del({.owner = owner, .id = keylet.key});
+                env(tx);
+                env.close();
+                BEAST_EXPECT(!env.le(keylet));
             }
 
             SUBCASE("insufficient fee")
@@ -89,7 +94,7 @@ class Vault_test : public beast::unit_test::suite
             MPTTester mptt{env, issuer, {.fund = false}};
             mptt.create();
             Asset asset = mptt.issuanceID();
-            auto tx = vault.create({.owner = owner, .asset = asset});
+            auto [tx, id] = vault.create({.owner = owner, .asset = asset});
 
             SUBCASE("happy path")
             {
@@ -105,9 +110,7 @@ class Vault_test : public beast::unit_test::suite
             }
         }
 
-        // (create) => no sfVaultID
         // (update) => sfVaultID
-        // TODO: VaultSet (create) succeed
         // TODO: VaultSet (update) succeed
         // TODO: VaultSet (update) fail: wrong owner
         // TODO: VaultSet (update) fail: Data too large

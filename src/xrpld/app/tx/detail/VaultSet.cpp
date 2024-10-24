@@ -31,8 +31,8 @@ VaultSet::preflight(PreflightContext const& ctx)
     if (!ctx.rules.enabled(featureSingleAssetVault))
         return temDISABLED;
 
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
+    if (auto const ter = preflight1(ctx))
+        return ter;
 
     return preflight2(ctx);
 }
