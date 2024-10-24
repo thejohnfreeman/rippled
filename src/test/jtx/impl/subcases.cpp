@@ -35,6 +35,7 @@ Subcase::operator bool() const
     if (_.entered < _.level && _.skip[_.level] == _.skipped)
     {
         _.entered = _.level;
+        _.names[_.level] = name_;
         _.skipped = 0;
         return true;
     }
@@ -44,6 +45,13 @@ Subcase::operator bool() const
 
 Subcase::~Subcase()
 {
+    if (_.level == _.entered && _.skipped == 0) {
+        // We are destroying the leaf subcase that executed on this pass.
+        // We call `suite::testcase()` here, after the subcase is finished,
+        // because only now do we know which subcase was the leaf,
+        // and we only want to print one name line for each subcase.
+        _.suite.testcase(_.name());
+    }
     if (_.skipped == 0)
     {
         ++_.skip[_.level];
@@ -53,9 +61,10 @@ Subcase::~Subcase()
 }
 
 void
-execute(Supercase supercase)
+execute(beast::unit_test::suite* suite, char const* name, Supercase supercase)
 {
-    Context context;
+    Context context{*suite};
+    context.names[0] = name;
     do
     {
         context.lap();

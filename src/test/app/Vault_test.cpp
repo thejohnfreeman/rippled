@@ -31,7 +31,6 @@ class Vault_test : public beast::unit_test::suite
     TEST_CASE(CreateUpdateDelete)
     {
         using namespace test::jtx;
-        testcase("Create / Update / Delete");
         Env env{*this};
 
         Account issuer{"issuer"};
@@ -48,8 +47,9 @@ class Vault_test : public beast::unit_test::suite
             SUBCASE("happy path")
             {
                 env(tx);
-                env.close();
+                auto meta = env.meta();
                 BEAST_EXPECT(env.le(keylet));
+                JLOG(env.journal.error()) << *meta;
 
                 tx = vault.del({.owner = owner, .id = keylet.key});
                 env(tx);
@@ -94,7 +94,7 @@ class Vault_test : public beast::unit_test::suite
             MPTTester mptt{env, issuer, {.fund = false}};
             mptt.create();
             Asset asset = mptt.issuanceID();
-            auto [tx, id] = vault.create({.owner = owner, .asset = asset});
+            auto [tx, keylet] = vault.create({.owner = owner, .asset = asset});
 
             SUBCASE("happy path")
             {

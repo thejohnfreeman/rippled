@@ -20,6 +20,8 @@
 #ifndef RIPPLE_TEST_JTX_SUBCASES_H_INCLUDED
 #define RIPPLE_TEST_JTX_SUBCASES_H_INCLUDED
 
+#include <xrpl/beast/unit_test/suite.h>
+
 #include <cstdint>
 #include <functional>
 
@@ -66,8 +68,11 @@ constexpr std::size_t MAXIMUM_SUBCASE_DEPTH = 10;
 
 struct Context
 {
+    beast::unit_test::suite& suite;
     // The number of subcases to skip at each level to reach the next subcase.
     std::uint8_t skip[MAXIMUM_SUBCASE_DEPTH] = {0};
+    // The subcase names at each level.
+    char const* names[MAXIMUM_SUBCASE_DEPTH] = {""};
     // The current level.
     std::uint8_t level = 0;
     // The maximum depth at which we entered a subcase.
@@ -75,6 +80,19 @@ struct Context
     // The number of subcases we skipped on this or deeper levels
     // since entering a subcase.
     std::uint8_t skipped = 0;
+
+    std::string
+        name() const
+        {
+            std::string n;
+            for (auto i = 0; i <= level; ++i) {
+                if (i != 0) {
+                    n += " > ";
+                }
+                n += names[i];
+            }
+            return n;
+        }
 
     void
     lap()
@@ -98,13 +116,13 @@ struct Subcase
 using Supercase = std::function<void(Context&)>;
 
 void
-execute(Supercase supercase);
+execute(beast::unit_test::suite* suite, char const* name, Supercase supercase);
 
 }  // namespace subcases
 
 #define TEST_CASE(name) void name(subcases::Context& _09876)
 #define SUBCASE(name) if (subcases::Subcase _54321{_09876, name})
 #define SKIP(name) if (false)
-#define EXECUTE(name) subcases::execute([&](auto& ctx) { name(ctx); })
+#define EXECUTE(name) subcases::execute(this, #name, [&](auto& ctx) { name(ctx); })
 
 #endif
