@@ -2243,7 +2243,7 @@ assetsToSharesDeposit(
         return assets;
     Number shareTotal = getShareTotal(view, vault);
     auto shares = shareTotal * (assets / assetTotal);
-    STAmount amount{MPTAmount{shares}, MPTIssue{vault->at(sfMPTokenIssuanceID)}};
+    STAmount amount{vault->at(sfMPTokenIssuanceID), shares};
     return amount;
 }
 
