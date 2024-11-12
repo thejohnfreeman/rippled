@@ -2223,7 +2223,7 @@ rippleCredit(
         saAmount.asset().value());
 }
 
-Number
+static Number
 getShareTotal(ReadView const& view, std::shared_ptr<SLE> const& vault)
 {
     auto issuance =
@@ -2231,7 +2231,7 @@ getShareTotal(ReadView const& view, std::shared_ptr<SLE> const& vault)
     return issuance->at(sfOutstandingAmount);
 }
 
-[[nodiscard]] Expected<Number, TER>
+[[nodiscard]] Expected<STAmount, TER>
 assetsToSharesDeposit(
     ReadView const& view,
     std::shared_ptr<SLE> const& vault,
@@ -2243,7 +2243,8 @@ assetsToSharesDeposit(
         return assets;
     Number shareTotal = getShareTotal(view, vault);
     auto shares = shareTotal * (assets / assetTotal);
-    return shares;
+    STAmount amount{MPTAmount{shares}, MPTIssue{vault->at(sfMPTokenIssuanceID)}};
+    return amount;
 }
 
 [[nodiscard]] Expected<Number, TER>
