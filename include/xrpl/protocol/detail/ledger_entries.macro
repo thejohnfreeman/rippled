@@ -17,8 +17,14 @@
 */
 //==============================================================================
 
-#if !defined(LEDGER_ENTRY)
+#ifndef LEDGER_ENTRY
 #error "undefined macro: LEDGER_ENTRY"
+#endif
+
+#ifdef NO_DUPLICATES
+#define DUPLICATE(...)
+#else
+#define DUPLICATE(...) LEDGER_ENTRY(__VA_ARGS__)
 #endif
 
 /**
@@ -243,7 +249,7 @@ LEDGER_ENTRY(ltOFFER, 0x006f, Offer, offer, ({
 
     \sa keylet::depositPreauth
  */
-LEDGER_ENTRY(ltDEPOSIT_PREAUTH, 0x0070, DepositPreauth, deposit_preauth, ({
+DUPLICATE(ltDEPOSIT_PREAUTH, 0x0070, DepositPreauth, deposit_preauth, ({
     {sfAccount,              soeREQUIRED},
     {sfAuthorize,            soeOPTIONAL},
     {sfOwnerNode,            soeREQUIRED},
@@ -436,3 +442,5 @@ LEDGER_ENTRY(ltCREDENTIAL, 0x0081, Credential, credential, ({
     {sfPreviousTxnID,        soeREQUIRED},
     {sfPreviousTxnLgrSeq,    soeREQUIRED},
 }))
+
+#undef DUPLICATE

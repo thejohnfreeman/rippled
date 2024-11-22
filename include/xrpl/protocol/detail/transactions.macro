@@ -17,7 +17,7 @@
 */
 //==============================================================================
 
-#if !defined(TRANSACTION)
+#ifndef TRANSACTION
 #error "undefined macro: TRANSACTION"
 #endif
 

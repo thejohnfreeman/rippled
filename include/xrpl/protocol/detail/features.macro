@@ -17,10 +17,10 @@
 */
 //==============================================================================
 
-#if !defined(XRPL_FEATURE)
+#ifndef XRPL_FEATURE
 #error "undefined macro: XRPL_FEATURE"
 #endif
-#if !defined(XRPL_FIX)
+#ifndef XRPL_FIX
 #error "undefined macro: XRPL_FIX"
 #endif
 
