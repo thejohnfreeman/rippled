@@ -68,6 +68,13 @@ TypedField<T>::TypedField(private_access_tag_t pat, Args&&... args)
         fieldValue,                                      \
         std::string_view(#sfName).substr(2).data(),      \
         ##__VA_ARGS__);
+#define SUPER_TYPED_SFIELD(name, stiSuffix, fieldValue, ...) \
+    SF_##stiSuffix const sf##name(                       \
+        access,                                          \
+        STI_##stiSuffix,                                 \
+        fieldValue,                                      \
+        #name,                                           \
+        ##__VA_ARGS__);
 
 // SFields which, for historical reasons, do not follow naming conventions.
 SField const sfInvalid(access, -1);
@@ -79,6 +86,7 @@ SField const sfIndex(access, STI_UINT256, 258, "index");
 
 #include <xrpl/protocol/detail/sfields.macro>
 
+#undef SUPER_TYPED_SFIELD
 #undef TYPED_SFIELD
 #pragma pop_macro("TYPED_SFIELD")
 #undef UNTYPED_SFIELD
