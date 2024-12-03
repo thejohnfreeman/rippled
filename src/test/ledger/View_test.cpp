@@ -20,10 +20,10 @@
 #include <test/jtx.h>
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/core/ConfigSections.h>
-#include <xrpld/ledger/ApplyViewImpl.h>
-#include <xrpld/ledger/OpenView.h>
-#include <xrpld/ledger/PaymentSandbox.h>
-#include <xrpld/ledger/Sandbox.h>
+#include <xrpl/ledger/ApplyViewImpl.h>
+#include <xrpl/ledger/OpenView.h>
+#include <xrpl/ledger/PaymentSandbox.h>
+#include <xrpl/ledger/Sandbox.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Protocol.h>
 #include <type_traits>

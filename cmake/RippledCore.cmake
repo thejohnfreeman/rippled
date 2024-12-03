@@ -103,6 +103,14 @@ target_link_libraries(xrpl.libxrpl.protocol PUBLIC
 )
 
 # Level 05
+add_module(xrpl ledger)
+target_link_libraries(xrpl.libxrpl.ledger PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.beast
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+)
+
 add_module(xrpl nodestore)
 target_link_libraries(xrpl.libxrpl.nodestore PUBLIC
   ${nudb}
@@ -149,6 +157,7 @@ target_link_modules(xrpl PUBLIC
   crypto
   jobqueue
   json
+  ledger
   nodestore
   protocol
   resource

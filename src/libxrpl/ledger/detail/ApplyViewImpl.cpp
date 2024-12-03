@@ -17,9 +17,9 @@
 */
 //==============================================================================
 
-#include <xrpld/ledger/ApplyViewImpl.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/ledger/ApplyViewImpl.h>
 
 namespace ripple {
 

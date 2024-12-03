@@ -19,7 +19,7 @@
 
 #include <xrpld/app/paths/RippleLineCache.h>
 #include <xrpld/app/paths/TrustLine.h>
-#include <xrpld/ledger/OpenView.h>
+#include <xrpl/ledger/OpenView.h>
 
 namespace ripple {
 

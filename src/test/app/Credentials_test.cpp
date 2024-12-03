@@ -19,8 +19,8 @@
 
 #include <test/jtx.h>
 #include <xrpld/app/misc/CredentialHelpers.h>
-#include <xrpld/ledger/ApplyViewImpl.h>
 #include <xrpl/basics/strHex.h>
+#include <xrpl/ledger/ApplyViewImpl.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/Protocol.h>
