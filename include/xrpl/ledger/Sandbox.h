@@ -17,39 +17,47 @@
 */
 //==============================================================================
 
-#include <xrpld/ledger/ApplyViewImpl.h>
-#include <xrpl/basics/contract.h>
-#include <cassert>
+#ifndef RIPPLE_LEDGER_SANDBOX_H_INCLUDED
+#define RIPPLE_LEDGER_SANDBOX_H_INCLUDED
+
+#include <xrpl/ledger/RawView.h>
+#include <xrpl/ledger/detail/ApplyViewBase.h>
 
 namespace ripple {
 
-ApplyViewImpl::ApplyViewImpl(ReadView const* base, ApplyFlags flags)
-    : ApplyViewBase(base, flags)
-{
-}
+/** Discardable, editable view to a ledger.
 
-void
-ApplyViewImpl::apply(OpenView& to, STTx const& tx, TER ter, beast::Journal j)
-{
-    items_.apply(to, tx, ter, deliver_, j);
-}
+    The sandbox inherits the flags of the base.
 
-std::size_t
-ApplyViewImpl::size()
+    @note Presented as ApplyView to clients.
+*/
+class Sandbox : public detail::ApplyViewBase
 {
-    return items_.size();
-}
+public:
+    Sandbox() = delete;
+    Sandbox(Sandbox const&) = delete;
+    Sandbox&
+    operator=(Sandbox&&) = delete;
+    Sandbox&
+    operator=(Sandbox const&) = delete;
 
-void
-ApplyViewImpl::visit(
-    OpenView& to,
-    std::function<void(
-        uint256 const& key,
-        bool isDelete,
-        std::shared_ptr<SLE const> const& before,
-        std::shared_ptr<SLE const> const& after)> const& func)
-{
-    items_.visit(to, func);
-}
+    Sandbox(Sandbox&&) = default;
+
+    Sandbox(ReadView const* base, ApplyFlags flags) : ApplyViewBase(base, flags)
+    {
+    }
+
+    Sandbox(ApplyView const* base) : Sandbox(base, base->flags())
+    {
+    }
+
+    void
+    apply(RawView& to)
+    {
+        items_.apply(to);
+    }
+};
 
 }  // namespace ripple
+
+#endif

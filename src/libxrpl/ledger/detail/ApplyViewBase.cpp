@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#include <xrpld/ledger/detail/ApplyViewBase.h>
 #include <xrpl/basics/contract.h>
+#include <xrpl/ledger/detail/ApplyViewBase.h>
 
 namespace ripple {
 namespace detail {

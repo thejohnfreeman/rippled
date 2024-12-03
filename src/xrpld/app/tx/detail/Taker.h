@@ -22,8 +22,8 @@
 
 #include <xrpld/app/tx/detail/Offer.h>
 #include <xrpld/core/Config.h>
-#include <xrpld/ledger/View.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Quality.h>
 #include <xrpl/protocol/Rate.h>
 #include <xrpl/protocol/TER.h>

@@ -20,10 +20,10 @@
 #ifndef RIPPLE_LEDGER_READVIEW_H_INCLUDED
 #define RIPPLE_LEDGER_READVIEW_H_INCLUDED
 
-#include <xrpld/ledger/detail/ReadViewFwdRange.h>
 #include <xrpl/basics/chrono.h>
 #include <xrpl/beast/hash/uhash.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/ledger/detail/ReadViewFwdRange.h>
 #include <xrpl/protocol/FeeUnits.h>
 #include <xrpl/protocol/Fees.h>
 #include <xrpl/protocol/IOUAmount.h>
@@ -283,6 +283,6 @@ makeRulesGivenLedger(
 
 }  // namespace ripple
 
-#include <xrpld/ledger/detail/ReadViewFwdRange.ipp>
+#include <xrpl/ledger/detail/ReadViewFwdRange.ipp>
 
 #endif

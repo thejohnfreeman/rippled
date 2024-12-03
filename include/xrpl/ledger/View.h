@@ -20,12 +20,11 @@
 #ifndef RIPPLE_LEDGER_VIEW_H_INCLUDED
 #define RIPPLE_LEDGER_VIEW_H_INCLUDED
 
-#include <xrpld/core/Config.h>
-#include <xrpld/ledger/ApplyView.h>
-#include <xrpld/ledger/OpenView.h>
-#include <xrpld/ledger/RawView.h>
-#include <xrpld/ledger/ReadView.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/ledger/ApplyView.h>
+#include <xrpl/ledger/OpenView.h>
+#include <xrpl/ledger/RawView.h>
+#include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/MPTIssue.h>
 #include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/Rate.h>
@@ -38,8 +37,6 @@
 #include <map>
 #include <memory>
 #include <utility>
-
-#include <vector>
 
 namespace ripple {
 

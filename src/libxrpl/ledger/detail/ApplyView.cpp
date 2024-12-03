@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#include <xrpld/ledger/ApplyView.h>
 #include <xrpl/basics/contract.h>
+#include <xrpl/ledger/ApplyView.h>
 #include <xrpl/protocol/Protocol.h>
 #include <cassert>
 

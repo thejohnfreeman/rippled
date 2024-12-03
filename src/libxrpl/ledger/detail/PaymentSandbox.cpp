@@ -17,9 +17,8 @@
 */
 //==============================================================================
 
-#include <xrpld/app/paths/detail/AmountSpec.h>
-#include <xrpld/ledger/PaymentSandbox.h>
-#include <xrpld/ledger/View.h>
+#include <xrpl/ledger/PaymentSandbox.h>
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STAccount.h>

@@ -22,7 +22,7 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/LedgerToJson.h>
-#include <xrpld/ledger/ReadView.h>
+#include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
 #include <memory>
 

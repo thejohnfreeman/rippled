@@ -20,7 +20,7 @@
 #include <xrpld/app/tx/detail/AMMDelete.h>
 
 #include <xrpld/app/misc/AMMUtils.h>
-#include <xrpld/ledger/Sandbox.h>
+#include <xrpl/ledger/Sandbox.h>
 #include <xrpl/protocol/AMMCore.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/STAccount.h>
