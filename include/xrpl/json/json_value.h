@@ -20,10 +20,12 @@
 #ifndef RIPPLE_JSON_JSON_VALUE_H_INCLUDED
 #define RIPPLE_JSON_JSON_VALUE_H_INCLUDED
 
+#include <xrpl/basics/Number.h>
 #include <xrpl/json/json_forwards.h>
 #include <cstring>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 /** \brief JSON (JavaScript Object Notation).
@@ -237,6 +239,11 @@ public:
     Value&
     operator=(Value&& other);
 
+    template <typename T>
+        requires(!std::convertible_to<T, Value>)
+    Value&
+    operator=(T const& rhs);
+
     Value(Value&& other) noexcept;
 
     /// Swap values.
@@ -364,6 +371,8 @@ public:
      */
     Value&
     operator[](const StaticString& key);
+    Value const&
+    operator[](const StaticString& key) const;
 
     /// Return the member named key if it exist, defaultValue otherwise.
     Value
@@ -679,6 +688,51 @@ public:
         return deref();
     }
 };
+
+// https://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/
+namespace detail {
+
+inline Value
+to_json(ripple::Number const& number)
+{
+    return to_string(number);
+}
+
+struct to_json_fn
+{
+    template <typename T>
+    constexpr Value
+    operator()(T&& t) const
+    {
+        return to_json(std::forward<T>(t));
+    }
+};
+
+template <typename T>
+struct static_const
+{
+    static constexpr T value{};
+};
+
+template <typename T>
+constexpr T static_const<T>::value;
+
+}  // namespace detail
+
+namespace {
+
+constexpr auto const& to_json = detail::static_const<detail::to_json_fn>::value;
+
+}
+
+template <typename T>
+    requires(!std::convertible_to<T, Value>)
+Value&
+Value::operator=(T const& rhs)
+{
+    *this = to_json(rhs);
+    return *this;
+}
 
 }  // namespace Json
 
